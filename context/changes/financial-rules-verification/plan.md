@@ -223,6 +223,38 @@ Prove the database authorization contract under realistic authenticated roles, t
 
 ---
 
+## Phase 5: Authenticated RLS Behavior Verification
+
+### Overview
+
+Extend the pgTAP suite from catalog configuration checks to repeatable, authenticated behavior checks that prove the database’s family isolation and read-only direct-table boundary.
+
+### Changes Required:
+
+#### 1. Authenticated pgTAP fixtures and RLS assertions
+
+**File**: `supabase/tests/financial_rules_foundation.test.sql`
+
+**Intent**: Prove that the RLS policies behave correctly for real authenticated users rather than only asserting that they are configured.
+
+**Contract**: In a transaction, create two isolated local auth users and one family for each. Establish an active parent membership and representative readable records for both families. Set the authenticated role and JWT subject using the Supabase local test-harness mechanism, then prove a parent can read only their own family’s foundation records. Under that same authenticated identity, prove direct `INSERT`, `UPDATE`, and `DELETE` attempts on financial records are denied. Keep existing catalog assertions and roll back all fixtures at test completion.
+
+### Success Criteria:
+
+#### Automated Verification:
+
+- `npx supabase db reset && npx supabase test db` passes the expanded pgTAP suite.
+- The suite proves authenticated cross-family reads return no rows.
+- The suite proves authenticated direct expense writes, updates, and deletes are denied by the database boundary.
+
+#### Manual Verification:
+
+- Review the test identities and JWT claim setup to confirm the test role matches the application’s authenticated Supabase requests.
+
+**Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation from the human that the manual testing was successful before proceeding to any follow-up work.
+
+---
+
 ## Testing Strategy
 
 ### Unit Tests:
@@ -311,3 +343,14 @@ This is the first application schema migration, so no existing application data 
 
 - [x] 4.3 Confirm the documented verification sequence from a clean checkout — d07757f
 - [x] 4.4 Confirm PRD and roadmap record PLN and F-01 to S-01 sequencing — d07757f
+
+### Phase 5: Authenticated RLS Behavior Verification
+
+#### Automated
+
+- [x] 5.1 Run the expanded pgTAP suite after a clean local database reset
+- [x] 5.2 Verify authenticated cross-family reads and direct expense mutations are denied
+
+#### Manual
+
+- [x] 5.3 Review the test JWT identity setup against authenticated application requests

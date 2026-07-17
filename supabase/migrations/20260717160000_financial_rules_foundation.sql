@@ -274,5 +274,7 @@ on public.monthly_settlements
 for select to authenticated
 using (public.is_active_family_member(family_id));
 
+grant select on public.families, public.family_members, public.children, public.expenses, public.monthly_settlements to authenticated;
+
 revoke all on function public.create_family() from public;
 grant execute on function public.create_family() to authenticated;
