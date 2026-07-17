@@ -32,7 +32,7 @@
   - Tradeoff: Adds SQL test setup and uses Supabase auth/JWT test helpers.
   - Confidence: HIGH — this is explicitly required by the approved plan.
   - Blind spot: Exact local helper syntax must be confirmed against the installed pgTAP/Supabase test image.
-- **Decision**: PENDING
+- **Decision**: IMPLEMENTED — Phase 5 (`132c9e2`)
 
 ### F2 — Financial service lacks the planned Supabase repository adapter
 

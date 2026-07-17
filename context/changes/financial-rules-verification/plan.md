@@ -348,9 +348,9 @@ This is the first application schema migration, so no existing application data 
 
 #### Automated
 
-- [x] 5.1 Run the expanded pgTAP suite after a clean local database reset
-- [x] 5.2 Verify authenticated cross-family reads and direct expense mutations are denied
+- [x] 5.1 Run the expanded pgTAP suite after a clean local database reset — 132c9e2
+- [x] 5.2 Verify authenticated cross-family reads and direct expense mutations are denied — 132c9e2
 
 #### Manual
 
-- [x] 5.3 Review the test JWT identity setup against authenticated application requests
+- [x] 5.3 Review the test JWT identity setup against authenticated application requests — 132c9e2
