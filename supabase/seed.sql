@@ -1,1 +1,2 @@
 -- Intentionally empty: this project currently has no database seed data.
+-- Database tests create isolated auth users and fixtures; do not add test-only data here.

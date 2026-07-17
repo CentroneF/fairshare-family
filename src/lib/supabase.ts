@@ -22,3 +22,6 @@ export function createClient(requestHeaders: Headers, cookies: AstroCookies) {
     },
   });
 }
+
+// Server-only callers must use this request-scoped client so Supabase receives the user's session.
+// Do not add a service-role client here: financial authorization depends on RLS and user identity.

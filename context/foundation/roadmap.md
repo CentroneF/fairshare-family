@@ -29,8 +29,8 @@ FairShare Family gives separated or divorced co-parents a shared record of child
 
 | ID | Change ID | Outcome (user can …) | Prerequisites | PRD refs | Status |
 |---|---|---|---|---|---|
-| F-01 | financial-rules-verification | (foundation) verify exact financial rules before shared balances depend on them | — | Business Logic; Non-Functional Requirements — financial accuracy | blocked |
-| S-01 | family-onboarding | create an account, establish a family, add children, and join as the second parent | — | FR-001, FR-002, FR-003, FR-004, FR-005; Non-Functional Requirements — responsive Android-installable web experience | ready |
+| F-01 | financial-rules-verification | (foundation) verify exact financial rules before shared balances depend on them | — | Business Logic; Non-Functional Requirements — financial accuracy | planned |
+| S-01 | family-onboarding | create an account, establish a family, add children, and join as the second parent | F-01 | FR-001, FR-002, FR-003, FR-004, FR-005; Non-Functional Requirements — responsive Android-installable web experience | blocked |
 | S-02 | approved-expense-balance | add, review, and see an approved expense affect the selected month’s balance | S-01, F-01 | US-01, FR-006, FR-009, FR-011, FR-013 | blocked |
 | S-03 | unsettled-expense-corrections | correct or remove their own unsettled expense without corrupting the shared balance | S-02, F-01 | FR-007, FR-008 | proposed |
 | S-04 | monthly-report-history | browse previous monthly reports and distinguish settled from unsettled months | S-02 | FR-012 | proposed |
@@ -42,8 +42,8 @@ Navigation aid — groups items that share a Prerequisites chain. Canonical orde
 
 | Stream | Theme | Chain | Note |
 |---|---|---|---|
-| A | Family entry | `S-01` | Establishes the two-parent workspace that feeds the shared-expense flow. |
-| B | Shared financial agreement | `F-01` → `S-02` → `S-03` / `S-04` → `S-05` | Joins Stream A at `S-02`; keeps the fastest financially safe path in focus. |
+| A | Family entry | `F-01` → `S-01` | Uses the shared family/access schema established by the foundation. |
+| B | Shared financial agreement | `F-01` → `S-02` → `S-03` / `S-04` → `S-05` | Joins Stream A after the shared foundation; keeps the fastest financially safe path in focus. |
 
 ## Baseline
 
@@ -63,14 +63,13 @@ What’s already in place in the codebase as of `2026-07-17` (auto-researched + 
 - **Outcome:** (foundation) exact amount handling, fixed 50/50 balance rules, and settlement eligibility have a shared verification path before user-facing balances rely on them.
 - **Change ID:** financial-rules-verification
 - **PRD refs:** Business Logic; Non-Functional Requirements — exact amounts and final rounding
-- **Unlocks:** S-02, S-03, S-05
+- **Unlocks:** S-01, S-02, S-03, S-05
 - **Prerequisites:** —
-- **Parallel with:** S-01
+- **Parallel with:** —
 - **Blockers:** —
-- **Unknowns:**
-  - Which currency or currencies does the MVP support? — Owner: user. Block: yes.
-- **Risk:** Financial rules are the product’s trust boundary; resolving currency first prevents a fast path from encoding the wrong amount semantics.
-- **Status:** blocked
+- **Unknowns:** —
+- **Risk:** Financial rules are the product’s trust boundary; the PLN-only decision prevents a fast path from encoding ambiguous amount semantics.
+- **Status:** planned
 
 ## Slices
 
@@ -79,12 +78,12 @@ What’s already in place in the codebase as of `2026-07-17` (auto-researched + 
 - **Outcome:** user can create an account, sign in, create a family, add children, and share a join code so the second parent can enter the same family.
 - **Change ID:** family-onboarding
 - **PRD refs:** FR-001, FR-002, FR-003, FR-004, FR-005; Non-Functional Requirements — authenticated family-only access and responsive Android-installable web experience
-- **Prerequisites:** —
-- **Parallel with:** F-01
+- **Prerequisites:** F-01
+- **Parallel with:** —
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** This reuses the existing account access rather than expanding it; the scope stays focused on a usable two-parent starting point.
-- **Status:** ready
+- **Status:** blocked
 
 ### S-02: Approved expense changes the shared monthly balance
 
@@ -94,8 +93,7 @@ What’s already in place in the codebase as of `2026-07-17` (auto-researched + 
 - **Prerequisites:** S-01, F-01
 - **Parallel with:** —
 - **Blockers:** —
-- **Unknowns:**
-  - Which currency or currencies does the MVP support? — Owner: user. Block: yes.
+- **Unknowns:** —
 - **Risk:** This is the first complete shared-money flow; it must separate approved and pending values clearly so provisional spending is not presented as final.
 - **Status:** blocked
 
@@ -108,7 +106,7 @@ What’s already in place in the codebase as of `2026-07-17` (auto-researched + 
 - **Parallel with:** S-04
 - **Blockers:** —
 - **Unknowns:**
-  - Which currency or currencies does the MVP support? — Owner: user. Block: no.
+  - No currency decision remains: the MVP is PLN only.
 - **Risk:** Correction rules change shared totals, so they follow the first review flow instead of adding alternate state changes before it is proven.
 - **Status:** proposed
 
@@ -133,7 +131,7 @@ What’s already in place in the codebase as of `2026-07-17` (auto-researched + 
 - **Parallel with:** —
 - **Blockers:** —
 - **Unknowns:**
-  - Which currency or currencies does the MVP support? — Owner: user. Block: no.
+  - No currency decision remains: the MVP is PLN only.
 - **Risk:** Settlement is intentionally last because it makes prior data irreversible and depends on the complete correction and report rules.
 - **Status:** proposed
 
@@ -141,9 +139,9 @@ What’s already in place in the codebase as of `2026-07-17` (auto-researched + 
 
 | Roadmap ID | Change ID | Suggested issue title | Ready for `/10x-plan` | Notes |
 |---|---|---|---|---|
-| F-01 | financial-rules-verification | Verify financial calculation and settlement rules | no | Currency decision blocks planning. |
-| S-01 | family-onboarding | Let two co-parents establish a shared family workspace | yes | Reuses existing account access. |
-| S-02 | approved-expense-balance | Let co-parents approve expenses into the monthly balance | no | Depends on S-01 and the blocked financial-rules foundation. |
+| F-01 | financial-rules-verification | Verify financial calculation and settlement rules | yes | PLN-only financial foundation is planned. |
+| S-01 | family-onboarding | Let two co-parents establish a shared family workspace | no | Depends on F-01's shared schema and authorization boundary. |
+| S-02 | approved-expense-balance | Let co-parents approve expenses into the monthly balance | no | Depends on S-01 and the financial-rules foundation. |
 | S-03 | unsettled-expense-corrections | Let a parent correct an unsettled expense safely | no | Depends on S-02. |
 | S-04 | monthly-report-history | Let a parent browse monthly report history | no | Depends on S-02. |
 | S-05 | joint-monthly-settlement | Let both parents settle an eligible monthly report | no | Depends on S-03 and S-04. |
@@ -152,7 +150,6 @@ What’s already in place in the codebase as of `2026-07-17` (auto-researched + 
 
 1. **What transaction-volume ballpark should the live product support?** — Owner: user. Block: roadmap-wide no.
 2. **What expense-data volume should the live product support?** — Owner: user. Block: roadmap-wide no.
-3. **Which currency or currencies does the MVP support?** — Owner: user. Block: F-01, S-02, S-03, S-05.
 
 ## Parked
 
@@ -163,4 +160,3 @@ What’s already in place in the codebase as of `2026-07-17` (auto-researched + 
 - **In-app money transfer and native mobile applications.** — Why parked: PRD Non-Goals limits the product to calculating settlement and an Android-installable web experience.
 
 ## Done
-
