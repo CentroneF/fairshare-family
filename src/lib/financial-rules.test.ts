@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { canReviewExpense, deriveMonthlyBalance, isSettlementEligible, parsePlnAmount } from "./financial-rules";
+import { mapFinancialExpense } from "./financial-service";
 
 const parents = ["parent-a", "parent-b"] as const;
 
@@ -41,6 +42,12 @@ describe("financial rules", () => {
       expect(() => parsePlnAmount(amount)).toThrow();
     }
     expect(parsePlnAmount("0.01").toString()).toBe("0.01");
+  });
+
+  it("maps database numeric strings without JavaScript number coercion", () => {
+    expect(mapFinancialExpense({ amount_pln: "10.10", payer_id: "parent-a", status: "approved" }).amountPln).toBe(
+      "10.10",
+    );
   });
 
   it("requires the other active parent for review and a past fully-approved month for settlement", () => {

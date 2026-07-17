@@ -282,23 +282,23 @@ This is the first application schema migration, so no existing application data 
 
 #### Automated
 
-- [x] 2.1 Run exact-money and final half-up rounding unit cases
-- [x] 2.2 Verify invalid decimal input and declined-expense exclusion cases
+- [x] 2.1 Run exact-money and final half-up rounding unit cases — 8155b0a
+- [x] 2.2 Verify invalid decimal input and declined-expense exclusion cases — 8155b0a
 
 #### Manual
 
-- [x] 2.3 Review directed balance outputs for representative monthly scenarios
+- [x] 2.3 Review directed balance outputs for representative monthly scenarios — 8155b0a
 
 ### Phase 3: Server Integration Contract
 
 #### Automated
 
-- [ ] 3.1 Verify Decimal-safe database mapping and server-only module boundary
-- [ ] 3.2 Run lint for the new financial service and domain modules
+- [x] 3.1 Verify Decimal-safe database mapping and server-only module boundary
+- [x] 3.2 Run lint for the new financial service and domain modules
 
 #### Manual
 
-- [ ] 3.3 Review public service exports against S-02 and S-05 needs
+- [x] 3.3 Review public service exports against S-02 and S-05 needs
 
 ### Phase 4: Database Verification and Planning Handoff
 
