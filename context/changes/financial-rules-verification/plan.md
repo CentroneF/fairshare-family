@@ -269,25 +269,25 @@ This is the first application schema migration, so no existing application data 
 
 #### Automated
 
-- [x] 1.1 Apply the financial foundation migration with a clean local reset
-- [x] 1.2 Verify schema constraints reject invalid family, expense, and review states
-- [x] 1.3 Verify direct authenticated expense and settlement mutations are unavailable
+- [x] 1.1 Apply the financial foundation migration with a clean local reset — 83630b8
+- [x] 1.2 Verify schema constraints reject invalid family, expense, and review states — 83630b8
+- [x] 1.3 Verify direct authenticated expense and settlement mutations are unavailable — 83630b8
 
 #### Manual
 
-- [x] 1.4 Inspect RLS enablement and two-parent membership behaviour in local Studio
-- [x] 1.5 Review migration SQL before hosted application
+- [x] 1.4 Inspect RLS enablement and two-parent membership behaviour in local Studio — 83630b8
+- [x] 1.5 Review migration SQL before hosted application — 83630b8
 
 ### Phase 2: Exact Financial Domain Rules
 
 #### Automated
 
-- [ ] 2.1 Run exact-money and final half-up rounding unit cases
-- [ ] 2.2 Verify invalid decimal input and declined-expense exclusion cases
+- [x] 2.1 Run exact-money and final half-up rounding unit cases
+- [x] 2.2 Verify invalid decimal input and declined-expense exclusion cases
 
 #### Manual
 
-- [ ] 2.3 Review directed balance outputs for representative monthly scenarios
+- [x] 2.3 Review directed balance outputs for representative monthly scenarios
 
 ### Phase 3: Server Integration Contract
 
