@@ -304,10 +304,10 @@ This is the first application schema migration, so no existing application data 
 
 #### Automated
 
-- [x] 4.1 Run pgTAP RLS and constraint integration tests against a fresh local database
-- [x] 4.2 Run unit tests, lint, build, and whitespace validation
+- [x] 4.1 Run pgTAP RLS and constraint integration tests against a fresh local database — d07757f
+- [x] 4.2 Run unit tests, lint, build, and whitespace validation — d07757f
 
 #### Manual
 
-- [x] 4.3 Confirm the documented verification sequence from a clean checkout
-- [x] 4.4 Confirm PRD and roadmap record PLN and F-01 to S-01 sequencing
+- [x] 4.3 Confirm the documented verification sequence from a clean checkout — d07757f
+- [x] 4.4 Confirm PRD and roadmap record PLN and F-01 to S-01 sequencing — d07757f
