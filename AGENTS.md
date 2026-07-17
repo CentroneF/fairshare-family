@@ -19,9 +19,9 @@ Preserve `context/` as project-planning history; do not overwrite or move archiv
 
 ## Build, Test, and Development Commands
 
-See `@package.json` for the current scripts. Run `npm run dev` for local development, and run `npm run lint` plus `npm run build` before opening a PR. Run `npm run lint:fix` or `npm run format` only when the resulting diff is limited to intended files; review all generated changes before committing.
+See `@package.json` for the current scripts. Run `npm run dev` for local development, and run `npm test`, `npm run lint`, plus `npm run build` before opening a PR. Run `npx supabase test db` after starting the local Supabase stack when changing migrations or RLS. Run `npm run lint:fix` or `npm run format` only when the resulting diff is limited to intended files; review all generated changes before committing.
 
-There is no automated test runner yet. When introducing one, add a `test` script to `package.json`, place tests beside or under the affected `src/` area, and document the command here.
+Unit tests use Vitest beside affected `src/` modules; database integration tests live under `supabase/tests/` and run through the Supabase CLI.
 
 ## Coding Style & Naming Conventions
 

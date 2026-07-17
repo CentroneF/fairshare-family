@@ -293,21 +293,21 @@ This is the first application schema migration, so no existing application data 
 
 #### Automated
 
-- [x] 3.1 Verify Decimal-safe database mapping and server-only module boundary
-- [x] 3.2 Run lint for the new financial service and domain modules
+- [x] 3.1 Verify Decimal-safe database mapping and server-only module boundary — 85543c5
+- [x] 3.2 Run lint for the new financial service and domain modules — 85543c5
 
 #### Manual
 
-- [x] 3.3 Review public service exports against S-02 and S-05 needs
+- [x] 3.3 Review public service exports against S-02 and S-05 needs — 85543c5
 
 ### Phase 4: Database Verification and Planning Handoff
 
 #### Automated
 
-- [ ] 4.1 Run pgTAP RLS and constraint integration tests against a fresh local database
-- [ ] 4.2 Run unit tests, lint, build, and whitespace validation
+- [x] 4.1 Run pgTAP RLS and constraint integration tests against a fresh local database
+- [x] 4.2 Run unit tests, lint, build, and whitespace validation
 
 #### Manual
 
-- [ ] 4.3 Confirm the documented verification sequence from a clean checkout
-- [ ] 4.4 Confirm PRD and roadmap record PLN and F-01 to S-01 sequencing
+- [x] 4.3 Confirm the documented verification sequence from a clean checkout
+- [x] 4.4 Confirm PRD and roadmap record PLN and F-01 to S-01 sequencing

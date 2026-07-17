@@ -101,6 +101,7 @@ The MVP is estimated at five weeks of after-hours work at roughly two to three h
 ## Non-Functional Requirements
 
 - Only authenticated accounts invited into a family can see that family's children, expenses, and reports.
+- The MVP supports PLN only, stored and calculated with exactly two decimal places.
 - Calculations use exact expense amounts; only the final amount owed is rounded to the nearest whole unit, with `.50` rounded upward.
 - The product is responsive across screen sizes and can be installed as a PWA on Android.
 
@@ -135,4 +136,3 @@ A report can be settled and locked only with both parents' agreement and only wh
 
 1. **What transaction-volume ballpark should the live product support?** — Owner: user. Resolve before tech-stack selection. Block: no.
 2. **What expense-data volume should the live product support?** — Owner: user. Resolve before tech-stack selection. Block: no.
-3. **Which currency or currencies does the MVP support?** — Owner: user. Resolve before implementation. Block: yes.
