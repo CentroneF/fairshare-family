@@ -187,7 +187,23 @@
           "SKILL.md"
         ],
         "contentHashes": {
-          "SKILL.md": "e44f04f660de02303f3c8e36d09f2a191b89584eeda1742aef2af930160ac297"
+          "SKILL.md": "14ac2846ca71e787288fe0c5e50c9d4ed680e66150333a7e119793aff7472624"
+        }
+      },
+      "10x-frame": {
+        "files": [
+          "SKILL.md"
+        ],
+        "contentHashes": {
+          "SKILL.md": "66f97da5b5d0908c11435bb6a2560854ea14e2baf7bcc3cf32f857f92765d3c2"
+        }
+      },
+      "10x-research": {
+        "files": [
+          "SKILL.md"
+        ],
+        "contentHashes": {
+          "SKILL.md": "3ce23d68b7ace357ef725136d57c0669cc03096eeb47af47aaba5c2b210e7c7e"
         }
       },
       "10x-frame": {
@@ -859,8 +875,13 @@
       ],
       "configs": []
     },
+<<<<<<< HEAD
     "m2l4": {
       "appliedAt": "2026-07-20T10:49:58.552Z",
+=======
+    "m2l5": {
+      "appliedAt": "2026-07-20T12:47:57.606Z",
+>>>>>>> bd4f4b4 (docs: plan family onboarding flow)
       "skills": {
         "10x-init": {
           "files": [
