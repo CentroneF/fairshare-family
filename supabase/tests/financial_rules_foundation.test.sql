@@ -7,10 +7,10 @@ values
   ('10000000-0000-0000-0000-000000000001', 'authenticated', 'authenticated', 'rls-parent-a@example.test', '{}'::jsonb, '{}'::jsonb, now(), now()),
   ('20000000-0000-0000-0000-000000000001', 'authenticated', 'authenticated', 'rls-parent-b@example.test', '{}'::jsonb, '{}'::jsonb, now(), now());
 
-insert into public.families (id, created_by)
+insert into public.families (id, created_by, name)
 values
-  ('30000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001'),
-  ('40000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001');
+  ('30000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'Family A'),
+  ('40000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 'Family B');
 
 insert into public.family_members (id, family_id, user_id)
 values

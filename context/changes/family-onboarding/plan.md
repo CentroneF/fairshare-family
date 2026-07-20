@@ -68,11 +68,7 @@ Create the migration and database verification suite for family creation, child 
 - `zsh -lic 'nvm use default >/dev/null && npx supabase test db'` passes, including the onboarding pgTAP suite.
 - The test suite proves no direct mutation policy was added to onboarding tables.
 
-#### Manual Verification:
-
-- In Supabase Studio, inspect a created family and confirm its required name, sole initial creator membership, and generated code use the agreed format.
-
-**Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation from the human that the manual testing was successful before proceeding to the next phase.
+**Implementation Note**: No phase-specific manual step applies. The Phase 3 end-to-end flow verifies the created family’s name, creator membership, and code visibility before this change is considered complete.
 
 ---
 
@@ -167,6 +163,7 @@ Provide responsive, accessible UI for every approved onboarding state using the 
 
 #### Manual Verification:
 
+- In Supabase Studio, inspect a family created through the UI and confirm its required name, sole initial creator membership, and generated code use the agreed format.
 - On desktop and a narrow Android-sized viewport, create a named family, add children, copy/share its code, regenerate it, and verify the previous code fails.
 - Sign in as a second account, preview the current code, cancel once, then confirm the dialog reading `Do you want to join the {name} family?`; verify both accounts see the same family name and children while neither sees the code afterward.
 - Attempt a repeat join, an invalid code, and a third account join; confirm safe explanatory errors and no cross-family data exposure.
@@ -223,13 +220,9 @@ Add a new forward-only migration; do not edit the already-applied financial foun
 
 #### Automated
 
-- [ ] 1.1 New onboarding migration applies to a clean local Supabase database.
-- [ ] 1.2 `npx supabase test db` passes, including onboarding pgTAP coverage.
-- [ ] 1.3 Tests prove direct mutation policies remain absent.
-
-#### Manual
-
-- [ ] 1.4 Inspect the created family name, initial member, and code format in Supabase Studio.
+- [x] 1.1 New onboarding migration applies to a clean local Supabase database.
+- [x] 1.2 `npx supabase test db` passes, including onboarding pgTAP coverage.
+- [x] 1.3 Tests prove direct mutation policies remain absent.
 
 ### Phase 2: Server-Owned Onboarding Flow
 
@@ -254,6 +247,7 @@ Add a new forward-only migration; do not edit the already-applied financial foun
 
 #### Manual
 
-- [ ] 3.4 Named-family onboarding, children, code regeneration, and invalid old-code behavior work on desktop and a narrow viewport.
-- [ ] 3.5 A second account previews, cancels, then confirms joining the named family; both parents see the shared family without the join code.
-- [ ] 3.6 Repeat, invalid, and third-account joins fail safely without data exposure.
+- [ ] 3.4 Inspect the UI-created family name, initial member, and code format in Supabase Studio.
+- [ ] 3.5 Named-family onboarding, children, code regeneration, and invalid old-code behavior work on desktop and a narrow viewport.
+- [ ] 3.6 A second account previews, cancels, then confirms joining the named family; both parents see the shared family without the join code.
+- [ ] 3.7 Repeat, invalid, and third-account joins fail safely without data exposure.

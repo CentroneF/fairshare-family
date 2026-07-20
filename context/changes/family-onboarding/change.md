@@ -1,7 +1,7 @@
 ---
 change_id: family-onboarding
 title: Family onboarding
-status: planned
+status: implementing
 created: 2026-07-20
 updated: 2026-07-20
 archived_at: null
