@@ -1,7 +1,11 @@
 ---
 import Layout from "@/layouts/Layout.astro";
+import { resolveOnboardingState } from "@/lib/family-onboarding";
+import { createClient } from "@/lib/supabase";
 
 const { user } = Astro.locals;
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+const onboarding = supabase && user ? await resolveOnboardingState(supabase, user.id) : { kind: "no-family" as const };
 ---
 
 <Layout title="Dashboard">
@@ -13,7 +17,15 @@ const { user } = Astro.locals;
       <p class="text-blue-100/80">
         Welcome, <span class="font-semibold text-white">{user?.email}</span>
       </p>
-      <p class="mt-2 text-sm text-blue-100/50">This page is only for authenticated users.</p>
+      {
+        onboarding.kind === "no-family" ? (
+          <p class="mt-2 text-sm text-blue-100/50">Create or join a family to get started.</p>
+        ) : onboarding.kind === "creator-awaiting-parent" ? (
+          <p class="mt-2 text-sm text-blue-100/50">Waiting for the second parent to join {onboarding.family.name}.</p>
+        ) : (
+          <p class="mt-2 text-sm text-blue-100/50">You belong to {onboarding.family.name}.</p>
+        )
+      }
       <form method="POST" action="/api/auth/signout" class="mt-6">
         <button
           type="submit"

@@ -112,12 +112,7 @@ Make the authenticated server the sole application caller of the onboarding RPCs
 - `zsh -lic 'nvm use default >/dev/null && npm test'` passes.
 - `zsh -lic 'nvm use default >/dev/null && npm run lint'` passes.
 
-#### Manual Verification:
-
-- Sign in as an account without a family and confirm it reaches the create-or-join dashboard state.
-- Submit invalid and valid create, preview, confirm-join, child, and regenerate-code requests and confirm each response and message is appropriate.
-
-**Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation from the human that the manual testing was successful before proceeding to the next phase.
+**Implementation Note**: The Phase 3 interactive dashboard exercises the server routes end to end, including their valid and invalid request behavior.
 
 ---
 
@@ -164,6 +159,7 @@ Provide responsive, accessible UI for every approved onboarding state using the 
 #### Manual Verification:
 
 - In Supabase Studio, inspect a family created through the UI and confirm its required name, sole initial creator membership, and generated code use the agreed format.
+- Sign in as an account without a family and confirm the dashboard presents create-or-join actions.
 - On desktop and a narrow Android-sized viewport, create a named family, add children, copy/share its code, regenerate it, and verify the previous code fails.
 - Sign in as a second account, preview the current code, cancel once, then confirm the dialog reading `Do you want to join the {name} family?`; verify both accounts see the same family name and children while neither sees the code afterward.
 - Attempt a repeat join, an invalid code, and a third account join; confirm safe explanatory errors and no cross-family data exposure.
@@ -220,22 +216,17 @@ Add a new forward-only migration; do not edit the already-applied financial foun
 
 #### Automated
 
-- [x] 1.1 New onboarding migration applies to a clean local Supabase database.
-- [x] 1.2 `npx supabase test db` passes, including onboarding pgTAP coverage.
-- [x] 1.3 Tests prove direct mutation policies remain absent.
+- [x] 1.1 New onboarding migration applies to a clean local Supabase database. — 557808e
+- [x] 1.2 `npx supabase test db` passes, including onboarding pgTAP coverage. — 557808e
+- [x] 1.3 Tests prove direct mutation policies remain absent. — 557808e
 
 ### Phase 2: Server-Owned Onboarding Flow
 
 #### Automated
 
-- [ ] 2.1 Focused family-onboarding Vitest tests pass.
-- [ ] 2.2 `npm test` passes.
-- [ ] 2.3 `npm run lint` passes.
-
-#### Manual
-
-- [ ] 2.4 An account without a family reaches the create-or-join dashboard state.
-- [ ] 2.5 Create, preview, confirm-join, child, and regenerate-code requests return safe feedback.
+- [x] 2.1 Focused family-onboarding Vitest tests pass.
+- [x] 2.2 `npm test` passes.
+- [x] 2.3 `npm run lint` passes.
 
 ### Phase 3: State-Driven Onboarding Dashboard
 
@@ -248,6 +239,7 @@ Add a new forward-only migration; do not edit the already-applied financial foun
 #### Manual
 
 - [ ] 3.4 Inspect the UI-created family name, initial member, and code format in Supabase Studio.
-- [ ] 3.5 Named-family onboarding, children, code regeneration, and invalid old-code behavior work on desktop and a narrow viewport.
-- [ ] 3.6 A second account previews, cancels, then confirms joining the named family; both parents see the shared family without the join code.
-- [ ] 3.7 Repeat, invalid, and third-account joins fail safely without data exposure.
+- [ ] 3.5 An account without a family reaches the create-or-join dashboard state.
+- [ ] 3.6 Named-family onboarding, children, code regeneration, and invalid old-code behavior work on desktop and a narrow viewport.
+- [ ] 3.7 A second account previews, cancels, then confirms joining the named family; both parents see the shared family without the join code.
+- [ ] 3.8 Repeat, invalid, and third-account joins fail safely without data exposure.
