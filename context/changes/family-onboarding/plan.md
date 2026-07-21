@@ -224,22 +224,22 @@ Add a new forward-only migration; do not edit the already-applied financial foun
 
 #### Automated
 
-- [x] 2.1 Focused family-onboarding Vitest tests pass.
-- [x] 2.2 `npm test` passes.
-- [x] 2.3 `npm run lint` passes.
+- [x] 2.1 Focused family-onboarding Vitest tests pass. — 8fbb995
+- [x] 2.2 `npm test` passes. — 8fbb995
+- [x] 2.3 `npm run lint` passes. — 8fbb995
 
 ### Phase 3: State-Driven Onboarding Dashboard
 
 #### Automated
 
-- [ ] 3.1 Focused library tests pass with `npm test`.
-- [ ] 3.2 Database tests pass with `npx supabase test db`.
-- [ ] 3.3 `npm run lint` and `npm run build` pass.
+- [x] 3.1 Focused library tests pass with `npm test`.
+- [x] 3.2 Database tests pass with `npx supabase test db`.
+- [x] 3.3 `npm run lint` and `npm run build` pass.
 
 #### Manual
 
-- [ ] 3.4 Inspect the UI-created family name, initial member, and code format in Supabase Studio.
-- [ ] 3.5 An account without a family reaches the create-or-join dashboard state.
-- [ ] 3.6 Named-family onboarding, children, code regeneration, and invalid old-code behavior work on desktop and a narrow viewport.
-- [ ] 3.7 A second account previews, cancels, then confirms joining the named family; both parents see the shared family without the join code.
-- [ ] 3.8 Repeat, invalid, and third-account joins fail safely without data exposure.
+- [x] 3.4 Inspect the UI-created family name, initial member, and code format in Supabase Studio.
+- [x] 3.5 An account without a family reaches the create-or-join dashboard state.
+- [x] 3.6 Named-family onboarding, children, code regeneration, and invalid old-code behavior work on desktop and a narrow viewport.
+- [x] 3.7 A second account previews, cancels, then confirms joining the named family; both parents see the shared family without the join code.
+- [x] 3.8 Repeat, invalid, and third-account joins fail safely without data exposure.

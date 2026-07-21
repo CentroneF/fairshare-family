@@ -57,5 +57,15 @@ describe("family onboarding helpers", () => {
         joinCode: null,
       }),
     ).toEqual({ kind: "two-parent-family", family: { id: "family-a", name: "Kowalski", children: [] } });
+
+    expect(() =>
+      deriveOnboardingState({
+        membership: { familyId: "family-a", familyName: "Kowalski", createdBy: "user-a" },
+        userId: "user-a",
+        memberCount: 1,
+        children: [],
+        joinCode: null,
+      }),
+    ).toThrow("active family code");
   });
 });

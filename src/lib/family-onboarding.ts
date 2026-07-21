@@ -108,6 +108,15 @@ function parseRows(value: unknown): readonly unknown[] {
   return Array.isArray(value) ? value : [];
 }
 
+function parseJoinCode(value: unknown): string | null {
+  if (typeof value === "string") return value;
+  const row = parseRows(value)[0];
+  if (!row || typeof row !== "object") return null;
+
+  const result = row as { get_family_join_code?: unknown };
+  return typeof result.get_family_join_code === "string" ? result.get_family_join_code : null;
+}
+
 export function deriveOnboardingState(input: {
   membership: { familyId: string; familyName: string; createdBy: string } | null;
   userId: string;
@@ -123,11 +132,14 @@ export function deriveOnboardingState(input: {
     children: input.children,
   };
 
-  if (input.memberCount === 1 && input.membership.createdBy === input.userId && input.joinCode) {
+  if (input.memberCount === 1 && input.membership.createdBy === input.userId) {
+    if (!input.joinCode) throw new OnboardingError("We could not load the active family code.");
     return { kind: "creator-awaiting-parent", family, joinCode: input.joinCode };
   }
 
-  return { kind: "two-parent-family", family };
+  if (input.memberCount === 2) return { kind: "two-parent-family", family };
+
+  throw new OnboardingError("We could not load this family.");
 }
 
 export async function resolveOnboardingState(client: FamilyClient, userId: string): Promise<OnboardingState> {
@@ -151,10 +163,20 @@ export async function resolveOnboardingState(client: FamilyClient, userId: strin
   const familyMembers = parseRows(membersResult.data);
   const children = parseChildren(childrenResult.data);
 
-  let joinCode: string | null = null;
   if (familyMembers.length === 1 && membership.createdBy === userId) {
     const codeResult = (await client.rpc("get_family_join_code")) as unknown as QueryResult;
-    if (!codeResult.error && typeof codeResult.data === "string") joinCode = codeResult.data;
+    const joinCode = parseJoinCode(codeResult.data);
+    if (codeResult.error || !joinCode) {
+      throw new OnboardingError("We could not load the active family code.");
+    }
+
+    return deriveOnboardingState({
+      membership,
+      userId,
+      memberCount: familyMembers.length,
+      children,
+      joinCode,
+    });
   }
 
   return deriveOnboardingState({
@@ -162,7 +184,7 @@ export async function resolveOnboardingState(client: FamilyClient, userId: strin
     userId,
     memberCount: familyMembers.length,
     children,
-    joinCode,
+    joinCode: null,
   });
 }
 
