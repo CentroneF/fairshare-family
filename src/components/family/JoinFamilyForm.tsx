@@ -22,6 +22,7 @@ export default function JoinFamilyForm({ serverError }: Props) {
   const [familyName, setFamilyName] = useState<string>();
   const [isPreviewing, setIsPreviewing] = useState(false);
   const confirmButtonRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (familyName) confirmButtonRef.current?.focus();
@@ -55,6 +56,35 @@ export default function JoinFamilyForm({ serverError }: Props) {
     }
   }
 
+  function closeDialog() {
+    setFamilyName(undefined);
+    requestAnimationFrame(() => document.getElementById("family-code")?.focus());
+  }
+
+  function handleDialogKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "Escape") {
+      closeDialog();
+      return;
+    }
+
+    if (event.key !== "Tab") return;
+
+    const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), [href], input:not([type="hidden"]):not([disabled])',
+    );
+    if (!focusable?.length) return;
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
   return (
     <>
       <form method="POST" className="space-y-4" onSubmit={previewJoin} noValidate>
@@ -84,13 +114,12 @@ export default function JoinFamilyForm({ serverError }: Props) {
 
       {familyName && (
         <div
+          ref={dialogRef}
           role="dialog"
           aria-modal="true"
           aria-labelledby="join-family-title"
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4"
-          onKeyDown={(event) => {
-            if (event.key === "Escape") setFamilyName(undefined);
-          }}
+          onKeyDown={handleDialogKeyDown}
         >
           <div className="w-full max-w-sm rounded-2xl border border-white/15 bg-slate-900 p-6 text-white shadow-2xl">
             <h2 id="join-family-title" className="text-xl font-bold">
@@ -101,9 +130,7 @@ export default function JoinFamilyForm({ serverError }: Props) {
               <button
                 type="button"
                 className="rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/10"
-                onClick={() => {
-                  setFamilyName(undefined);
-                }}
+                onClick={closeDialog}
               >
                 Cancel
               </button>

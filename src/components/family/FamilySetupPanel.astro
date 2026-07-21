@@ -74,6 +74,9 @@ const { familyName, children, joinCode, serverError } = Astro.props;
   const fields = document.querySelector<HTMLDivElement>("#child-name-fields");
   const addChildButton = document.querySelector<HTMLButtonElement>("#add-child-field");
 
+  const childInputClass =
+    "min-w-0 flex-1 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-white placeholder-white/40 focus:ring-2 focus:ring-purple-400 focus:outline-none";
+
   copyButton?.addEventListener("click", async () => {
     try {
       await navigator.clipboard.writeText(code?.textContent ?? "");
@@ -84,13 +87,27 @@ const { familyName, children, joinCode, serverError } = Astro.props;
   });
 
   addChildButton?.addEventListener("click", () => {
+    const row = document.createElement("div");
+    row.className = "flex gap-2";
+
     const input = document.createElement("input");
     input.name = "name";
     input.required = true;
     input.placeholder = "Child name";
-    input.className =
-      "w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-white placeholder-white/40 focus:ring-2 focus:ring-purple-400 focus:outline-none";
-    fields?.append(input);
+    input.className = childInputClass;
+
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.className = "rounded-lg px-3 text-sm text-red-200 hover:bg-red-500/15";
+    removeButton.textContent = "Remove";
+    removeButton.setAttribute("aria-label", "Remove unsaved child");
+    removeButton.addEventListener("click", () => {
+      row.remove();
+      addChildButton?.focus();
+    });
+
+    row.append(input, removeButton);
+    fields?.append(row);
     input.focus();
   });
 </script>

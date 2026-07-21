@@ -232,14 +232,14 @@ Add a new forward-only migration; do not edit the already-applied financial foun
 
 #### Automated
 
-- [x] 3.1 Focused library tests pass with `npm test`.
-- [x] 3.2 Database tests pass with `npx supabase test db`.
-- [x] 3.3 `npm run lint` and `npm run build` pass.
+- [x] 3.1 Focused library tests pass with `npm test`. — dde7032
+- [x] 3.2 Database tests pass with `npx supabase test db`. — dde7032
+- [x] 3.3 `npm run lint` and `npm run build` pass. — dde7032
 
 #### Manual
 
-- [x] 3.4 Inspect the UI-created family name, initial member, and code format in Supabase Studio.
-- [x] 3.5 An account without a family reaches the create-or-join dashboard state.
-- [x] 3.6 Named-family onboarding, children, code regeneration, and invalid old-code behavior work on desktop and a narrow viewport.
-- [x] 3.7 A second account previews, cancels, then confirms joining the named family; both parents see the shared family without the join code.
-- [x] 3.8 Repeat, invalid, and third-account joins fail safely without data exposure.
+- [x] 3.4 Inspect the UI-created family name, initial member, and code format in Supabase Studio. — dde7032
+- [x] 3.5 An account without a family reaches the create-or-join dashboard state. — dde7032
+- [x] 3.6 Named-family onboarding, children, code regeneration, and invalid old-code behavior work on desktop and a narrow viewport. — dde7032
+- [x] 3.7 A second account previews, cancels, then confirms joining the named family; both parents see the shared family without the join code. — dde7032
+- [x] 3.8 Repeat, invalid, and third-account joins fail safely without data exposure. — dde7032
