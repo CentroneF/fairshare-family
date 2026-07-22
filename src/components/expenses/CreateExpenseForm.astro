@@ -1,0 +1,146 @@
+---
+interface Props {
+  children: readonly { id: string; name: string }[];
+  month: string;
+  maxDate: string;
+  defaultDate: string;
+  serverError?: string | null;
+}
+
+const { children, month, maxDate, defaultDate, serverError } = Astro.props;
+---
+
+<form
+  id="create-expense-form"
+  method="POST"
+  action="/api/expenses/create"
+  class="grid gap-3 rounded-xl border border-white/15 bg-white/5 p-4 sm:grid-cols-2"
+>
+  <input type="hidden" name="month" value={month} />
+  <label class="sm:col-span-2">
+    <span class="mb-1 block text-sm text-blue-100/80">Description</span>
+    <input
+      name="description"
+      required
+      class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2"
+      placeholder="e.g. School supplies"
+    />
+  </label>
+  <label>
+    <span class="mb-1 block text-sm text-blue-100/80">Child</span>
+    <select name="childId" class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2">
+      <option value="">No specific child</option>
+      {children.map((child) => <option value={child.id}>{child.name}</option>)}
+    </select>
+  </label>
+  <label>
+    <span class="mb-1 block text-sm text-blue-100/80">Amount (PLN)</span>
+    <input
+      name="amount"
+      inputmode="decimal"
+      required
+      class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2"
+      placeholder="12,50"
+    />
+  </label>
+  <label>
+    <span class="mb-1 block text-sm text-blue-100/80">Expense date</span>
+    <input
+      name="expenseDate"
+      type="date"
+      max={maxDate}
+      value={defaultDate}
+      required
+      class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2"
+    />
+  </label>
+  <div class="flex items-end">
+    <button
+      id="create-expense-submit"
+      type="submit"
+      class="w-full rounded-lg bg-purple-600 px-4 py-2 font-medium hover:bg-purple-500 disabled:cursor-wait disabled:opacity-70"
+      >Add expense</button
+    >
+  </div>
+  {
+    serverError && (
+      <p class="sm:col-span-2" role="alert">
+        {serverError}
+      </p>
+    )
+  }
+</form>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>("#create-expense-form");
+  const submitButton = document.querySelector<HTMLButtonElement>("#create-expense-submit");
+
+  function showError(message: string) {
+    const existing = form?.querySelector<HTMLElement>("[role='alert']");
+    if (existing) {
+      existing.textContent = message;
+      return;
+    }
+    const error = document.createElement("p");
+    error.className = "sm:col-span-2 text-sm text-red-200";
+    error.setAttribute("role", "alert");
+    error.textContent = message;
+    form?.append(error);
+  }
+
+  function refreshExpenseWorkspace(month: string) {
+    const refresh = (window as typeof window & { refreshExpenseWorkspace?: (value: string) => Promise<void> })
+      .refreshExpenseWorkspace;
+    if (!refresh) return Promise.reject(new Error("Unable to refresh expenses"));
+    return refresh(month);
+  }
+
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!form || !submitButton) return;
+
+    const data = new FormData(form);
+    submitButton.disabled = true;
+    submitButton.textContent = "Saving…";
+    form.querySelector("[role='alert']")?.remove();
+
+    try {
+      const response = await fetch(form.action, {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        body: data,
+      });
+      const result = (await response.json()) as { error?: string; month?: string };
+      if (!response.ok || result.error) {
+        showError(result.error ?? "We could not save that expense. Please try again.");
+        return;
+      }
+      if (!result.month) {
+        showError("We could not refresh that expense. Please try again.");
+        return;
+      }
+      const url = new URL(window.location.href);
+      url.searchParams.set("month", result.month);
+      url.searchParams.delete("success");
+      window.history.replaceState(null, "", url);
+      await refreshExpenseWorkspace(result.month);
+      const monthInput = form.querySelector<HTMLInputElement>("[name='month']");
+      const expenseDateInput = form.querySelector<HTMLInputElement>("[name='expenseDate']");
+      if (monthInput) {
+        monthInput.defaultValue = result.month;
+        monthInput.value = result.month;
+      }
+      if (expenseDateInput) {
+        const defaultDate = `${result.month}-01`;
+        expenseDateInput.defaultValue = defaultDate;
+        expenseDateInput.value = defaultDate;
+      }
+      form.reset();
+    } catch {
+      showError("We could not save that expense. Please try again.");
+    } finally {
+      submitButton.disabled = false;
+      submitButton.textContent = "Add expense";
+    }
+  });
+</script>

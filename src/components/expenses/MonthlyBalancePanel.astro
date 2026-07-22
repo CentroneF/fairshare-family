@@ -1,0 +1,58 @@
+---
+import type { MonthlyBalance } from "@/lib/financial-rules";
+
+interface Props {
+  balance: MonthlyBalance;
+  currentMembershipId: string;
+}
+
+const { balance, currentMembershipId } = Astro.props;
+const hasPendingExpenses = balance.toReviewAmount.greaterThan(0);
+const settlementMessage =
+  balance.settlement.kind === "balanced"
+    ? "Your approved balance is even."
+    : balance.settlement.fromParentId === currentMembershipId
+      ? `You owe ${balance.settlement.amount.toFixed(0)} PLN.`
+      : `You are owed ${balance.settlement.amount.toFixed(0)} PLN.`;
+---
+
+<section
+  data-monthly-balance
+  data-current-membership-id={currentMembershipId}
+  class:list={[
+    "rounded-xl border p-4",
+    hasPendingExpenses ? "border-amber-300/30 bg-amber-500/10" : "border-emerald-300/30 bg-emerald-500/10",
+  ]}
+>
+  <p
+    data-balance-heading
+    class:list={["text-sm tracking-wide uppercase", hasPendingExpenses ? "text-amber-100" : "text-emerald-100"]}
+  >
+    Monthly balance
+  </p>
+  <div class="mt-3 grid gap-3 sm:grid-cols-3">
+    <div>
+      <p class="text-sm text-blue-100/70">Total</p>
+      <p data-balance-total class="font-semibold">{balance.totalAmount.toFixed(2)} PLN</p>
+    </div>
+    <div>
+      <p class="text-sm text-blue-100/70">Approved</p>
+      <p data-balance-approved class="font-semibold">{balance.approvedAmount.toFixed(2)} PLN</p>
+    </div>
+    <div>
+      <p class="text-sm text-blue-100/70">To review</p>
+      <p data-balance-to-review class="font-semibold">{balance.toReviewAmount.toFixed(2)} PLN</p>
+    </div>
+  </div>
+  {
+    hasPendingExpenses ? (
+      <p data-balance-guidance class="mt-4 text-sm text-amber-100/80">
+        Some expenses are still awaiting review.
+      </p>
+    ) : (
+      <p data-balance-guidance class="mt-4 font-medium text-emerald-100">
+        {settlementMessage}
+      </p>
+    )
+  }
+</section>

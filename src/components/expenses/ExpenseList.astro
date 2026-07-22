@@ -1,0 +1,179 @@
+---
+import type { ExpenseDisplay } from "@/lib/expense-balance";
+import DeclineExpenseDialog from "@/components/expenses/DeclineExpenseDialog.astro";
+
+interface Props {
+  expenses: readonly ExpenseDisplay[];
+  month: string;
+  currentMembershipId: string | null;
+  canApprove: boolean;
+}
+
+const { expenses, month, currentMembershipId, canApprove } = Astro.props;
+const activeExpenses = expenses.filter((expense) => expense.status !== "declined");
+const declinedExpenses = expenses.filter((expense) => expense.status === "declined");
+---
+
+<section id="expense-list-container" class="mt-6">
+  <div class="flex items-center justify-between gap-3">
+    <h2 class="text-lg font-semibold">Expenses</h2>
+    <form data-refresh-expenses method="GET" action="/dashboard">
+      <input type="hidden" name="month" value={month} />
+      <button type="submit" class="rounded-lg border border-white/20 px-3 py-1 text-sm hover:bg-white/10"
+        >Refresh</button
+      >
+    </form>
+  </div>
+  <ul id="expense-list" class="mt-3 space-y-3">
+    {
+      activeExpenses.map((expense) => (
+        <li data-expense-id={expense.id} class="rounded-xl border border-white/15 bg-white/5 p-4">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <p class="font-medium">{expense.description}</p>
+              <p class="mt-1 text-sm text-blue-100/70">
+                {expense.expenseDate} · {expense.childName ?? "No specific child"}
+              </p>
+            </div>
+            <div class="text-right">
+              <p class="font-semibold">{expense.amountPln} PLN</p>
+              {expense.status === "approved" ? (
+                <p class="mt-1 text-sm text-emerald-200">Approved</p>
+              ) : canApprove && currentMembershipId && expense.payerId !== currentMembershipId ? (
+                <div class="mt-2 flex justify-end gap-2">
+                  <form data-approve-expense method="POST" action="/api/expenses/approve">
+                    <input type="hidden" name="expenseId" value={expense.id} />
+                    <input type="hidden" name="month" value={month} />
+                    <button
+                      type="submit"
+                      class="rounded-lg bg-emerald-600 px-3 py-1 text-sm font-medium hover:bg-emerald-500"
+                    >
+                      Approve
+                    </button>
+                  </form>
+                  <DeclineExpenseDialog expenseId={expense.id} month={month} />
+                </div>
+              ) : (
+                <p class="mt-1 text-sm text-amber-200">Awaiting review</p>
+              )}
+            </div>
+          </div>
+        </li>
+      ))
+    }
+  </ul>
+  {
+    activeExpenses.length === 0 && declinedExpenses.length === 0 && (
+      <p id="empty-expense-list" class="mt-2 text-sm text-blue-100/60">
+        No expenses for this month yet.
+      </p>
+    )
+  }
+  {
+    declinedExpenses.length > 0 && (
+      <section class="mt-8" aria-labelledby="declined-expenses-heading">
+        <h3 id="declined-expenses-heading" class="text-base font-semibold text-red-100">
+          Declined expenses
+        </h3>
+        <ul id="declined-expense-list" class="mt-3 space-y-3">
+          {declinedExpenses.map((expense) => (
+            <li data-expense-id={expense.id} class="rounded-xl border border-red-300/20 bg-red-500/5 p-4">
+              <div class="flex items-start justify-between gap-4">
+                <div>
+                  <p class="font-medium">{expense.description}</p>
+                  <p class="mt-1 text-sm text-blue-100/70">
+                    {expense.expenseDate} · {expense.childName ?? "No specific child"}
+                  </p>
+                </div>
+                <div class="text-right">
+                  <p class="font-semibold">{expense.amountPln} PLN</p>
+                  <p class="mt-1 text-sm text-red-200">Declined</p>
+                  {expense.declineReason && <p class="mt-1 text-sm text-red-100/80">{expense.declineReason}</p>}
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+</section>
+
+<script>
+  interface ApprovalResult {
+    error?: string;
+    expenseId?: string;
+    month?: string;
+  }
+
+  function refreshExpenseWorkspace(month: string) {
+    const refresh = (window as typeof window & { refreshExpenseWorkspace?: (value: string) => Promise<void> })
+      .refreshExpenseWorkspace;
+    if (!refresh) return Promise.reject(new Error("Unable to refresh expenses"));
+    return refresh(month);
+  }
+
+  function showApprovalError(form: HTMLFormElement, message: string) {
+    const existing = form.querySelector<HTMLElement>("[role='alert']");
+    if (existing) {
+      existing.textContent = message;
+      return;
+    }
+    const error = document.createElement("p");
+    error.className = "mt-2 text-sm text-red-200";
+    error.setAttribute("role", "alert");
+    error.textContent = message;
+    form.append(error);
+  }
+
+  document.addEventListener("submit", async (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement) || !form.matches("[data-approve-expense]")) return;
+    event.preventDefault();
+    const button = form.querySelector<HTMLButtonElement>("button[type='submit']");
+    const data = new FormData(form);
+    button?.setAttribute("disabled", "true");
+    if (button) button.textContent = "Approving…";
+    form.querySelector("[role='alert']")?.remove();
+
+    try {
+      const response = await fetch(form.action, {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        body: data,
+      });
+      const result = (await response.json()) as ApprovalResult;
+      if (!response.ok || result.error || !result.expenseId || !result.month) {
+        showApprovalError(form, result.error ?? "We could not approve that expense. Please try again.");
+        return;
+      }
+      await refreshExpenseWorkspace(result.month);
+    } catch {
+      showApprovalError(form, "We could not approve that expense. Please try again.");
+    } finally {
+      button?.removeAttribute("disabled");
+      if (button) button.textContent = "Approve";
+    }
+  });
+</script>
+
+<script>
+  document.addEventListener("submit", async (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement) || !form.matches("[data-refresh-expenses]")) return;
+    event.preventDefault();
+    const button = form.querySelector<HTMLButtonElement>("button");
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Refreshing…";
+    }
+    try {
+      await refreshExpenseWorkspace(String(new FormData(form).get("month") ?? ""));
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = "Refresh";
+      }
+    }
+  });
+</script>

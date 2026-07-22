@@ -3,7 +3,7 @@ project: FairShare Family
 version: 1
 status: draft
 created: 2026-07-17
-updated: 2026-07-17
+updated: 2026-07-21
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -29,9 +29,9 @@ FairShare Family gives separated or divorced co-parents a shared record of child
 
 | ID | Change ID | Outcome (user can …) | Prerequisites | PRD refs | Status |
 |---|---|---|---|---|---|
-| F-01 | financial-rules-verification | (foundation) verify exact financial rules before shared balances depend on them | — | Business Logic; Non-Functional Requirements — financial accuracy | planned |
-| S-01 | family-onboarding | create an account, establish a family, add children, and join as the second parent | F-01 | FR-001, FR-002, FR-003, FR-004, FR-005; Non-Functional Requirements — responsive Android-installable web experience | blocked |
-| S-02 | approved-expense-balance | add, review, and see an approved expense affect the selected month’s balance | S-01, F-01 | US-01, FR-006, FR-009, FR-011, FR-013 | blocked |
+| F-01 | financial-rules-verification | (foundation) verify exact financial rules before shared balances depend on them | — | Business Logic; Non-Functional Requirements — financial accuracy | completed |
+| S-01 | family-onboarding | create an account, establish a family, add children, and join as the second parent | F-01 | FR-001, FR-002, FR-003, FR-004, FR-005; Non-Functional Requirements — responsive Android-installable web experience | completed |
+| S-02 | approved-expense-balance | add, review, and see an approved expense affect the selected month’s balance | S-01, F-01 | US-01, FR-006, FR-009, FR-011, FR-013 | planned |
 | S-03 | unsettled-expense-corrections | correct or remove their own unsettled expense without corrupting the shared balance | S-02, F-01 | FR-007, FR-008 | proposed |
 | S-04 | monthly-report-history | browse previous monthly reports and distinguish settled from unsettled months | S-02 | FR-012 | proposed |
 | S-05 | joint-monthly-settlement | jointly settle and lock an eligible monthly report | S-03, S-04, F-01 | FR-014 | proposed |
@@ -69,7 +69,7 @@ What’s already in place in the codebase as of `2026-07-17` (auto-researched + 
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Financial rules are the product’s trust boundary; the PLN-only decision prevents a fast path from encoding ambiguous amount semantics.
-- **Status:** planned
+- **Status:** completed
 
 ## Slices
 
@@ -83,7 +83,7 @@ What’s already in place in the codebase as of `2026-07-17` (auto-researched + 
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** This reuses the existing account access rather than expanding it; the scope stays focused on a usable two-parent starting point.
-- **Status:** blocked
+- **Status:** completed
 
 ### S-02: Approved expense changes the shared monthly balance
 
@@ -95,7 +95,7 @@ What’s already in place in the codebase as of `2026-07-17` (auto-researched + 
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** This is the first complete shared-money flow; it must separate approved and pending values clearly so provisional spending is not presented as final.
-- **Status:** blocked
+- **Status:** planned
 
 ### S-03: Unsettled expense corrections
 
@@ -139,9 +139,9 @@ What’s already in place in the codebase as of `2026-07-17` (auto-researched + 
 
 | Roadmap ID | Change ID | Suggested issue title | Ready for `/10x-plan` | Notes |
 |---|---|---|---|---|
-| F-01 | financial-rules-verification | Verify financial calculation and settlement rules | yes | PLN-only financial foundation is planned. |
-| S-01 | family-onboarding | Let two co-parents establish a shared family workspace | no | Depends on F-01's shared schema and authorization boundary. |
-| S-02 | approved-expense-balance | Let co-parents approve expenses into the monthly balance | no | Depends on S-01 and the financial-rules foundation. |
+| F-01 | financial-rules-verification | Verify financial calculation and settlement rules | no | Completed. |
+| S-01 | family-onboarding | Let two co-parents establish a shared family workspace | no | Completed. |
+| S-02 | approved-expense-balance | Let co-parents approve expenses into the monthly balance | yes | F-01 and S-01 are completed. |
 | S-03 | unsettled-expense-corrections | Let a parent correct an unsettled expense safely | no | Depends on S-02. |
 | S-04 | monthly-report-history | Let a parent browse monthly report history | no | Depends on S-02. |
 | S-05 | joint-monthly-settlement | Let both parents settle an eligible monthly report | no | Depends on S-03 and S-04. |

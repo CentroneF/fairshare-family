@@ -1,0 +1,86 @@
+---
+import CreateExpenseForm from "@/components/expenses/CreateExpenseForm.astro";
+import ExpenseList from "@/components/expenses/ExpenseList.astro";
+import MonthlyBalancePanel from "@/components/expenses/MonthlyBalancePanel.astro";
+import { loadExpenseWorkspaceState } from "@/lib/expense-balance";
+import { createClient } from "@/lib/supabase";
+
+interface Props {
+  familyId: string;
+  userId: string;
+  children: readonly { id: string; name: string }[];
+  month: string;
+  serverError?: string | null;
+}
+
+const { familyId, userId, children, month, serverError } = Astro.props;
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+const state = supabase ? await loadExpenseWorkspaceState(supabase, { familyId, userId, month }) : null;
+const today = new Date().toISOString().slice(0, 10);
+const defaultDate = month === today.slice(0, 7) ? today : `${month}-01`;
+---
+
+<section class="border-t border-white/10 pt-8">
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <p class="text-sm tracking-wide text-purple-200 uppercase">Shared expenses</p>
+      <h2 class="mt-1 text-2xl font-bold">Track an expense</h2>
+    </div>
+    <form method="GET" action="/dashboard">
+      <label class="block text-sm text-blue-100/80" for="expense-month">Month</label>
+      <div class="mt-1 flex gap-2">
+        <input
+          id="expense-month"
+          name="month"
+          type="month"
+          value={month}
+          max={today.slice(0, 7)}
+          class="rounded-lg border border-white/20 bg-white/10 px-3 py-2"
+        />
+        <button type="submit" class="rounded-lg border border-white/20 px-3 py-2 text-sm hover:bg-white/10">View</button
+        >
+      </div>
+    </form>
+  </div>
+
+  <div class="mt-5">
+    <CreateExpenseForm
+      children={children}
+      month={month}
+      maxDate={today}
+      defaultDate={defaultDate}
+      serverError={serverError}
+    />
+  </div>
+  <div id="monthly-balance-container" class="mt-5">
+    {
+      state?.balance && state.currentMembershipId && (
+        <MonthlyBalancePanel balance={state.balance} currentMembershipId={state.currentMembershipId} />
+      )
+    }
+  </div>
+  <ExpenseList
+    expenses={state?.expenses ?? []}
+    month={month}
+    currentMembershipId={state?.currentMembershipId ?? null}
+    canApprove={Boolean(state?.balance && state.currentMembershipId)}
+  />
+</section>
+
+<script>
+  async function refreshExpenseWorkspace(month: string) {
+    const response = await fetch(`/dashboard?${new URLSearchParams({ month })}`);
+    if (!response.ok) throw new Error("Unable to refresh expenses");
+
+    const parsedDocument = new DOMParser().parseFromString(await response.text(), "text/html");
+    const updatedBalance = parsedDocument.querySelector<HTMLElement>("#monthly-balance-container");
+    const updatedList = parsedDocument.querySelector<HTMLElement>("#expense-list-container");
+    if (!updatedBalance || !updatedList) throw new Error("Unable to refresh expenses");
+
+    document.querySelector("#monthly-balance-container")?.replaceWith(updatedBalance);
+    document.querySelector("#expense-list-container")?.replaceWith(updatedList);
+  }
+
+  (window as typeof window & { refreshExpenseWorkspace?: (month: string) => Promise<void> }).refreshExpenseWorkspace =
+    refreshExpenseWorkspace;
+</script>
