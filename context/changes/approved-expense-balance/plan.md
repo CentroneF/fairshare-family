@@ -237,12 +237,12 @@ Use one forward-only migration. It is additive: introduce commands and the nulla
 #### Automated
 
 - [ ] 1.1 Pending-expense migration and pgTAP authorization tests pass.
-- [ ] 1.2 Expense server module and focused unit tests pass.
-- [ ] 1.3 Pending-expense dashboard builds and lints successfully.
+- [x] 1.2 Expense server module and focused unit tests pass.
+- [x] 1.3 Pending-expense dashboard builds and lints successfully.
 
 #### Manual
 
-- [ ] 1.4 Create pending child-linked/N/A current and past expenses, including comma input.
+- [x] 1.4 Create pending child-linked/N/A current and past expenses, including comma input.
 
 ### Phase 2: Approve Expenses Into the Balance
 

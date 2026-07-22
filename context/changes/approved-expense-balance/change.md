@@ -1,7 +1,7 @@
 ---
 change_id: approved-expense-balance
 title: Approved expense balance
-status: planned
+status: implementing
 created: 2026-07-21
 updated: 2026-07-22
 archived_at: null

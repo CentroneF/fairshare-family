@@ -3,7 +3,9 @@ import CreateFamilyForm from "@/components/family/CreateFamilyForm";
 import FamilySetupPanel from "@/components/family/FamilySetupPanel.astro";
 import FamilySummaryPanel from "@/components/family/FamilySummaryPanel.astro";
 import JoinFamilyForm from "@/components/family/JoinFamilyForm";
+import ExpenseWorkspace from "@/components/expenses/ExpenseWorkspace.astro";
 import Layout from "@/layouts/Layout.astro";
+import { normalizeSelectedMonth } from "@/lib/expense-balance";
 import { resolveOnboardingState } from "@/lib/family-onboarding";
 import { createClient } from "@/lib/supabase";
 
@@ -12,6 +14,12 @@ const supabase = createClient(Astro.request.headers, Astro.cookies);
 const onboarding = supabase && user ? await resolveOnboardingState(supabase, user.id) : { kind: "no-family" as const };
 const error = Astro.url.searchParams.get("error");
 const success = Astro.url.searchParams.get("success");
+let selectedMonth: string;
+try {
+  selectedMonth = normalizeSelectedMonth(Astro.url.searchParams.get("month"));
+} catch {
+  selectedMonth = normalizeSelectedMonth(null);
+}
 ---
 
 <Layout title="Family dashboard">
@@ -52,14 +60,30 @@ const success = Astro.url.searchParams.get("success");
             </section>
           </div>
         ) : onboarding.kind === "creator-awaiting-parent" ? (
-          <FamilySetupPanel
-            familyName={onboarding.family.name}
-            children={onboarding.family.children}
-            joinCode={onboarding.joinCode}
-            serverError={error}
-          />
+          <div class="space-y-8">
+            <FamilySetupPanel
+              familyName={onboarding.family.name}
+              children={onboarding.family.children}
+              joinCode={onboarding.joinCode}
+              serverError={error}
+            />
+            <ExpenseWorkspace
+              familyId={onboarding.family.id}
+              children={onboarding.family.children}
+              month={selectedMonth}
+              serverError={error}
+            />
+          </div>
         ) : (
-          <FamilySummaryPanel familyName={onboarding.family.name} children={onboarding.family.children} />
+          <div class="space-y-8">
+            <FamilySummaryPanel familyName={onboarding.family.name} children={onboarding.family.children} />
+            <ExpenseWorkspace
+              familyId={onboarding.family.id}
+              children={onboarding.family.children}
+              month={selectedMonth}
+              serverError={error}
+            />
+          </div>
         )
       }
     </div>
