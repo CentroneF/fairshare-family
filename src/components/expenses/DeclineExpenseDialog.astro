@@ -1,0 +1,99 @@
+---
+interface Props {
+  expenseId: string;
+  month: string;
+}
+const { expenseId, month } = Astro.props;
+---
+
+<button
+  type="button"
+  data-open-decline={expenseId}
+  onclick={`document.getElementById("decline-dialog-${expenseId}")?.showModal()`}
+  class="rounded-lg border border-red-300/40 px-3 py-1 text-sm text-red-100 hover:bg-red-500/20">Decline</button
+>
+<dialog
+  id={`decline-dialog-${expenseId}`}
+  data-decline-dialog={expenseId}
+  class="fixed inset-0 m-auto h-fit w-[calc(100%-2rem)] max-w-2xl rounded-xl border border-white/20 bg-slate-900 p-5 text-white backdrop:bg-slate-950/70"
+>
+  <form data-decline-expense method="POST" action="/api/expenses/decline" class="space-y-4">
+    <h2 class="text-lg font-semibold">Decline expense</h2>
+    <input type="hidden" name="expenseId" value={expenseId} />
+    <input type="hidden" name="month" value={month} />
+    <label class="block text-sm"
+      >Reason<textarea
+        name="reason"
+        required
+        maxlength="500"
+        class="mt-1 block min-h-28 w-full rounded border border-white/20 bg-white/10 p-3"></textarea></label
+    >
+    <div class="flex justify-end gap-3">
+      <button type="button" data-cancel-decline class="rounded px-3 py-2 hover:bg-white/10">Cancel</button>
+      <button type="submit" class="rounded bg-red-700 px-3 py-2 text-sm">Confirm decline</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+  document.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+
+    const openButton = target.closest<HTMLButtonElement>("[data-open-decline]");
+    if (openButton) {
+      const expenseId = openButton.dataset.openDecline;
+      const dialog = document.querySelector<HTMLDialogElement>(`[data-decline-dialog='${expenseId ?? ""}']`);
+      dialog?.addEventListener("close", () => openButton.focus(), { once: true });
+      return;
+    }
+
+    const cancelButton = target.closest<HTMLButtonElement>("[data-cancel-decline]");
+    cancelButton?.closest<HTMLDialogElement>("dialog")?.close();
+  });
+
+  document.addEventListener("submit", async (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement) || !form.matches("[data-decline-expense]")) return;
+    event.preventDefault();
+    form.querySelector("[role='alert']")?.remove();
+
+    try {
+      const response = await fetch(form.action, {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        body: new FormData(form),
+      });
+      const result = (await response.json()) as { expenseId?: string; reason?: string; error?: string };
+      if (!response.ok || !result.expenseId) {
+        const error = document.createElement("p");
+        error.className = "text-sm text-red-200";
+        error.setAttribute("role", "alert");
+        error.textContent = result.error ?? "We could not decline that expense.";
+        form.append(error);
+        return;
+      }
+      const dialog = form.closest<HTMLDialogElement>("dialog");
+      const item = dialog?.closest<HTMLElement>("li[data-expense-id]");
+      const actions = item?.querySelector<HTMLElement>(".text-right");
+      if (actions) {
+        actions.replaceChildren();
+        const status = document.createElement("p");
+        status.className = "mt-1 text-sm text-red-200";
+        status.textContent = "Declined";
+        const reason = document.createElement("p");
+        reason.className = "mt-1 text-sm text-red-100/80";
+        reason.textContent = result.reason ?? "";
+        actions.append(status, reason);
+      }
+      item?.setAttribute("data-expense-status", "declined");
+      dialog?.close();
+    } catch {
+      const error = document.createElement("p");
+      error.className = "text-sm text-red-200";
+      error.setAttribute("role", "alert");
+      error.textContent = "We could not decline that expense.";
+      form.append(error);
+    }
+  });
+</script>

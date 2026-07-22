@@ -1,6 +1,6 @@
 begin;
 
-select plan(16);
+select plan(28);
 
 insert into auth.users (id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values
@@ -82,6 +82,51 @@ select set_config('request.jwt.claim.sub', '52000000-0000-0000-0000-000000000001
 select throws_ok(
   $$select public.approve_expense('00000000-0000-0000-0000-000000000009')$$,
   'P0001', 'Expense is not available to this family', 'a missing expense is rejected safely'
+);
+
+select set_config('request.jwt.claim.sub', '51000000-0000-0000-0000-000000000001', true);
+select lives_ok(
+  $$select public.create_expense(null, 'Decline candidate', current_date, 18.00)$$,
+  'a pending expense can be prepared for decline'
+);
+select throws_ok(
+  $$select public.decline_expense((select id from public.expenses where description = 'Decline candidate'), 'Duplicate')$$,
+  'P0001', 'Only the other parent can decline an expense', 'a payer cannot decline their own expense'
+);
+
+select set_config('request.jwt.claim.sub', '52000000-0000-0000-0000-000000000001', true);
+select throws_ok(
+  $$select public.decline_expense((select id from public.expenses where description = 'Decline candidate'), ' ')$$,
+  'P0001', 'A decline reason between 1 and 500 characters is required', 'a blank decline reason is rejected'
+);
+select throws_ok(
+  $$select public.decline_expense((select id from public.expenses where description = 'Decline candidate'), repeat('x', 501))$$,
+  'P0001', 'A decline reason between 1 and 500 characters is required', 'an oversized decline reason is rejected'
+);
+select lives_ok(
+  $$select public.decline_expense((select id from public.expenses where description = 'Decline candidate'), ' Duplicate charge ')$$,
+  'the other active parent declines a pending expense with a reason'
+);
+select is((select status::text from public.expenses where description = 'Decline candidate'), 'declined', 'decline resolves the expense');
+select is((select decline_reason from public.expenses where description = 'Decline candidate'), 'Duplicate charge', 'decline stores a trimmed reason');
+select is((select reviewed_by from public.expenses where description = 'Decline candidate'), '54200000-0000-0000-0000-000000000001'::uuid, 'decline records the other parent as reviewer');
+select throws_ok(
+  $$select public.decline_expense((select id from public.expenses where description = 'Decline candidate'), 'Another reason')$$,
+  'P0001', 'Expense has already been reviewed', 'a resolved expense cannot be declined again'
+);
+select set_config('test.decline_candidate_id', (select id::text from public.expenses where description = 'Decline candidate'), true);
+update public.expenses set description = 'Tampered decline candidate' where description = 'Decline candidate';
+select is((select description from public.expenses where id = (select id from public.expenses where description = 'Decline candidate')),
+  'Decline candidate', 'direct authenticated expense updates remain denied');
+
+select set_config('request.jwt.claim.sub', '56000000-0000-0000-0000-000000000001', true);
+select throws_ok(
+  $$select public.decline_expense(current_setting('test.decline_candidate_id')::uuid, 'Not mine')$$,
+  'P0001', 'Expense is not available to this family', 'an active parent cannot decline another family expense'
+);
+select is_empty(
+  $$select decline_reason from public.expenses where description = 'Decline candidate'$$,
+  'a non-member cannot read a decline reason'
 );
 
 select * from finish();

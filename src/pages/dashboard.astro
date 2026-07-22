@@ -17,11 +17,13 @@ const success = Astro.url.searchParams.get("success");
 const successMessage =
   success === "expense-approved"
     ? "Expense approved. The monthly balance was updated."
-    : success === "expense-created"
-      ? "Expense created and awaiting review."
-      : success
-        ? "Your family update was saved."
-        : null;
+    : success === "expense-declined"
+      ? "Expense declined. It no longer affects the monthly balance."
+      : success === "expense-created"
+        ? "Expense created and awaiting review."
+        : success
+          ? "Your family update was saved."
+          : null;
 let selectedMonth: string;
 try {
   selectedMonth = normalizeSelectedMonth(Astro.url.searchParams.get("month"));

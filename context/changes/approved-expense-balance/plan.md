@@ -249,22 +249,22 @@ Use one forward-only migration. It is additive: introduce commands and the nulla
 #### Automated
 
 - [ ] 2.1 Approval RPC authorization and resolved-state tests pass.
-- [x] 2.2 Request-scoped balance loader and exact calculation tests pass.
-- [x] 2.3 Approval and balance dashboard builds and lints successfully.
+- [x] 2.2 Request-scoped balance loader and exact calculation tests pass. — 0206682
+- [x] 2.3 Approval and balance dashboard builds and lints successfully. — 0206682
 
 #### Manual
 
-- [x] 2.4 The other parent approves an expense and the balance updates correctly.
+- [x] 2.4 The other parent approves an expense and the balance updates correctly. — 0206682
 
 ### Phase 3: Decline Reasons and Completed Month Experience
 
 #### Automated
 
 - [ ] 3.1 Decline-reason migration/RPC/RLS tests pass.
-- [ ] 3.2 Decline server validation and balance-mapping tests pass.
-- [ ] 3.3 Full dashboard lint and production build pass.
+- [x] 3.2 Decline server validation and balance-mapping tests pass.
+- [x] 3.3 Full dashboard lint and production build pass.
 
 #### Manual
 
-- [ ] 3.4 Declined expenses retain required reasons and remain financially excluded.
-- [ ] 3.5 The complete create/approve/decline/month flow works on desktop and narrow viewport.
+- [x] 3.4 Declined expenses retain required reasons and remain financially excluded.
+- [x] 3.5 The complete create/approve/decline/month flow works on desktop and narrow viewport.

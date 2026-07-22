@@ -3,6 +3,7 @@ import { loadMonthlyBalance } from "./financial-service";
 import {
   mapExpenseError,
   normalizeExpenseAmount,
+  normalizeDeclineReason,
   normalizeExpenseDate,
   normalizeExpenseId,
   normalizeSelectedMonth,
@@ -32,6 +33,12 @@ describe("expense balance inputs", () => {
     expect(mapExpenseError({ message: "Expense has already been reviewed" })).toBe(
       "This expense has already been reviewed.",
     );
+  });
+
+  it("requires a concise decline reason", () => {
+    expect(normalizeDeclineReason("  Duplicate charge  ")).toBe("Duplicate charge");
+    expect(() => normalizeDeclineReason(" ")).toThrow("decline reason");
+    expect(() => normalizeDeclineReason("x".repeat(501))).toThrow("decline reason");
   });
 
   it("loads exact approved and pending totals through the repository seam", async () => {

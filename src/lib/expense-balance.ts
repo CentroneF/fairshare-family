@@ -14,6 +14,7 @@ export interface ExpenseDisplay {
   status: "pending" | "approved" | "declined";
   payerId: string;
   childName: string | null;
+  declineReason: string | null;
 }
 
 export interface ExpenseWorkspaceState {
@@ -76,8 +77,15 @@ export function mapExpenseError(error: unknown): string {
     return "Both active parents must be in the family before an expense can be approved.";
   if (message.includes("already been reviewed")) return "This expense has already been reviewed.";
   if (message.includes("not available to this family")) return "This expense is no longer available.";
+  if (message.toLowerCase().includes("decline reason")) return "Enter a decline reason of up to 500 characters.";
   if (message.includes("Authentication is required")) return "Please sign in and try again.";
   return "We could not save that expense. Please try again.";
+}
+
+export function normalizeDeclineReason(value: string): string {
+  const reason = value.trim();
+  if (!reason || reason.length > 500) throw new ExpenseBalanceError("Enter a decline reason of up to 500 characters.");
+  return reason;
 }
 
 export function normalizeExpenseId(value: string): string {
@@ -128,6 +136,13 @@ export async function createExpense(
 export async function approveExpense(client: ExpenseClient, rawExpenseId: string): Promise<void> {
   const expenseId = normalizeExpenseId(rawExpenseId);
   const { error } = await client.rpc("approve_expense", { p_expense_id: expenseId });
+  if (error) throw new ExpenseBalanceError(mapExpenseError(error));
+}
+
+export async function declineExpense(client: ExpenseClient, rawExpenseId: string, rawReason: string): Promise<void> {
+  const expenseId = normalizeExpenseId(rawExpenseId);
+  const reason = normalizeDeclineReason(rawReason);
+  const { error } = await client.rpc("decline_expense", { p_expense_id: expenseId, p_reason: reason });
   if (error) throw new ExpenseBalanceError(mapExpenseError(error));
 }
 
@@ -183,7 +198,7 @@ export async function listMonthExpenses(
   const start = `${month}-01`;
   const result = await client
     .from("expenses")
-    .select("id, description, expense_date, amount_pln, status, payer_id, children(name)")
+    .select("id, description, expense_date, amount_pln, status, payer_id, decline_reason, children(name)")
     .eq("family_id", familyId)
     .gte("expense_date", start)
     .lt("expense_date", nextMonth)
@@ -215,6 +230,7 @@ export async function listMonthExpenses(
         amountPln,
         status: value.status,
         payerId: value.payer_id,
+        declineReason: typeof value.decline_reason === "string" ? value.decline_reason : null,
         childName:
           child && typeof child === "object" && typeof (child as { name?: unknown }).name === "string"
             ? (child as { name: string }).name
