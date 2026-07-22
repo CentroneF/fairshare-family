@@ -52,13 +52,13 @@ const defaultDate = month === today.slice(0, 7) ? today : `${month}-01`;
       serverError={serverError}
     />
   </div>
-  {
-    state?.balance && state.currentMembershipId && (
-      <div class="mt-5">
+  <div id="monthly-balance-container" class="mt-5">
+    {
+      state?.balance && state.currentMembershipId && (
         <MonthlyBalancePanel balance={state.balance} currentMembershipId={state.currentMembershipId} />
-      </div>
-    )
-  }
+      )
+    }
+  </div>
   <ExpenseList
     expenses={state?.expenses ?? []}
     month={month}
@@ -66,3 +66,21 @@ const defaultDate = month === today.slice(0, 7) ? today : `${month}-01`;
     canApprove={Boolean(state?.balance && state.currentMembershipId)}
   />
 </section>
+
+<script>
+  async function refreshExpenseWorkspace(month: string) {
+    const response = await fetch(`/dashboard?${new URLSearchParams({ month })}`);
+    if (!response.ok) throw new Error("Unable to refresh expenses");
+
+    const parsedDocument = new DOMParser().parseFromString(await response.text(), "text/html");
+    const updatedBalance = parsedDocument.querySelector<HTMLElement>("#monthly-balance-container");
+    const updatedList = parsedDocument.querySelector<HTMLElement>("#expense-list-container");
+    if (!updatedBalance || !updatedList) throw new Error("Unable to refresh expenses");
+
+    document.querySelector("#monthly-balance-container")?.replaceWith(updatedBalance);
+    document.querySelector("#expense-list-container")?.replaceWith(updatedList);
+  }
+
+  (window as typeof window & { refreshExpenseWorkspace?: (month: string) => Promise<void> }).refreshExpenseWorkspace =
+    refreshExpenseWorkspace;
+</script>

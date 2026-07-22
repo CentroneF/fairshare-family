@@ -36,6 +36,13 @@ const { expenseId, month } = Astro.props;
 </dialog>
 
 <script>
+  function refreshExpenseWorkspace(month: string) {
+    const refresh = (window as typeof window & { refreshExpenseWorkspace?: (value: string) => Promise<void> })
+      .refreshExpenseWorkspace;
+    if (!refresh) return Promise.reject(new Error("Unable to refresh expenses"));
+    return refresh(month);
+  }
+
   document.addEventListener("click", (event) => {
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
@@ -64,8 +71,8 @@ const { expenseId, month } = Astro.props;
         headers: { Accept: "application/json" },
         body: new FormData(form),
       });
-      const result = (await response.json()) as { expenseId?: string; reason?: string; error?: string };
-      if (!response.ok || !result.expenseId) {
+      const result = (await response.json()) as { expenseId?: string; month?: string; error?: string };
+      if (!response.ok || !result.expenseId || !result.month) {
         const error = document.createElement("p");
         error.className = "text-sm text-red-200";
         error.setAttribute("role", "alert");
@@ -74,20 +81,8 @@ const { expenseId, month } = Astro.props;
         return;
       }
       const dialog = form.closest<HTMLDialogElement>("dialog");
-      const item = dialog?.closest<HTMLElement>("li[data-expense-id]");
-      const actions = item?.querySelector<HTMLElement>(".text-right");
-      if (actions) {
-        actions.replaceChildren();
-        const status = document.createElement("p");
-        status.className = "mt-1 text-sm text-red-200";
-        status.textContent = "Declined";
-        const reason = document.createElement("p");
-        reason.className = "mt-1 text-sm text-red-100/80";
-        reason.textContent = result.reason ?? "";
-        actions.append(status, reason);
-      }
-      item?.setAttribute("data-expense-status", "declined");
       dialog?.close();
+      await refreshExpenseWorkspace(result.month);
     } catch {
       const error = document.createElement("p");
       error.className = "text-sm text-red-200";

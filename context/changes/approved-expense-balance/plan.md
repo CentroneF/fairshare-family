@@ -236,7 +236,7 @@ Use one forward-only migration. It is additive: introduce commands and the nulla
 
 #### Automated
 
-- [ ] 1.1 Pending-expense migration and pgTAP authorization tests pass.
+- [x] 1.1 Pending-expense migration and pgTAP authorization tests pass.
 - [x] 1.2 Expense server module and focused unit tests pass.
 - [x] 1.3 Pending-expense dashboard builds and lints successfully.
 
@@ -248,7 +248,7 @@ Use one forward-only migration. It is additive: introduce commands and the nulla
 
 #### Automated
 
-- [ ] 2.1 Approval RPC authorization and resolved-state tests pass.
+- [x] 2.1 Approval RPC authorization and resolved-state tests pass.
 - [x] 2.2 Request-scoped balance loader and exact calculation tests pass. — 0206682
 - [x] 2.3 Approval and balance dashboard builds and lints successfully. — 0206682
 
@@ -260,11 +260,11 @@ Use one forward-only migration. It is additive: introduce commands and the nulla
 
 #### Automated
 
-- [ ] 3.1 Decline-reason migration/RPC/RLS tests pass.
-- [x] 3.2 Decline server validation and balance-mapping tests pass.
-- [x] 3.3 Full dashboard lint and production build pass.
+- [x] 3.1 Decline-reason migration/RPC/RLS tests pass.
+- [x] 3.2 Decline server validation and balance-mapping tests pass. — 689cc61
+- [x] 3.3 Full dashboard lint and production build pass. — 689cc61
 
 #### Manual
 
-- [x] 3.4 Declined expenses retain required reasons and remain financially excluded.
-- [x] 3.5 The complete create/approve/decline/month flow works on desktop and narrow viewport.
+- [x] 3.4 Declined expenses retain required reasons and remain financially excluded. — 689cc61
+- [x] 3.5 The complete create/approve/decline/month flow works on desktop and narrow viewport. — 689cc61

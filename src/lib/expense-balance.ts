@@ -202,7 +202,6 @@ export async function listMonthExpenses(
     .eq("family_id", familyId)
     .gte("expense_date", start)
     .lt("expense_date", nextMonth)
-    .order("expense_date", { ascending: false })
     .order("created_at", { ascending: false });
   if (result.error) throw new ExpenseBalanceError(mapExpenseError(result.error));
   const rows = result.data as unknown;

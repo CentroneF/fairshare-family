@@ -18,6 +18,7 @@ export const POST: APIRoute = async (context) => {
     if (acceptsJson) {
       return Response.json({
         expenseId: formValue(form.get("expenseId")),
+        month,
         reason: formValue(form.get("reason")).trim(),
       });
     }

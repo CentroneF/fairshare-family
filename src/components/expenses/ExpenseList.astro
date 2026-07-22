@@ -104,54 +104,13 @@ const declinedExpenses = expenses.filter((expense) => expense.status === "declin
     error?: string;
     expenseId?: string;
     month?: string;
-    balance?: {
-      totalAmount: string;
-      approvedAmount: string;
-      toReviewAmount: string;
-      settlement:
-        | { kind: "balanced"; amount: string }
-        | { kind: "payment"; amount: string; fromParentId: string; toParentId: string };
-    };
   }
 
-  function setText(selector: string, value: string) {
-    const element = document.querySelector<HTMLElement>(selector);
-    if (element) element.textContent = value;
-  }
-
-  function updateBalance(balance: NonNullable<ApprovalResult["balance"]>) {
-    const panel = document.querySelector<HTMLElement>("[data-monthly-balance]");
-    if (!panel) return;
-
-    setText("[data-balance-total]", `${balance.totalAmount} PLN`);
-    setText("[data-balance-approved]", `${balance.approvedAmount} PLN`);
-    setText("[data-balance-to-review]", `${balance.toReviewAmount} PLN`);
-
-    const hasPendingExpenses = balance.toReviewAmount !== "0.00";
-    const heading = panel.querySelector<HTMLElement>("[data-balance-heading]");
-    const guidance = panel.querySelector<HTMLElement>("[data-balance-guidance]");
-    panel.classList.toggle("border-amber-300/30", hasPendingExpenses);
-    panel.classList.toggle("bg-amber-500/10", hasPendingExpenses);
-    panel.classList.toggle("border-emerald-300/30", !hasPendingExpenses);
-    panel.classList.toggle("bg-emerald-500/10", !hasPendingExpenses);
-    heading?.classList.toggle("text-amber-100", hasPendingExpenses);
-    heading?.classList.toggle("text-emerald-100", !hasPendingExpenses);
-
-    if (!guidance) return;
-    if (hasPendingExpenses) {
-      guidance.className = "mt-4 text-sm text-amber-100/80";
-      guidance.textContent = "Some expenses are still awaiting review.";
-      return;
-    }
-
-    const currentMembershipId = panel.dataset.currentMembershipId;
-    guidance.className = "mt-4 font-medium text-emerald-100";
-    guidance.textContent =
-      balance.settlement.kind === "balanced"
-        ? "Your approved balance is even."
-        : balance.settlement.fromParentId === currentMembershipId
-          ? `You owe ${balance.settlement.amount} PLN.`
-          : `You are owed ${balance.settlement.amount} PLN.`;
+  function refreshExpenseWorkspace(month: string) {
+    const refresh = (window as typeof window & { refreshExpenseWorkspace?: (value: string) => Promise<void> })
+      .refreshExpenseWorkspace;
+    if (!refresh) return Promise.reject(new Error("Unable to refresh expenses"));
+    return refresh(month);
   }
 
   function showApprovalError(form: HTMLFormElement, message: string) {
@@ -184,18 +143,11 @@ const declinedExpenses = expenses.filter((expense) => expense.status === "declin
         body: data,
       });
       const result = (await response.json()) as ApprovalResult;
-      if (!response.ok || result.error || !result.expenseId || !result.balance) {
+      if (!response.ok || result.error || !result.expenseId || !result.month) {
         showApprovalError(form, result.error ?? "We could not approve that expense. Please try again.");
         return;
       }
-
-      const item = document.querySelector<HTMLElement>(`[data-expense-id='${result.expenseId}']`);
-      const status = document.createElement("p");
-      status.className = "mt-1 text-sm text-emerald-200";
-      status.textContent = "Approved";
-      form.replaceWith(status);
-      item?.setAttribute("data-expense-status", "approved");
-      updateBalance(result.balance);
+      await refreshExpenseWorkspace(result.month);
     } catch {
       showApprovalError(form, "We could not approve that expense. Please try again.");
     } finally {
@@ -216,14 +168,7 @@ const declinedExpenses = expenses.filter((expense) => expense.status === "declin
       button.textContent = "Refreshing…";
     }
     try {
-      const query = new URLSearchParams();
-      new FormData(form).forEach((value, key) => {
-        if (typeof value === "string") query.set(key, value);
-      });
-      const response = await fetch(`${form.action}?${query}`);
-      const parsedDocument = new DOMParser().parseFromString(await response.text(), "text/html");
-      const updatedList = parsedDocument.querySelector<HTMLElement>("#expense-list-container");
-      if (updatedList) document.querySelector("#expense-list-container")?.replaceWith(updatedList);
+      await refreshExpenseWorkspace(String(new FormData(form).get("month") ?? ""));
     } finally {
       if (button) {
         button.disabled = false;

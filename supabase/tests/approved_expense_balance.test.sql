@@ -115,9 +115,10 @@ select throws_ok(
   'P0001', 'Expense has already been reviewed', 'a resolved expense cannot be declined again'
 );
 select set_config('test.decline_candidate_id', (select id::text from public.expenses where description = 'Decline candidate'), true);
-update public.expenses set description = 'Tampered decline candidate' where description = 'Decline candidate';
-select is((select description from public.expenses where id = (select id from public.expenses where description = 'Decline candidate')),
-  'Decline candidate', 'direct authenticated expense updates remain denied');
+select throws_ok(
+  $$update public.expenses set description = 'Tampered decline candidate' where description = 'Decline candidate'$$,
+  '42501', 'permission denied for table expenses', 'direct authenticated expense updates are denied'
+);
 
 select set_config('request.jwt.claim.sub', '56000000-0000-0000-0000-000000000001', true);
 select throws_ok(
