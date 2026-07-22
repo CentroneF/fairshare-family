@@ -14,6 +14,14 @@ const supabase = createClient(Astro.request.headers, Astro.cookies);
 const onboarding = supabase && user ? await resolveOnboardingState(supabase, user.id) : { kind: "no-family" as const };
 const error = Astro.url.searchParams.get("error");
 const success = Astro.url.searchParams.get("success");
+const successMessage =
+  success === "expense-approved"
+    ? "Expense approved. The monthly balance was updated."
+    : success === "expense-created"
+      ? "Expense created and awaiting review."
+      : success
+        ? "Your family update was saved."
+        : null;
 let selectedMonth: string;
 try {
   selectedMonth = normalizeSelectedMonth(Astro.url.searchParams.get("month"));
@@ -30,7 +38,7 @@ try {
       >
         <div>
           <p class="text-sm text-blue-100/60">Signed in as {user?.email}</p>
-          {success && <p class="mt-1 text-sm text-emerald-300">Your family update was saved.</p>}
+          {successMessage && <p class="mt-1 text-sm text-emerald-300">{successMessage}</p>}
         </div>
         <form method="POST" action="/api/auth/signout">
           <button type="submit" class="rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/10"
@@ -69,6 +77,7 @@ try {
             />
             <ExpenseWorkspace
               familyId={onboarding.family.id}
+              userId={user.id}
               children={onboarding.family.children}
               month={selectedMonth}
               serverError={error}
@@ -79,6 +88,7 @@ try {
             <FamilySummaryPanel familyName={onboarding.family.name} children={onboarding.family.children} />
             <ExpenseWorkspace
               familyId={onboarding.family.id}
+              userId={user.id}
               children={onboarding.family.children}
               month={selectedMonth}
               serverError={error}

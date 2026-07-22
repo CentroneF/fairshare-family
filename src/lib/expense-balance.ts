@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { parsePlnAmount } from "./financial-rules";
+import { createSupabaseFinancialRepository, loadMonthlyBalance } from "./financial-service";
+import { parsePlnAmount, type MonthlyBalance } from "./financial-rules";
 
 type ExpenseClient = SupabaseClient;
 
@@ -13,6 +14,12 @@ export interface ExpenseDisplay {
   status: "pending" | "approved" | "declined";
   payerId: string;
   childName: string | null;
+}
+
+export interface ExpenseWorkspaceState {
+  expenses: readonly ExpenseDisplay[];
+  currentMembershipId: string | null;
+  balance: MonthlyBalance | null;
 }
 
 export function normalizeExpenseAmount(value: string): string {
@@ -54,13 +61,31 @@ export function normalizeSelectedMonth(value: string | null, today = new Date())
 
 export function mapExpenseError(error: unknown): string {
   if (error instanceof ExpenseBalanceError) return error.message;
-  const message = error instanceof Error ? error.message : "";
+  const message =
+    error instanceof Error
+      ? error.message
+      : error && typeof error === "object" && typeof (error as { message?: unknown }).message === "string"
+        ? (error as { message: string }).message
+        : "";
   if (message.includes("Expense description is required")) return "Enter an expense description.";
   if (message.includes("Amount must be")) return "Enter a positive amount with at most two decimal places.";
   if (message.includes("Expense date cannot")) return "Expense date cannot be in the future.";
   if (message.includes("Selected child")) return "Choose a child from your family or leave it empty.";
+  if (message.includes("Only the other parent")) return "Only the other parent can approve this expense.";
+  if (message.includes("Exactly two active parents"))
+    return "Both active parents must be in the family before an expense can be approved.";
+  if (message.includes("already been reviewed")) return "This expense has already been reviewed.";
+  if (message.includes("not available to this family")) return "This expense is no longer available.";
   if (message.includes("Authentication is required")) return "Please sign in and try again.";
   return "We could not save that expense. Please try again.";
+}
+
+export function normalizeExpenseId(value: string): string {
+  const id = value.trim();
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
+    throw new ExpenseBalanceError("This expense is no longer available.");
+  }
+  return id;
 }
 
 function parseExpenseDisplayAmount(value: unknown): string | null {
@@ -98,6 +123,54 @@ export async function createExpense(
     p_amount_pln: amount,
   });
   if (error) throw new ExpenseBalanceError(mapExpenseError(error));
+}
+
+export async function approveExpense(client: ExpenseClient, rawExpenseId: string): Promise<void> {
+  const expenseId = normalizeExpenseId(rawExpenseId);
+  const { error } = await client.rpc("approve_expense", { p_expense_id: expenseId });
+  if (error) throw new ExpenseBalanceError(mapExpenseError(error));
+}
+
+async function loadCurrentMembershipId(
+  client: ExpenseClient,
+  familyId: string,
+  userId: string,
+): Promise<string | null> {
+  const result = await client
+    .from("family_members")
+    .select("id")
+    .eq("family_id", familyId)
+    .eq("user_id", userId)
+    .eq("role", "parent")
+    .eq("is_active", true)
+    .maybeSingle();
+  if (result.error) throw new ExpenseBalanceError("We could not load the family balance.");
+  const value = result.data as unknown;
+  return value && typeof value === "object" && typeof (value as { id?: unknown }).id === "string"
+    ? (value as { id: string }).id
+    : null;
+}
+
+export async function loadExpenseWorkspaceState(
+  client: ExpenseClient,
+  input: { familyId: string; userId: string; month: string },
+): Promise<ExpenseWorkspaceState> {
+  const repository = createSupabaseFinancialRepository(client);
+  const [expenses, parentIds, currentMembershipId] = await Promise.all([
+    listMonthExpenses(client, input.familyId, input.month),
+    repository.listActiveParentIds(input.familyId, input.userId),
+    loadCurrentMembershipId(client, input.familyId, input.userId),
+  ]);
+  const balance =
+    parentIds.length === 2
+      ? await loadMonthlyBalance({
+          repository,
+          familyId: input.familyId,
+          userId: input.userId,
+          month: input.month,
+        })
+      : null;
+  return { expenses, currentMembershipId, balance };
 }
 
 export async function listMonthExpenses(

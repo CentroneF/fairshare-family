@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { normalizeExpenseAmount, normalizeExpenseDate, normalizeSelectedMonth } from "./expense-balance";
+import { loadMonthlyBalance } from "./financial-service";
+import {
+  mapExpenseError,
+  normalizeExpenseAmount,
+  normalizeExpenseDate,
+  normalizeExpenseId,
+  normalizeSelectedMonth,
+} from "./expense-balance";
 
 describe("expense balance inputs", () => {
   it("normalizes comma or dot PLN decimals without number coercion", () => {
@@ -17,5 +24,34 @@ describe("expense balance inputs", () => {
     expect(normalizeSelectedMonth(null, today)).toBe("2026-07");
     expect(normalizeSelectedMonth("2026-06", today)).toBe("2026-06");
     expect(() => normalizeSelectedMonth("2026-08", today)).toThrow();
+  });
+
+  it("validates approval IDs and maps safe approval errors", () => {
+    expect(normalizeExpenseId("11111111-1111-4111-8111-111111111111")).toBe("11111111-1111-4111-8111-111111111111");
+    expect(() => normalizeExpenseId("not-an-expense")).toThrow("no longer available");
+    expect(mapExpenseError({ message: "Expense has already been reviewed" })).toBe(
+      "This expense has already been reviewed.",
+    );
+  });
+
+  it("loads exact approved and pending totals through the repository seam", async () => {
+    const balance = await loadMonthlyBalance({
+      repository: {
+        listActiveParentIds: () => Promise.resolve(["parent-a", "parent-b"]),
+        listMonthExpenses: () =>
+          Promise.resolve([
+            { amount_pln: "10.50", payer_id: "parent-a", status: "approved" },
+            { amount_pln: "2.25", payer_id: "parent-b", status: "pending" },
+            { amount_pln: "99.99", payer_id: "parent-a", status: "declined" },
+          ]),
+      },
+      familyId: "family-a",
+      userId: "user-a",
+      month: "2026-07",
+    });
+    expect(balance.totalAmount.toFixed(2)).toBe("12.75");
+    expect(balance.approvedAmount.toFixed(2)).toBe("10.50");
+    expect(balance.toReviewAmount.toFixed(2)).toBe("2.25");
+    expect(balance.settlement).toMatchObject({ kind: "payment", fromParentId: "parent-b", toParentId: "parent-a" });
   });
 });

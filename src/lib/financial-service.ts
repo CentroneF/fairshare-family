@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   canReviewExpense,
   deriveMonthlyBalance,
@@ -8,6 +9,8 @@ import {
   type MonthlyBalance,
 } from "./financial-rules";
 
+type FinancialClient = SupabaseClient;
+
 export interface FinancialExpenseRow {
   amount_pln: string;
   payer_id: string;
@@ -17,6 +20,72 @@ export interface FinancialExpenseRow {
 export interface FinancialRepository {
   listActiveParentIds(familyId: string, userId: string): Promise<readonly string[]>;
   listMonthExpenses(familyId: string, userId: string, month: string): Promise<readonly FinancialExpenseRow[]>;
+}
+
+function monthRange(month: string): { start: string; nextMonth: string } {
+  const [year, monthNumber] = month.split("-").map(Number);
+  return {
+    start: `${month}-01`,
+    nextMonth: new Date(Date.UTC(year, monthNumber, 1)).toISOString().slice(0, 10),
+  };
+}
+
+function parseParentIds(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((row) => {
+    if (!row || typeof row !== "object") return [];
+    const id = (row as { id?: unknown }).id;
+    return typeof id === "string" ? [id] : [];
+  });
+}
+
+function parseFinancialExpenseRows(value: unknown): FinancialExpenseRow[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((row) => {
+    if (!row || typeof row !== "object") return [];
+    const expense = row as { amount_pln?: unknown; payer_id?: unknown; status?: unknown };
+    const amount =
+      typeof expense.amount_pln === "string"
+        ? expense.amount_pln
+        : typeof expense.amount_pln === "number" && Number.isFinite(expense.amount_pln)
+          ? expense.amount_pln.toString()
+          : null;
+    if (
+      !amount ||
+      typeof expense.payer_id !== "string" ||
+      (expense.status !== "pending" && expense.status !== "approved" && expense.status !== "declined")
+    ) {
+      return [];
+    }
+    return [{ amount_pln: amount, payer_id: expense.payer_id, status: expense.status }];
+  });
+}
+
+export function createSupabaseFinancialRepository(client: FinancialClient): FinancialRepository {
+  return {
+    async listActiveParentIds(familyId: string, _userId: string): Promise<readonly string[]> {
+      const result = await client
+        .from("family_members")
+        .select("id")
+        .eq("family_id", familyId)
+        .eq("role", "parent")
+        .eq("is_active", true)
+        .order("created_at");
+      if (result.error) throw new Error("We could not load the family balance.");
+      return parseParentIds(result.data);
+    },
+    async listMonthExpenses(familyId: string, _userId: string, month: string): Promise<readonly FinancialExpenseRow[]> {
+      const { start, nextMonth } = monthRange(month);
+      const result = await client
+        .from("expenses")
+        .select("amount_pln, payer_id, status")
+        .eq("family_id", familyId)
+        .gte("expense_date", start)
+        .lt("expense_date", nextMonth);
+      if (result.error) throw new Error("We could not load the family balance.");
+      return parseFinancialExpenseRows(result.data);
+    },
+  };
 }
 
 export function mapFinancialExpense(row: FinancialExpenseRow): FinancialExpense {

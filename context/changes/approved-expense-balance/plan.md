@@ -249,12 +249,12 @@ Use one forward-only migration. It is additive: introduce commands and the nulla
 #### Automated
 
 - [ ] 2.1 Approval RPC authorization and resolved-state tests pass.
-- [ ] 2.2 Request-scoped balance loader and exact calculation tests pass.
-- [ ] 2.3 Approval and balance dashboard builds and lints successfully.
+- [x] 2.2 Request-scoped balance loader and exact calculation tests pass.
+- [x] 2.3 Approval and balance dashboard builds and lints successfully.
 
 #### Manual
 
-- [ ] 2.4 The other parent approves an expense and the balance updates correctly.
+- [x] 2.4 The other parent approves an expense and the balance updates correctly.
 
 ### Phase 3: Decline Reasons and Completed Month Experience
 

@@ -1,19 +1,21 @@
 ---
 import CreateExpenseForm from "@/components/expenses/CreateExpenseForm.astro";
 import ExpenseList from "@/components/expenses/ExpenseList.astro";
-import { listMonthExpenses } from "@/lib/expense-balance";
+import MonthlyBalancePanel from "@/components/expenses/MonthlyBalancePanel.astro";
+import { loadExpenseWorkspaceState } from "@/lib/expense-balance";
 import { createClient } from "@/lib/supabase";
 
 interface Props {
   familyId: string;
+  userId: string;
   children: readonly { id: string; name: string }[];
   month: string;
   serverError?: string | null;
 }
 
-const { familyId, children, month, serverError } = Astro.props;
+const { familyId, userId, children, month, serverError } = Astro.props;
 const supabase = createClient(Astro.request.headers, Astro.cookies);
-const expenses = supabase ? await listMonthExpenses(supabase, familyId, month) : [];
+const state = supabase ? await loadExpenseWorkspaceState(supabase, { familyId, userId, month }) : null;
 const today = new Date().toISOString().slice(0, 10);
 const defaultDate = month === today.slice(0, 7) ? today : `${month}-01`;
 ---
@@ -50,5 +52,17 @@ const defaultDate = month === today.slice(0, 7) ? today : `${month}-01`;
       serverError={serverError}
     />
   </div>
-  <ExpenseList expenses={expenses} />
+  {
+    state?.balance && state.currentMembershipId && (
+      <div class="mt-5">
+        <MonthlyBalancePanel balance={state.balance} currentMembershipId={state.currentMembershipId} />
+      </div>
+    )
+  }
+  <ExpenseList
+    expenses={state?.expenses ?? []}
+    month={month}
+    currentMembershipId={state?.currentMembershipId ?? null}
+    canApprove={Boolean(state?.balance && state.currentMembershipId)}
+  />
 </section>
