@@ -255,5 +255,5 @@ Use two forward-only additive migrations: Phase 1 adds `previous_decline_reason`
 
 #### Manual
 
-- [ ] 3.3 On desktop and a narrow viewport, complete the correction lifecycle and switch months without a full-page refresh.
-- [ ] 3.4 Verify safe feedback for stale/resolved/cross-family attempts and no visible correction actions in a settled month.
+- [x] 3.3 On desktop and a narrow viewport, complete the correction lifecycle and switch months without a full-page refresh.
+- [x] 3.4 Verify safe feedback for stale/resolved/cross-family attempts and no visible correction actions in a settled month.
