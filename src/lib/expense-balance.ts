@@ -77,6 +77,8 @@ export function mapExpenseError(error: unknown): string {
   if (message.includes("Selected child")) return "Choose a child from your family or leave it empty.";
   if (message.includes("Only the other parent")) return "Only the other parent can approve this expense.";
   if (message.includes("Only the payer can update")) return "Only the payer can edit this expense.";
+  if (message.includes("Only the payer can delete")) return "Only the payer can delete this expense.";
+  if (message.includes("Only pending or declined")) return "Approved expenses cannot be deleted.";
   if (message.includes("settled month")) return "Expenses in a settled month cannot be changed.";
   if (message.includes("Exactly two active parents"))
     return "Both active parents must be in the family before an expense can be approved.";
@@ -167,6 +169,12 @@ export async function updateExpense(
     p_expense_date: expenseDate,
     p_amount_pln: amount,
   });
+  if (error) throw new ExpenseBalanceError(mapExpenseError(error));
+}
+
+export async function deleteExpense(client: ExpenseClient, rawExpenseId: string): Promise<void> {
+  const expenseId = normalizeExpenseId(rawExpenseId);
+  const { error } = await client.rpc("delete_expense", { p_expense_id: expenseId });
   if (error) throw new ExpenseBalanceError(mapExpenseError(error));
 }
 

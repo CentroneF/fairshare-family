@@ -223,28 +223,28 @@ Use two forward-only additive migrations: Phase 1 adds `previous_decline_reason`
 
 #### Automated
 
-- [x] 1.1 Edit migration/RPC authorization, settlement-lock, and direct-write-denial tests pass.
-- [x] 1.2 Edit server state, route, and exact-balance tests pass.
-- [x] 1.3 Edit dialog/dashboard lint and production build pass.
+- [x] 1.1 Edit migration/RPC authorization, settlement-lock, and direct-write-denial tests pass. — 7d3be51
+- [x] 1.2 Edit server state, route, and exact-balance tests pass. — 7d3be51
+- [x] 1.3 Edit dialog/dashboard lint and production build pass. — 7d3be51
 
 #### Manual
 
-- [x] 1.4 Edit own pending, approved, and declined expenses; each re-opens as pending and an approved amount moves into To review.
-- [x] 1.5 Re-decline an edited expense; its prior decline reason pre-fills and the new decline result is displayed.
-- [x] 1.6 Edit an expense into an earlier month; the view switches there without a full-page reload.
+- [x] 1.4 Edit own pending, approved, and declined expenses; each re-opens as pending and an approved amount moves into To review. — 7d3be51
+- [x] 1.5 Re-decline an edited expense; its prior decline reason pre-fills and the new decline result is displayed. — 7d3be51
+- [x] 1.6 Edit an expense into an earlier month; the view switches there without a full-page reload. — 7d3be51
 
 ### Phase 2: Delete an Eligible Own Expense
 
 #### Automated
 
-- [ ] 2.1 Delete RPC eligibility, authorization, settlement-lock, and direct-delete-denial tests pass.
-- [ ] 2.2 Delete route/dialog/dashboard lint and production build pass.
+- [x] 2.1 Delete RPC eligibility, authorization, settlement-lock, and direct-delete-denial tests pass.
+- [x] 2.2 Delete route/dialog/dashboard lint and production build pass.
 
 #### Manual
 
-- [ ] 2.3 Delete own pending and declined expenses; each disappears and the monthly totals/balance refresh immediately.
-- [ ] 2.4 Confirm Delete is absent for approved, other-parent, and settled-month expenses.
-- [ ] 2.5 Confirm Cancel/Escape leave an expense unchanged and return keyboard focus to its Delete control.
+- [x] 2.3 Delete own pending and declined expenses; each disappears and the monthly totals/balance refresh immediately.
+- [x] 2.4 Confirm Delete is absent for approved, other-parent, and settled-month expenses.
+- [x] 2.5 Confirm Cancel/Escape leave an expense unchanged and return keyboard focus to its Delete control.
 
 ### Phase 3: Verify the Complete Correction Workflow
 

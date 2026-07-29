@@ -131,7 +131,8 @@ const { children, month, maxDate, defaultDate, serverError } = Astro.props;
         monthInput.value = result.month;
       }
       if (expenseDateInput) {
-        const defaultDate = `${result.month}-01`;
+        const today = new Date().toISOString().slice(0, 10);
+        const defaultDate = result.month === today.slice(0, 7) ? today : `${result.month}-01`;
         expenseDateInput.defaultValue = defaultDate;
         expenseDateInput.value = defaultDate;
       }

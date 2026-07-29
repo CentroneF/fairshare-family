@@ -1,6 +1,6 @@
 begin;
 
-select plan(43);
+select plan(57);
 
 insert into auth.users (id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values
@@ -175,16 +175,72 @@ select throws_ok(
 );
 
 select set_config('request.jwt.claim.sub', '51000000-0000-0000-0000-000000000001', true);
+select lives_ok(
+  $$select public.create_expense(null, 'Delete pending candidate', current_date - 1, 7.00)$$,
+  'a pending expense can be prepared for deletion'
+);
+select lives_ok(
+  $$select public.delete_expense((select id from public.expenses where description = 'Delete pending candidate'))$$,
+  'the payer can delete a pending expense'
+);
+select is_empty($$select 1 from public.expenses where description = 'Delete pending candidate'$$, 'pending deletion removes the expense');
+select lives_ok(
+  $$select public.create_expense(null, 'Delete declined candidate', current_date - 1, 8.00)$$,
+  'a pending expense can be prepared for declined deletion'
+);
+select set_config('request.jwt.claim.sub', '52000000-0000-0000-0000-000000000001', true);
+select lives_ok(
+  $$select public.decline_expense((select id from public.expenses where description = 'Delete declined candidate'), 'Duplicate')$$,
+  'the other parent can decline a deletable expense'
+);
+select set_config('request.jwt.claim.sub', '51000000-0000-0000-0000-000000000001', true);
+select lives_ok(
+  $$select public.delete_expense((select id from public.expenses where description = 'Delete declined candidate'))$$,
+  'the payer can delete a declined expense'
+);
+select is_empty($$select 1 from public.expenses where description = 'Delete declined candidate'$$, 'declined deletion removes the expense');
+select lives_ok(
+  $$select public.create_expense(null, 'Delete approved candidate', current_date - 1, 9.00)$$,
+  'a pending expense can be prepared for approved-delete denial'
+);
+select set_config('request.jwt.claim.sub', '52000000-0000-0000-0000-000000000001', true);
+select lives_ok(
+  $$select public.approve_expense((select id from public.expenses where description = 'Delete approved candidate'))$$,
+  'the other parent approves the protected expense'
+);
+select set_config('request.jwt.claim.sub', '51000000-0000-0000-0000-000000000001', true);
+select throws_ok(
+  $$select public.delete_expense((select id from public.expenses where description = 'Delete approved candidate'))$$,
+  'P0001', 'Only pending or declined expenses can be deleted', 'approved expenses cannot be deleted'
+);
+select throws_ok(
+  $$select public.delete_expense((select id from public.expenses where description = 'Settled correction candidate'))$$,
+  'P0001', 'Expenses in a settled month cannot be deleted', 'settled-month expenses cannot be deleted'
+);
+select set_config('request.jwt.claim.sub', '52000000-0000-0000-0000-000000000001', true);
+select throws_ok(
+  $$select public.delete_expense((select id from public.expenses where description = 'Updated decline candidate'))$$,
+  'P0001', 'Only the payer can delete this expense', 'the other parent cannot delete the payer expense'
+);
+select set_config('request.jwt.claim.sub', '51000000-0000-0000-0000-000000000001', true);
 select set_config('test.decline_candidate_id', (select id::text from public.expenses where description = 'Updated decline candidate'), true);
 select throws_ok(
   $$update public.expenses set description = 'Tampered decline candidate' where description = 'Updated decline candidate'$$,
   '42501', 'permission denied for table expenses', 'direct authenticated expense updates are denied'
+);
+select throws_ok(
+  $$delete from public.expenses where description = 'Updated decline candidate'$$,
+  '42501', 'permission denied for table expenses', 'direct authenticated expense deletes are denied'
 );
 
 select set_config('request.jwt.claim.sub', '56000000-0000-0000-0000-000000000001', true);
 select throws_ok(
   $$select public.decline_expense(current_setting('test.decline_candidate_id')::uuid, 'Not mine')$$,
   'P0001', 'Expense is not available to this family', 'an active parent cannot decline another family expense'
+);
+select throws_ok(
+  $$select public.delete_expense(current_setting('test.decline_candidate_id')::uuid)$$,
+  'P0001', 'Expense is not available to this family', 'an active parent cannot delete another family expense'
 );
 select is_empty(
   $$select decline_reason from public.expenses where description = 'Updated decline candidate'$$,

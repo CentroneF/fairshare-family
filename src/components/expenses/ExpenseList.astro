@@ -2,6 +2,7 @@
 import type { ExpenseDisplay } from "@/lib/expense-balance";
 import DeclineExpenseDialog from "@/components/expenses/DeclineExpenseDialog.astro";
 import EditExpenseDialog from "@/components/expenses/EditExpenseDialog.astro";
+import DeleteExpenseDialog from "@/components/expenses/DeleteExpenseDialog.astro";
 
 interface Props {
   expenses: readonly ExpenseDisplay[];
@@ -25,6 +26,10 @@ const canReviewExpense = (expense: ExpenseDisplay) =>
     expense.status === "pending" &&
     expense.payerId !== currentMembershipId &&
     !isMonthSettled,
+  );
+const canDeleteExpense = (expense: ExpenseDisplay) =>
+  Boolean(
+    currentMembershipId && expense.payerId === currentMembershipId && !isMonthSettled && expense.status !== "approved",
   );
 ---
 
@@ -75,8 +80,9 @@ const canReviewExpense = (expense: ExpenseDisplay) =>
                 <p class="mt-1 text-sm text-amber-200">Awaiting review</p>
               ) : null}
               {canEditExpense(expense) && (
-                <div class="mt-2 flex justify-end">
+                <div class="mt-2 flex justify-end gap-2">
                   <EditExpenseDialog expense={expense} children={children} month={month} maxDate={maxDate} />
+                  {canDeleteExpense(expense) && <DeleteExpenseDialog expenseId={expense.id} month={month} />}
                 </div>
               )}
             </div>
@@ -113,8 +119,9 @@ const canReviewExpense = (expense: ExpenseDisplay) =>
                   <p class="mt-1 text-sm text-red-200">Declined</p>
                   {expense.declineReason && <p class="mt-1 text-sm text-red-100/80">{expense.declineReason}</p>}
                   {canEditExpense(expense) && (
-                    <div class="mt-2 flex justify-end">
+                    <div class="mt-2 flex justify-end gap-2">
                       <EditExpenseDialog expense={expense} children={children} month={month} maxDate={maxDate} />
+                      {canDeleteExpense(expense) && <DeleteExpenseDialog expenseId={expense.id} month={month} />}
                     </div>
                   )}
                 </div>

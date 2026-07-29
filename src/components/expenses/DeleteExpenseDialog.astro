@@ -1,0 +1,83 @@
+---
+interface Props {
+  expenseId: string;
+  month: string;
+}
+const { expenseId, month } = Astro.props;
+---
+
+<button
+  type="button"
+  data-open-delete={expenseId}
+  onclick={`document.getElementById("delete-dialog-${expenseId}")?.showModal()`}
+  class="rounded-lg border border-red-300/40 px-3 py-1 text-sm text-red-100 hover:bg-red-500/20">Delete</button
+>
+<dialog
+  id={`delete-dialog-${expenseId}`}
+  data-delete-dialog={expenseId}
+  class="fixed inset-0 m-auto h-fit w-[calc(100%-2rem)] max-w-lg rounded-xl border border-white/20 bg-slate-900 p-5 text-left text-white backdrop:bg-slate-950/70"
+>
+  <form data-delete-expense method="POST" action="/api/expenses/delete" class="space-y-4">
+    <div>
+      <h2 class="text-lg font-semibold">Delete expense?</h2>
+      <p class="mt-1 text-sm text-blue-100/80">This cannot be undone.</p>
+    </div>
+    <input type="hidden" name="expenseId" value={expenseId} /><input type="hidden" name="month" value={month} />
+    <div class="flex justify-end gap-3">
+      <button type="button" data-cancel-delete class="rounded px-3 py-2 hover:bg-white/10">Cancel</button>
+      <button type="submit" class="rounded bg-red-700 px-3 py-2 text-sm">Delete</button>
+    </div>
+  </form>
+</dialog>
+<script>
+  const refresh = (month: string) => {
+    const handler = (window as typeof window & { refreshExpenseWorkspace?: (value: string) => Promise<void> })
+      .refreshExpenseWorkspace;
+    return handler ? handler(month) : Promise.reject(new Error("Unable to refresh expenses"));
+  };
+  const showError = (form: HTMLFormElement, message: string) => {
+    const error = document.createElement("p");
+    error.className = "text-sm text-red-200";
+    error.setAttribute("role", "alert");
+    error.textContent = message;
+    form.append(error);
+  };
+  document.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    const open = target.closest<HTMLButtonElement>("[data-open-delete]");
+    if (open) {
+      const dialog = document.querySelector<HTMLDialogElement>(
+        `[data-delete-dialog='${open.dataset.openDelete ?? ""}']`,
+      );
+      dialog?.addEventListener("close", () => open.focus(), { once: true });
+      return;
+    }
+    target.closest<HTMLButtonElement>("[data-cancel-delete]")?.closest<HTMLDialogElement>("dialog")?.close();
+  });
+  document.addEventListener("submit", async (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement) || !form.matches("[data-delete-expense]")) return;
+    event.preventDefault();
+    const button = form.querySelector<HTMLButtonElement>("button[type='submit']");
+    button?.setAttribute("disabled", "true");
+    try {
+      const response = await fetch(form.action, {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        body: new FormData(form),
+      });
+      const result = (await response.json()) as { expenseId?: string; month?: string; error?: string };
+      if (!response.ok || !result.expenseId || !result.month) {
+        showError(form, result.error ?? "We could not delete that expense.");
+        return;
+      }
+      form.closest<HTMLDialogElement>("dialog")?.close();
+      await refresh(result.month);
+    } catch {
+      showError(form, "We could not delete that expense.");
+    } finally {
+      button?.removeAttribute("disabled");
+    }
+  });
+</script>
