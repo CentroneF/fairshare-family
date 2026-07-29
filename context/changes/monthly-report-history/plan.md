@@ -210,12 +210,12 @@ No migration is required. `monthly_settlements` already supplies the protected r
 
 #### Automated
 
-- [ ] 2.1 Dashboard history component and selected-month regression tests pass.
-- [ ] 2.2 History UI lint and production build pass.
+- [x] 2.1 Dashboard history component and selected-month regression tests pass.
+- [x] 2.2 History UI lint and production build pass.
 
 #### Manual
 
-- [ ] 2.3 Check collapsed history, row navigation, and empty state on desktop and narrow viewport.
+- [x] 2.3 Check collapsed history, row navigation, and empty state on desktop and narrow viewport.
 
 ### Phase 3: Prove Family Visibility and Reporting Boundaries
 

@@ -2,6 +2,7 @@
 import CreateExpenseForm from "@/components/expenses/CreateExpenseForm.astro";
 import ExpenseList from "@/components/expenses/ExpenseList.astro";
 import MonthlyBalancePanel from "@/components/expenses/MonthlyBalancePanel.astro";
+import MonthlyReportHistory from "@/components/expenses/MonthlyReportHistory.astro";
 import { loadExpenseWorkspaceState } from "@/lib/expense-balance";
 import { createClient } from "@/lib/supabase";
 
@@ -68,6 +69,7 @@ const defaultDate = month === today.slice(0, 7) ? today : `${month}-01`;
     canApprove={Boolean(state?.balance && state.currentMembershipId)}
     isMonthSettled={state?.isMonthSettled ?? false}
   />
+  <MonthlyReportHistory reports={state?.history ?? []} selectedMonth={month} />
 </section>
 
 <script>
