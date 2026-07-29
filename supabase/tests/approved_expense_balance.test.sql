@@ -1,6 +1,6 @@
 begin;
 
-select plan(60);
+select plan(62);
 
 insert into auth.users (id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values
@@ -64,6 +64,10 @@ select is(
   ),
   '10.35',
   'report history aggregates approved amounts exactly by month'
+);
+select throws_ok(
+  $$select public.list_monthly_report_history('54000000-0000-0000-0000-000000000001', (date_trunc('month', current_date) + interval '1 month')::date)$$,
+  'P0001', 'Report history cannot end in the future', 'report history rejects a future cutoff'
 );
 select is(
   (
@@ -267,6 +271,10 @@ select throws_ok(
 select throws_ok(
   $$delete from public.expenses where description = 'Updated decline candidate'$$,
   '42501', 'permission denied for table expenses', 'direct authenticated expense deletes are denied'
+);
+select throws_ok(
+  $$update public.monthly_settlements set status = 'open' where family_id = '54000000-0000-0000-0000-000000000001'$$,
+  '42501', 'permission denied for table monthly_settlements', 'direct authenticated settlement updates are denied'
 );
 
 select set_config('request.jwt.claim.sub', '56000000-0000-0000-0000-000000000001', true);
