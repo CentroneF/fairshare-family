@@ -144,35 +144,26 @@ function parseExpenseDisplayAmount(value: unknown): string | null {
   return null;
 }
 
-function parseHistoricalExpenseRows(value: unknown): HistoricalExpenseRow[] {
+function parseMonthlyReportHistoryRows(value: unknown): MonthlyReportHistoryEntry[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((row) => {
     if (!row || typeof row !== "object") return [];
-    const expense = row as Record<string, unknown>;
-    const amount = parseExpenseDisplayAmount(expense.amount_pln);
+    const report = row as Record<string, unknown>;
+    const approvedAmount = parseExpenseDisplayAmount(report.approved_amount);
     if (
-      !amount ||
-      typeof expense.expense_date !== "string" ||
-      (expense.status !== "pending" && expense.status !== "approved" && expense.status !== "declined")
+      typeof report.report_month !== "string" ||
+      !approvedAmount ||
+      (report.status !== "open" && report.status !== "settled")
     ) {
       return [];
     }
-    return [{ expense_date: expense.expense_date, amount_pln: amount, payer_id: "history", status: expense.status }];
-  });
-}
-
-function parseHistoricalSettlementRows(value: unknown): HistoricalSettlementRow[] {
-  if (!Array.isArray(value)) return [];
-  return value.flatMap((row) => {
-    if (!row || typeof row !== "object") return [];
-    const settlement = row as Record<string, unknown>;
-    if (
-      typeof settlement.report_month !== "string" ||
-      (settlement.status !== "open" && settlement.status !== "settled")
-    ) {
-      return [];
-    }
-    return [{ report_month: settlement.report_month, status: settlement.status }];
+    return [
+      {
+        month: report.report_month.slice(0, 7),
+        status: report.status === "settled" ? "settled" : "unsettled",
+        approvedAmount,
+      },
+    ];
   });
 }
 
@@ -297,27 +288,14 @@ export async function loadMonthlyReportHistory(
   client: ExpenseClient,
   input: { familyId: string; currentMonth: string },
 ): Promise<MonthlyReportHistoryEntry[]> {
-  const beforeCurrentMonth = `${input.currentMonth}-01`;
-  const [expenseResult, settlementResult] = await Promise.all([
-    client
-      .from("expenses")
-      .select("expense_date, amount_pln, status")
-      .eq("family_id", input.familyId)
-      .lt("expense_date", beforeCurrentMonth),
-    client
-      .from("monthly_settlements")
-      .select("report_month, status")
-      .eq("family_id", input.familyId)
-      .lt("report_month", beforeCurrentMonth),
-  ]);
-  if (expenseResult.error || settlementResult.error) {
+  const result = await client.rpc("list_monthly_report_history", {
+    p_family_id: input.familyId,
+    p_before_month: `${input.currentMonth}-01`,
+  });
+  if (result.error) {
     throw new ExpenseBalanceError("We could not load the report history.");
   }
-  return deriveMonthlyReportHistory({
-    expenses: parseHistoricalExpenseRows(expenseResult.data),
-    settlements: parseHistoricalSettlementRows(settlementResult.data),
-    currentMonth: input.currentMonth,
-  });
+  return parseMonthlyReportHistoryRows(result.data);
 }
 
 export async function loadExpenseWorkspaceState(

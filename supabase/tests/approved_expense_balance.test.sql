@@ -1,6 +1,6 @@
 begin;
 
-select plan(57);
+select plan(59);
 
 insert into auth.users (id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values
@@ -37,9 +37,45 @@ values
     '54100000-0000-0000-0000-000000000001', now(), '54200000-0000-0000-0000-000000000001', now(), now()
   );
 
+insert into public.expenses (
+  family_id, payer_id, description, expense_date, amount_pln, status, reviewed_by, reviewed_at
+)
+values
+  (
+    '54000000-0000-0000-0000-000000000001', '54100000-0000-0000-0000-000000000001', 'History approved one',
+    (current_date - interval '1 month')::date, 10.25, 'approved', '54200000-0000-0000-0000-000000000001', now()
+  ),
+  (
+    '54000000-0000-0000-0000-000000000001', '54200000-0000-0000-0000-000000000001', 'History approved two',
+    (current_date - interval '1 month')::date, 0.10, 'approved', '54100000-0000-0000-0000-000000000001', now()
+  );
+
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '51000000-0000-0000-0000-000000000001', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+
+select is(
+  (
+    select approved_amount::text
+      from public.list_monthly_report_history(
+        '54000000-0000-0000-0000-000000000001', date_trunc('month', current_date)::date
+      )
+     where report_month = date_trunc('month', current_date - interval '1 month')::date
+  ),
+  '10.35',
+  'report history aggregates approved amounts exactly by month'
+);
+select is(
+  (
+    select status::text
+      from public.list_monthly_report_history(
+        '54000000-0000-0000-0000-000000000001', date_trunc('month', current_date)::date
+      )
+     where report_month = date_trunc('month', current_date - interval '2 months')::date
+  ),
+  'settled',
+  'report history retains a settled month status'
+);
 
 select lives_ok(
   $$select public.create_expense('54300000-0000-0000-0000-000000000001', 'School supplies', current_date, 12.50)$$,
