@@ -89,6 +89,7 @@ describe("expense balance inputs", () => {
         currentMonth: "2026-07",
         expenses: [
           { expense_date: "2026-06-15", amount_pln: "10.25", payer_id: "parent-a", status: "approved" },
+          { expense_date: "2026-06-15", amount_pln: "0.10", payer_id: "parent-b", status: "approved" },
           { expense_date: "2026-06-16", amount_pln: "2.75", payer_id: "parent-b", status: "pending" },
           { expense_date: "2026-05-10", amount_pln: "99.99", payer_id: "parent-a", status: "declined" },
           { expense_date: "2026-07-01", amount_pln: "20.00", payer_id: "parent-a", status: "approved" },
@@ -99,7 +100,7 @@ describe("expense balance inputs", () => {
         ],
       }),
     ).toEqual([
-      { month: "2026-06", status: "unsettled", approvedAmount: "10.25" },
+      { month: "2026-06", status: "unsettled", approvedAmount: "10.35" },
       { month: "2026-05", status: "unsettled", approvedAmount: "0.00" },
       { month: "2026-04", status: "settled", approvedAmount: "0.00" },
     ]);
