@@ -1,5 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { createSupabaseFinancialRepository, loadMonthlyBalance } from "./financial-service";
+import Decimal from "decimal.js";
+import {
+  createSupabaseFinancialRepository,
+  loadMonthlyBalance,
+  sumApprovedExpenseAmounts,
+  type FinancialExpenseRow,
+} from "./financial-service";
 import { parsePlnAmount, type MonthlyBalance } from "./financial-rules";
 
 type ExpenseClient = SupabaseClient;
@@ -21,9 +27,25 @@ export interface ExpenseDisplay {
 
 export interface ExpenseWorkspaceState {
   expenses: readonly ExpenseDisplay[];
+  history: readonly MonthlyReportHistoryEntry[];
   currentMembershipId: string | null;
   balance: MonthlyBalance | null;
   isMonthSettled: boolean;
+}
+
+export interface MonthlyReportHistoryEntry {
+  month: string;
+  status: "settled" | "unsettled";
+  approvedAmount: string;
+}
+
+interface HistoricalExpenseRow extends FinancialExpenseRow {
+  expense_date: string;
+}
+
+interface HistoricalSettlementRow {
+  report_month: string;
+  status: "open" | "settled";
 }
 
 export function normalizeExpenseAmount(value: string): string {
@@ -123,6 +145,73 @@ function parseExpenseDisplayAmount(value: unknown): string | null {
   return null;
 }
 
+function parseApprovedReportAmount(value: unknown): string | null {
+  const raw =
+    typeof value === "string" ? value : typeof value === "number" && Number.isFinite(value) ? value.toString() : null;
+  if (raw === null) return null;
+  try {
+    const amount = new Decimal(raw);
+    return amount.isFinite() && amount.greaterThanOrEqualTo(0) && amount.decimalPlaces() <= 2
+      ? amount.toFixed(2)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+export function mapMonthlyReportHistoryRows(value: unknown): MonthlyReportHistoryEntry[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((row) => {
+    if (!row || typeof row !== "object") return [];
+    const report = row as Record<string, unknown>;
+    const approvedAmount = parseApprovedReportAmount(report.approved_amount);
+    if (
+      typeof report.report_month !== "string" ||
+      !approvedAmount ||
+      (report.status !== "open" && report.status !== "settled")
+    ) {
+      return [];
+    }
+    return [
+      {
+        month: report.report_month.slice(0, 7),
+        status: report.status === "settled" ? "settled" : "unsettled",
+        approvedAmount,
+      },
+    ];
+  });
+}
+
+export function deriveMonthlyReportHistory(input: {
+  expenses: readonly HistoricalExpenseRow[];
+  settlements: readonly HistoricalSettlementRow[];
+  currentMonth: string;
+}): MonthlyReportHistoryEntry[] {
+  const expensesByMonth = new Map<string, HistoricalExpenseRow[]>();
+  for (const expense of input.expenses) {
+    const month = expense.expense_date.slice(0, 7);
+    if (!/^\d{4}-\d{2}$/.test(month) || month >= input.currentMonth) continue;
+    const existing = expensesByMonth.get(month) ?? [];
+    existing.push(expense);
+    expensesByMonth.set(month, existing);
+  }
+
+  const settlementsByMonth = new Map<string, HistoricalSettlementRow>();
+  for (const settlement of input.settlements) {
+    const month = settlement.report_month.slice(0, 7);
+    if (!/^\d{4}-\d{2}$/.test(month) || month >= input.currentMonth) continue;
+    settlementsByMonth.set(month, settlement);
+  }
+
+  return [...new Set([...expensesByMonth.keys(), ...settlementsByMonth.keys()])]
+    .sort((first, second) => second.localeCompare(first))
+    .map((month) => ({
+      month,
+      status: settlementsByMonth.get(month)?.status === "settled" ? "settled" : "unsettled",
+      approvedAmount: sumApprovedExpenseAmounts(expensesByMonth.get(month) ?? []).toFixed(2),
+    }));
+}
+
 export async function createExpense(
   client: ExpenseClient,
   input: { childId: string | null; description: string; expenseDate: string; amount: string },
@@ -210,13 +299,28 @@ async function loadIsMonthSettled(client: ExpenseClient, familyId: string, month
   return Boolean(value && typeof value === "object" && (value as { status?: unknown }).status === "settled");
 }
 
+export async function loadMonthlyReportHistory(
+  client: ExpenseClient,
+  input: { familyId: string; currentMonth: string },
+): Promise<MonthlyReportHistoryEntry[]> {
+  const result = await client.rpc("list_monthly_report_history", {
+    p_family_id: input.familyId,
+    p_before_month: `${input.currentMonth}-01`,
+  });
+  if (result.error) {
+    throw new ExpenseBalanceError("We could not load the report history.");
+  }
+  return mapMonthlyReportHistoryRows(result.data);
+}
+
 export async function loadExpenseWorkspaceState(
   client: ExpenseClient,
   input: { familyId: string; userId: string; month: string },
 ): Promise<ExpenseWorkspaceState> {
   const repository = createSupabaseFinancialRepository(client);
-  const [expenses, parentIds, currentMembershipId, isMonthSettled] = await Promise.all([
+  const [expenses, history, parentIds, currentMembershipId, isMonthSettled] = await Promise.all([
     listMonthExpenses(client, input.familyId, input.month),
+    loadMonthlyReportHistory(client, { familyId: input.familyId, currentMonth: new Date().toISOString().slice(0, 7) }),
     repository.listActiveParentIds(input.familyId, input.userId),
     loadCurrentMembershipId(client, input.familyId, input.userId),
     loadIsMonthSettled(client, input.familyId, input.month),
@@ -230,7 +334,7 @@ export async function loadExpenseWorkspaceState(
           month: input.month,
         })
       : null;
-  return { expenses, currentMembershipId, balance, isMonthSettled };
+  return { expenses, history, currentMembershipId, balance, isMonthSettled };
 }
 
 export async function listMonthExpenses(

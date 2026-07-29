@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import Decimal from "decimal.js";
 import {
   canReviewExpense,
   deriveMonthlyBalance,
@@ -94,6 +95,13 @@ export function mapFinancialExpense(row: FinancialExpenseRow): FinancialExpense 
     payerId: row.payer_id,
     status: row.status,
   };
+}
+
+export function sumApprovedExpenseAmounts(expenses: readonly FinancialExpenseRow[]): Decimal {
+  return expenses.reduce(
+    (total, expense) => (expense.status === "approved" ? total.plus(parsePlnAmount(expense.amount_pln)) : total),
+    new Decimal(0),
+  );
 }
 
 export async function loadMonthlyBalance(input: {

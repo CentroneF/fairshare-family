@@ -8,3 +8,10 @@
 - **Problem**: The page is completely refreshed, losing the scrolling position.
 - **Rule**: The form post call should be done in the background without page refresh.
 - **Applies to**: implement
+
+## Plan Vertical End-to-End Phases
+
+- **Context**: plan a change
+- **Problem**: every time I plan a change, the phases are horizontal, not vertical on the full stack so im not able to manually verify the changes from the frontend
+- **Rule**: Plan vertical, end-to-end phases so each phase is manually verifiable from the frontend.
+- **Applies to**: plan

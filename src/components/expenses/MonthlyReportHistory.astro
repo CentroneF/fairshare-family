@@ -1,0 +1,67 @@
+---
+import type { MonthlyReportHistoryEntry } from "@/lib/expense-balance";
+
+interface Props {
+  reports: readonly MonthlyReportHistoryEntry[];
+  selectedMonth: string;
+}
+
+const { reports, selectedMonth } = Astro.props;
+
+function formatMonth(month: string): string {
+  return new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric", timeZone: "UTC" }).format(
+    new Date(`${month}-01T00:00:00Z`),
+  );
+}
+---
+
+<section class="mt-8 border-t border-white/10 pt-6" aria-labelledby="report-history-heading">
+  <details>
+    <summary id="report-history-heading" class="cursor-pointer text-lg font-semibold marker:text-purple-200">
+      Monthly report history
+    </summary>
+    <p class="mt-2 text-sm text-blue-100/70">Browse previous shared-expense reports.</p>
+    {
+      reports.length === 0 ? (
+        <p class="mt-4 rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-blue-100/80">
+          No previous reports yet. Your completed months will appear here.
+        </p>
+      ) : (
+        <ul class="mt-4 space-y-3">
+          {reports.map((report) => {
+            const isSelected = report.month === selectedMonth;
+            const isSettled = report.status === "settled";
+            return (
+              <li>
+                <a
+                  href={`/dashboard?month=${report.month}`}
+                  aria-current={isSelected ? "page" : undefined}
+                  class:list={[
+                    "flex flex-col gap-3 rounded-xl border p-4 transition hover:bg-white/10 sm:flex-row sm:items-center sm:justify-between",
+                    isSelected ? "border-purple-300/60 bg-purple-500/10" : "border-white/10 bg-white/5",
+                  ]}
+                >
+                  <span>
+                    <span class="block font-medium">{formatMonth(report.month)}</span>
+                    {isSelected && <span class="mt-1 block text-sm text-purple-100">Currently viewing</span>}
+                  </span>
+                  <span class="flex flex-wrap items-center gap-3 text-sm sm:justify-end">
+                    <span
+                      class:list={[
+                        "rounded-full px-2.5 py-1 font-medium",
+                        isSettled ? "bg-emerald-400/15 text-emerald-100" : "bg-amber-400/15 text-amber-100",
+                      ]}
+                    >
+                      {isSettled ? "Settled" : "Unsettled"}
+                    </span>
+                    <span class="font-semibold">{report.approvedAmount} PLN approved</span>
+                  </span>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      )
+    }
+  </details>
+</section>
