@@ -15,3 +15,10 @@
 - **Problem**: every time I plan a change, the phases are horizontal, not vertical on the full stack so im not able to manually verify the changes from the frontend
 - **Rule**: Plan vertical, end-to-end phases so each phase is manually verifiable from the frontend.
 - **Applies to**: plan
+
+## Create a Branch for Every New Change
+
+- **Context**: When working on a change implementation
+- **Problem**: The changes are committed to main.
+- **Rule**: When using `/10x-new`, a new branch should be checked out named like the change ID.
+- **Applies to**: new
