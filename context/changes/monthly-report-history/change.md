@@ -1,7 +1,7 @@
 ---
 change_id: monthly-report-history
 title: Monthly report history
-status: impl_reviewed
+status: implemented
 created: 2026-07-29
 updated: 2026-07-29
 archived_at: null

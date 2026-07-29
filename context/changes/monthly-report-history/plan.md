@@ -221,10 +221,10 @@ No migration is required. `monthly_settlements` already supplies the protected r
 
 #### Automated
 
-- [x] 3.1 Database history-source visibility and direct-settlement-denial tests pass.
-- [x] 3.2 Complete multi-month history unit tests, lint, and production build pass.
+- [x] 3.1 Database history-source visibility and direct-settlement-denial tests pass. — 610fd92
+- [x] 3.2 Complete multi-month history unit tests, lint, and production build pass. — 610fd92
 
 #### Manual
 
-- [x] 3.3 Confirm both parents see only their family’s settled/unsettled history and navigation remains correct.
-- [x] 3.4 Confirm background expense refresh remains intact and history refreshes on later navigation.
+- [x] 3.3 Confirm both parents see only their family’s settled/unsettled history and navigation remains correct. — 610fd92
+- [x] 3.4 Confirm background expense refresh remains intact and history refreshes on later navigation. — 610fd92
