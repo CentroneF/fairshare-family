@@ -1,6 +1,6 @@
 begin;
 
-select plan(59);
+select plan(60);
 
 insert into auth.users (id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values
@@ -270,6 +270,10 @@ select throws_ok(
 );
 
 select set_config('request.jwt.claim.sub', '56000000-0000-0000-0000-000000000001', true);
+select throws_ok(
+  $$select public.list_monthly_report_history('54000000-0000-0000-0000-000000000001', date_trunc('month', current_date)::date)$$,
+  'P0001', 'Family is not available', 'an active parent cannot read another family report history'
+);
 select throws_ok(
   $$select public.decline_expense(current_setting('test.decline_candidate_id')::uuid, 'Not mine')$$,
   'P0001', 'Expense is not available to this family', 'an active parent cannot decline another family expense'

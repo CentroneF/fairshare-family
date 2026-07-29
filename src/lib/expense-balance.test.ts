@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { loadMonthlyBalance } from "./financial-service";
 import {
   deriveMonthlyReportHistory,
+  mapMonthlyReportHistoryRows,
   mapExpenseError,
   normalizeExpenseAmount,
   normalizeDeclineReason,
@@ -114,5 +115,11 @@ describe("expense balance inputs", () => {
         settlements: [{ report_month: "2026-07-01", status: "settled" }],
       }),
     ).toEqual([]);
+  });
+
+  it("keeps a pending-only report with a zero approved total", () => {
+    expect(
+      mapMonthlyReportHistoryRows([{ report_month: "2026-06-01", status: "open", approved_amount: "0.00" }]),
+    ).toEqual([{ month: "2026-06", status: "unsettled", approvedAmount: "0.00" }]);
   });
 });

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import Decimal from "decimal.js";
 import {
   createSupabaseFinancialRepository,
   loadMonthlyBalance,
@@ -144,12 +145,26 @@ function parseExpenseDisplayAmount(value: unknown): string | null {
   return null;
 }
 
-function parseMonthlyReportHistoryRows(value: unknown): MonthlyReportHistoryEntry[] {
+function parseApprovedReportAmount(value: unknown): string | null {
+  const raw =
+    typeof value === "string" ? value : typeof value === "number" && Number.isFinite(value) ? value.toString() : null;
+  if (raw === null) return null;
+  try {
+    const amount = new Decimal(raw);
+    return amount.isFinite() && amount.greaterThanOrEqualTo(0) && amount.decimalPlaces() <= 2
+      ? amount.toFixed(2)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+export function mapMonthlyReportHistoryRows(value: unknown): MonthlyReportHistoryEntry[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((row) => {
     if (!row || typeof row !== "object") return [];
     const report = row as Record<string, unknown>;
-    const approvedAmount = parseExpenseDisplayAmount(report.approved_amount);
+    const approvedAmount = parseApprovedReportAmount(report.approved_amount);
     if (
       typeof report.report_month !== "string" ||
       !approvedAmount ||
@@ -295,7 +310,7 @@ export async function loadMonthlyReportHistory(
   if (result.error) {
     throw new ExpenseBalanceError("We could not load the report history.");
   }
-  return parseMonthlyReportHistoryRows(result.data);
+  return mapMonthlyReportHistoryRows(result.data);
 }
 
 export async function loadExpenseWorkspaceState(
