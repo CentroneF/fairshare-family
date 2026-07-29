@@ -199,12 +199,12 @@ No migration is required. `monthly_settlements` already supplies the protected r
 
 #### Automated
 
-- [ ] 1.1 History read-model unit tests prove prior-month filtering, exact approved totals, and settlement status mapping.
-- [ ] 1.2 History server-state lint passes.
+- [x] 1.1 History read-model unit tests prove prior-month filtering, exact approved totals, and settlement status mapping.
+- [x] 1.2 History server-state lint passes.
 
 #### Manual
 
-- [ ] 1.3 Inspect multiple prior report rows and confirm meaningful months appear newest first.
+- [x] 1.3 Inspect multiple prior report rows and confirm meaningful months appear newest first.
 
 ### Phase 2: Add the Collapsible Dashboard History
 
