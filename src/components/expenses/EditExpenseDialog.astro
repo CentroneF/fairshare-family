@@ -1,0 +1,150 @@
+---
+interface Props {
+  expense: {
+    id: string;
+    childId: string | null;
+    description: string;
+    expenseDate: string;
+    amountPln: string;
+  };
+  children: readonly { id: string; name: string }[];
+  month: string;
+  maxDate: string;
+}
+
+const { expense, children, month, maxDate } = Astro.props;
+---
+
+<button
+  type="button"
+  data-open-edit={expense.id}
+  onclick={`document.getElementById("edit-dialog-${expense.id}")?.showModal()`}
+  class="rounded-lg border border-white/30 px-3 py-1 text-sm hover:bg-white/10">Edit</button
+>
+<dialog
+  id={`edit-dialog-${expense.id}`}
+  data-edit-dialog={expense.id}
+  class="fixed inset-0 m-auto h-fit w-[calc(100%-2rem)] max-w-2xl rounded-xl border border-white/20 bg-slate-900 p-5 text-white backdrop:bg-slate-950/70"
+>
+  <form data-edit-expense method="POST" action="/api/expenses/edit" class="grid gap-3 sm:grid-cols-2">
+    <h2 class="text-lg font-semibold sm:col-span-2">Edit expense</h2>
+    <input type="hidden" name="expenseId" value={expense.id} />
+    <input type="hidden" name="month" value={month} />
+    <label class="sm:col-span-2">
+      <span class="mb-1 block text-sm text-blue-100/80">Description</span>
+      <input
+        name="description"
+        required
+        value={expense.description}
+        class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2"
+      />
+    </label>
+    <label>
+      <span class="mb-1 block text-sm text-blue-100/80">Child</span>
+      <select name="childId" class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2">
+        <option value="" selected={expense.childId === null}>No specific child</option>
+        {
+          children.map((child) => (
+            <option value={child.id} selected={child.id === expense.childId}>
+              {child.name}
+            </option>
+          ))
+        }
+      </select>
+    </label>
+    <label>
+      <span class="mb-1 block text-sm text-blue-100/80">Amount (PLN)</span>
+      <input
+        name="amount"
+        inputmode="decimal"
+        required
+        value={expense.amountPln}
+        class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2"
+      />
+    </label>
+    <label>
+      <span class="mb-1 block text-sm text-blue-100/80">Expense date</span>
+      <input
+        name="expenseDate"
+        type="date"
+        max={maxDate}
+        value={expense.expenseDate}
+        required
+        class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2"
+      />
+    </label>
+    <div class="flex items-end justify-end gap-3">
+      <button type="button" data-cancel-edit class="rounded px-3 py-2 hover:bg-white/10">Cancel</button>
+      <button type="submit" class="rounded bg-purple-600 px-3 py-2 text-sm hover:bg-purple-500">Save changes</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+  function refreshExpenseWorkspace(month: string) {
+    const refresh = (window as typeof window & { refreshExpenseWorkspace?: (value: string) => Promise<void> })
+      .refreshExpenseWorkspace;
+    if (!refresh) return Promise.reject(new Error("Unable to refresh expenses"));
+    return refresh(month);
+  }
+
+  function showError(form: HTMLFormElement, message: string) {
+    const existing = form.querySelector<HTMLElement>("[role='alert']");
+    if (existing) {
+      existing.textContent = message;
+      return;
+    }
+    const error = document.createElement("p");
+    error.className = "sm:col-span-2 text-sm text-red-200";
+    error.setAttribute("role", "alert");
+    error.textContent = message;
+    form.append(error);
+  }
+
+  document.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    const openButton = target.closest<HTMLButtonElement>("[data-open-edit]");
+    if (openButton) {
+      const expenseId = openButton.dataset.openEdit;
+      const dialog = document.querySelector<HTMLDialogElement>(`[data-edit-dialog='${expenseId ?? ""}']`);
+      dialog?.addEventListener("close", () => openButton.focus(), { once: true });
+      return;
+    }
+    target.closest<HTMLButtonElement>("[data-cancel-edit]")?.closest<HTMLDialogElement>("dialog")?.close();
+  });
+
+  document.addEventListener("submit", async (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement) || !form.matches("[data-edit-expense]")) return;
+    event.preventDefault();
+    const submitButton = form.querySelector<HTMLButtonElement>("button[type='submit']");
+    submitButton?.setAttribute("disabled", "true");
+    if (submitButton) submitButton.textContent = "Saving…";
+    form.querySelector("[role='alert']")?.remove();
+
+    try {
+      const response = await fetch(form.action, {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        body: new FormData(form),
+      });
+      const result = (await response.json()) as { expenseId?: string; month?: string; error?: string };
+      if (!response.ok || !result.expenseId || !result.month) {
+        showError(form, result.error ?? "We could not update that expense. Please try again.");
+        return;
+      }
+      form.closest<HTMLDialogElement>("dialog")?.close();
+      const url = new URL(window.location.href);
+      url.searchParams.set("month", result.month);
+      url.searchParams.delete("success");
+      window.history.replaceState(null, "", url);
+      await refreshExpenseWorkspace(result.month);
+    } catch {
+      showError(form, "We could not update that expense. Please try again.");
+    } finally {
+      submitButton?.removeAttribute("disabled");
+      if (submitButton) submitButton.textContent = "Save changes";
+    }
+  });
+</script>

@@ -61,9 +61,12 @@ const defaultDate = month === today.slice(0, 7) ? today : `${month}-01`;
   </div>
   <ExpenseList
     expenses={state?.expenses ?? []}
+    children={children}
     month={month}
+    maxDate={today}
     currentMembershipId={state?.currentMembershipId ?? null}
     canApprove={Boolean(state?.balance && state.currentMembershipId)}
+    isMonthSettled={state?.isMonthSettled ?? false}
   />
 </section>
 

@@ -28,7 +28,7 @@ The original payer can edit a pending, approved, or declined expense while both 
 
 ## Implementation Approach
 
-Add one forward-only migration with a retained prior-decline-reason field and two narrowly authorized command RPCs. The server module and routes normalize only editable input, while database commands derive family, payer, status, and settlement eligibility from locked database rows. Extend the workspace state with the selected month's settled flag, then use native edit/delete dialogs and the existing fragment refresh helper to keep the balance and list in sync.
+Add a forward-only edit migration with a retained prior-decline-reason field, then a separate forward-only deletion migration after Phase 1 is manually confirmed. The server module and routes normalize only editable input, while database commands derive family, payer, status, and settlement eligibility from locked database rows. Extend the workspace state with the selected month's settled flag, then use native edit/delete dialogs and the existing fragment refresh helper to keep the balance and list in sync.
 
 ## Critical Implementation Details
 
@@ -102,7 +102,7 @@ Deliver the end-to-end deletion flow for own pending or declined expenses, with 
 
 #### 1. Delete command and authorization tests
 
-**Files**: `supabase/migrations/20260722130000_unsettled_expense_corrections.sql`, `supabase/tests/approved_expense_balance.test.sql`
+**Files**: `supabase/migrations/<next-timestamp>_delete_unsettled_expenses.sql`, `supabase/tests/approved_expense_balance.test.sql`
 
 **Intent**: Let a payer remove only unresolved expenses they own while preserving approved records and settlement locks.
 
@@ -204,7 +204,7 @@ The existing one-month query remains bounded. Correction commands use targeted f
 
 ## Migration Notes
 
-Use one forward-only additive migration. Update the decline-reason constraint only after adding `previous_decline_reason`; do not edit applied migrations or add direct UPDATE/DELETE RLS policies. Absence of a settlement row and an `open` settlement both mean unsettled; only a `settled` row locks correction commands.
+Use two forward-only additive migrations: Phase 1 adds `previous_decline_reason`, adjusts the decline-reason constraint, and creates `update_expense`; Phase 2 creates `delete_expense` in a new migration after the Phase 1 migration is applied. Do not edit applied migrations or add direct UPDATE/DELETE RLS policies. Absence of a settlement row and an `open` settlement both mean unsettled; only a `settled` row locks correction commands.
 
 ## References
 
@@ -223,15 +223,15 @@ Use one forward-only additive migration. Update the decline-reason constraint on
 
 #### Automated
 
-- [ ] 1.1 Edit migration/RPC authorization, settlement-lock, and direct-write-denial tests pass.
-- [ ] 1.2 Edit server state, route, and exact-balance tests pass.
-- [ ] 1.3 Edit dialog/dashboard lint and production build pass.
+- [x] 1.1 Edit migration/RPC authorization, settlement-lock, and direct-write-denial tests pass.
+- [x] 1.2 Edit server state, route, and exact-balance tests pass.
+- [x] 1.3 Edit dialog/dashboard lint and production build pass.
 
 #### Manual
 
-- [ ] 1.4 Edit own pending, approved, and declined expenses; each re-opens as pending and an approved amount moves into To review.
-- [ ] 1.5 Re-decline an edited expense; its prior decline reason pre-fills and the new decline result is displayed.
-- [ ] 1.6 Edit an expense into an earlier month; the view switches there without a full-page reload.
+- [x] 1.4 Edit own pending, approved, and declined expenses; each re-opens as pending and an approved amount moves into To review.
+- [x] 1.5 Re-decline an edited expense; its prior decline reason pre-fills and the new decline result is displayed.
+- [x] 1.6 Edit an expense into an earlier month; the view switches there without a full-page reload.
 
 ### Phase 2: Delete an Eligible Own Expense
 

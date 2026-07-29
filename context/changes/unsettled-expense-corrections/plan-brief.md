@@ -33,7 +33,7 @@ The payer can edit pending, approved, or declined items while both affected mont
 
 ## Architecture / Approach
 
-`Edit/Delete dialog → authenticated Astro route → server normalizer/wrapper → SECURITY DEFINER RPC → refreshed dashboard fragments`. The RPC locks the family and expense, derives authority from `auth.uid()`, checks settlement state, and changes only allowed fields.
+`Edit/Delete dialog → authenticated Astro route → server normalizer/wrapper → SECURITY DEFINER RPC → refreshed dashboard fragments`. Phase 1 ships the edit migration; Phase 2 adds deletion in its own forward-only migration. Each RPC locks the family and expense, derives authority from `auth.uid()`, checks settlement state, and changes only allowed fields.
 
 ## Phases at a Glance
 

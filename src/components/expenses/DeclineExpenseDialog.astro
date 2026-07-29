@@ -2,8 +2,9 @@
 interface Props {
   expenseId: string;
   month: string;
+  previousReason?: string | null;
 }
-const { expenseId, month } = Astro.props;
+const { expenseId, month, previousReason = null } = Astro.props;
 ---
 
 <button
@@ -26,7 +27,9 @@ const { expenseId, month } = Astro.props;
         name="reason"
         required
         maxlength="500"
-        class="mt-1 block min-h-28 w-full rounded border border-white/20 bg-white/10 p-3"></textarea></label
+        class="mt-1 block min-h-28 w-full rounded border border-white/20 bg-white/10 p-3"
+        >{previousReason ?? ""}</textarea
+      ></label
     >
     <div class="flex justify-end gap-3">
       <button type="button" data-cancel-decline class="rounded px-3 py-2 hover:bg-white/10">Cancel</button>
