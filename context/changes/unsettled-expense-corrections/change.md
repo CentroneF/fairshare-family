@@ -1,7 +1,7 @@
 ---
 change_id: unsettled-expense-corrections
 title: Unsettled expense corrections
-status: implementing
+status: impl_reviewed
 created: 2026-07-22
 updated: 2026-07-29
 archived_at: null

@@ -237,21 +237,21 @@ Use two forward-only additive migrations: Phase 1 adds `previous_decline_reason`
 
 #### Automated
 
-- [x] 2.1 Delete RPC eligibility, authorization, settlement-lock, and direct-delete-denial tests pass.
-- [x] 2.2 Delete route/dialog/dashboard lint and production build pass.
+- [x] 2.1 Delete RPC eligibility, authorization, settlement-lock, and direct-delete-denial tests pass. — 8916851
+- [x] 2.2 Delete route/dialog/dashboard lint and production build pass. — 8916851
 
 #### Manual
 
-- [x] 2.3 Delete own pending and declined expenses; each disappears and the monthly totals/balance refresh immediately.
-- [x] 2.4 Confirm Delete is absent for approved, other-parent, and settled-month expenses.
-- [x] 2.5 Confirm Cancel/Escape leave an expense unchanged and return keyboard focus to its Delete control.
+- [x] 2.3 Delete own pending and declined expenses; each disappears and the monthly totals/balance refresh immediately. — 8916851
+- [x] 2.4 Confirm Delete is absent for approved, other-parent, and settled-month expenses. — 8916851
+- [x] 2.5 Confirm Cancel/Escape leave an expense unchanged and return keyboard focus to its Delete control. — 8916851
 
 ### Phase 3: Verify the Complete Correction Workflow
 
 #### Automated
 
-- [ ] 3.1 Full correction lifecycle pgTAP and exact-balance unit coverage pass.
-- [ ] 3.2 Complete correction dashboard lint and production build pass.
+- [x] 3.1 Full correction lifecycle pgTAP and exact-balance unit coverage pass.
+- [x] 3.2 Complete correction dashboard lint and production build pass.
 
 #### Manual
 
