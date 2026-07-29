@@ -13,14 +13,17 @@ export interface ExpenseDisplay {
   amountPln: string;
   status: "pending" | "approved" | "declined";
   payerId: string;
+  childId: string | null;
   childName: string | null;
   declineReason: string | null;
+  previousDeclineReason: string | null;
 }
 
 export interface ExpenseWorkspaceState {
   expenses: readonly ExpenseDisplay[];
   currentMembershipId: string | null;
   balance: MonthlyBalance | null;
+  isMonthSettled: boolean;
 }
 
 export function normalizeExpenseAmount(value: string): string {
@@ -73,6 +76,10 @@ export function mapExpenseError(error: unknown): string {
   if (message.includes("Expense date cannot")) return "Expense date cannot be in the future.";
   if (message.includes("Selected child")) return "Choose a child from your family or leave it empty.";
   if (message.includes("Only the other parent")) return "Only the other parent can approve this expense.";
+  if (message.includes("Only the payer can update")) return "Only the payer can edit this expense.";
+  if (message.includes("Only the payer can delete")) return "Only the payer can delete this expense.";
+  if (message.includes("Only pending or declined")) return "Approved expenses cannot be deleted.";
+  if (message.includes("settled month")) return "Expenses in a settled month cannot be changed.";
   if (message.includes("Exactly two active parents"))
     return "Both active parents must be in the family before an expense can be approved.";
   if (message.includes("already been reviewed")) return "This expense has already been reviewed.";
@@ -146,6 +153,31 @@ export async function declineExpense(client: ExpenseClient, rawExpenseId: string
   if (error) throw new ExpenseBalanceError(mapExpenseError(error));
 }
 
+export async function updateExpense(
+  client: ExpenseClient,
+  input: { expenseId: string; childId: string | null; description: string; expenseDate: string; amount: string },
+): Promise<void> {
+  const expenseId = normalizeExpenseId(input.expenseId);
+  const description = input.description.trim();
+  if (!description) throw new ExpenseBalanceError("Enter an expense description.");
+  const amount = normalizeExpenseAmount(input.amount);
+  const expenseDate = normalizeExpenseDate(input.expenseDate);
+  const { error } = await client.rpc("update_expense", {
+    p_expense_id: expenseId,
+    p_child_id: input.childId,
+    p_description: description,
+    p_expense_date: expenseDate,
+    p_amount_pln: amount,
+  });
+  if (error) throw new ExpenseBalanceError(mapExpenseError(error));
+}
+
+export async function deleteExpense(client: ExpenseClient, rawExpenseId: string): Promise<void> {
+  const expenseId = normalizeExpenseId(rawExpenseId);
+  const { error } = await client.rpc("delete_expense", { p_expense_id: expenseId });
+  if (error) throw new ExpenseBalanceError(mapExpenseError(error));
+}
+
 async function loadCurrentMembershipId(
   client: ExpenseClient,
   familyId: string,
@@ -166,15 +198,28 @@ async function loadCurrentMembershipId(
     : null;
 }
 
+async function loadIsMonthSettled(client: ExpenseClient, familyId: string, month: string): Promise<boolean> {
+  const result = await client
+    .from("monthly_settlements")
+    .select("status")
+    .eq("family_id", familyId)
+    .eq("report_month", `${month}-01`)
+    .maybeSingle();
+  if (result.error) throw new ExpenseBalanceError("We could not load the family balance.");
+  const value = result.data as unknown;
+  return Boolean(value && typeof value === "object" && (value as { status?: unknown }).status === "settled");
+}
+
 export async function loadExpenseWorkspaceState(
   client: ExpenseClient,
   input: { familyId: string; userId: string; month: string },
 ): Promise<ExpenseWorkspaceState> {
   const repository = createSupabaseFinancialRepository(client);
-  const [expenses, parentIds, currentMembershipId] = await Promise.all([
+  const [expenses, parentIds, currentMembershipId, isMonthSettled] = await Promise.all([
     listMonthExpenses(client, input.familyId, input.month),
     repository.listActiveParentIds(input.familyId, input.userId),
     loadCurrentMembershipId(client, input.familyId, input.userId),
+    loadIsMonthSettled(client, input.familyId, input.month),
   ]);
   const balance =
     parentIds.length === 2
@@ -185,7 +230,7 @@ export async function loadExpenseWorkspaceState(
           month: input.month,
         })
       : null;
-  return { expenses, currentMembershipId, balance };
+  return { expenses, currentMembershipId, balance, isMonthSettled };
 }
 
 export async function listMonthExpenses(
@@ -198,7 +243,9 @@ export async function listMonthExpenses(
   const start = `${month}-01`;
   const result = await client
     .from("expenses")
-    .select("id, description, expense_date, amount_pln, status, payer_id, decline_reason, children(name)")
+    .select(
+      "id, child_id, description, expense_date, amount_pln, status, payer_id, decline_reason, previous_decline_reason, children(name)",
+    )
     .eq("family_id", familyId)
     .gte("expense_date", start)
     .lt("expense_date", nextMonth)
@@ -217,6 +264,7 @@ export async function listMonthExpenses(
       typeof value.expense_date !== "string" ||
       !amountPln ||
       typeof value.payer_id !== "string" ||
+      (value.child_id !== null && typeof value.child_id !== "string") ||
       (value.status !== "pending" && value.status !== "approved" && value.status !== "declined")
     ) {
       return [];
@@ -229,7 +277,9 @@ export async function listMonthExpenses(
         amountPln,
         status: value.status,
         payerId: value.payer_id,
+        childId: typeof value.child_id === "string" ? value.child_id : null,
         declineReason: typeof value.decline_reason === "string" ? value.decline_reason : null,
+        previousDeclineReason: typeof value.previous_decline_reason === "string" ? value.previous_decline_reason : null,
         childName:
           child && typeof child === "object" && typeof (child as { name?: unknown }).name === "string"
             ? (child as { name: string }).name

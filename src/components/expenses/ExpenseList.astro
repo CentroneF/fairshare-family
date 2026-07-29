@@ -1,17 +1,36 @@
 ---
 import type { ExpenseDisplay } from "@/lib/expense-balance";
 import DeclineExpenseDialog from "@/components/expenses/DeclineExpenseDialog.astro";
+import EditExpenseDialog from "@/components/expenses/EditExpenseDialog.astro";
+import DeleteExpenseDialog from "@/components/expenses/DeleteExpenseDialog.astro";
 
 interface Props {
   expenses: readonly ExpenseDisplay[];
+  children: readonly { id: string; name: string }[];
   month: string;
+  maxDate: string;
   currentMembershipId: string | null;
   canApprove: boolean;
+  isMonthSettled: boolean;
 }
 
-const { expenses, month, currentMembershipId, canApprove } = Astro.props;
+const { expenses, children, month, maxDate, currentMembershipId, canApprove, isMonthSettled } = Astro.props;
 const activeExpenses = expenses.filter((expense) => expense.status !== "declined");
 const declinedExpenses = expenses.filter((expense) => expense.status === "declined");
+const canEditExpense = (expense: ExpenseDisplay) =>
+  Boolean(currentMembershipId && expense.payerId === currentMembershipId && !isMonthSettled);
+const canReviewExpense = (expense: ExpenseDisplay) =>
+  Boolean(
+    canApprove &&
+    currentMembershipId &&
+    expense.status === "pending" &&
+    expense.payerId !== currentMembershipId &&
+    !isMonthSettled,
+  );
+const canDeleteExpense = (expense: ExpenseDisplay) =>
+  Boolean(
+    currentMembershipId && expense.payerId === currentMembershipId && !isMonthSettled && expense.status !== "approved",
+  );
 ---
 
 <section id="expense-list-container" class="mt-6">
@@ -39,7 +58,7 @@ const declinedExpenses = expenses.filter((expense) => expense.status === "declin
               <p class="font-semibold">{expense.amountPln} PLN</p>
               {expense.status === "approved" ? (
                 <p class="mt-1 text-sm text-emerald-200">Approved</p>
-              ) : canApprove && currentMembershipId && expense.payerId !== currentMembershipId ? (
+              ) : canReviewExpense(expense) ? (
                 <div class="mt-2 flex justify-end gap-2">
                   <form data-approve-expense method="POST" action="/api/expenses/approve">
                     <input type="hidden" name="expenseId" value={expense.id} />
@@ -51,10 +70,20 @@ const declinedExpenses = expenses.filter((expense) => expense.status === "declin
                       Approve
                     </button>
                   </form>
-                  <DeclineExpenseDialog expenseId={expense.id} month={month} />
+                  <DeclineExpenseDialog
+                    expenseId={expense.id}
+                    month={month}
+                    previousReason={expense.previousDeclineReason}
+                  />
                 </div>
-              ) : (
+              ) : !canEditExpense(expense) ? (
                 <p class="mt-1 text-sm text-amber-200">Awaiting review</p>
+              ) : null}
+              {canEditExpense(expense) && (
+                <div class="mt-2 flex justify-end gap-2">
+                  <EditExpenseDialog expense={expense} children={children} month={month} maxDate={maxDate} />
+                  {canDeleteExpense(expense) && <DeleteExpenseDialog expenseId={expense.id} month={month} />}
+                </div>
               )}
             </div>
           </div>
@@ -89,6 +118,12 @@ const declinedExpenses = expenses.filter((expense) => expense.status === "declin
                   <p class="font-semibold">{expense.amountPln} PLN</p>
                   <p class="mt-1 text-sm text-red-200">Declined</p>
                   {expense.declineReason && <p class="mt-1 text-sm text-red-100/80">{expense.declineReason}</p>}
+                  {canEditExpense(expense) && (
+                    <div class="mt-2 flex justify-end gap-2">
+                      <EditExpenseDialog expense={expense} children={children} month={month} maxDate={maxDate} />
+                      {canDeleteExpense(expense) && <DeleteExpenseDialog expenseId={expense.id} month={month} />}
+                    </div>
+                  )}
                 </div>
               </div>
             </li>

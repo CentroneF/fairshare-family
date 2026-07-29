@@ -19,7 +19,7 @@ Preserve `context/` as project-planning history; do not overwrite or move archiv
 
 ## Build, Test, and Development Commands
 
-See `@package.json` for the current scripts. Run `npm run dev` for local development, and run `npm test`, `npm run lint`, plus `npm run build` before opening a PR. Run `npx supabase test db` after starting the local Supabase stack when changing migrations or RLS. Run `npm run lint:fix` or `npm run format` only when the resulting diff is limited to intended files; review all generated changes before committing.
+See `@package.json` for the current scripts. Run `npm run dev` for local development, and run `npm test`, `npm run lint`, plus `npm run build` before opening a PR. Run `npx supabase test db` after starting the local Supabase stack when changing migrations or RLS. Do not run `supabase db reset` during normal development: it recreates the local database and deletes local `auth.users`; apply migrations incrementally instead, and reset only with explicit user approval. Run `npm run lint:fix` or `npm run format` only when the resulting diff is limited to intended files; review all generated changes before committing.
 
 Unit tests use Vitest beside affected `src/` modules; database integration tests live under `supabase/tests/` and run through the Supabase CLI.
 

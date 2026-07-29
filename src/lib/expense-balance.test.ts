@@ -33,6 +33,12 @@ describe("expense balance inputs", () => {
     expect(mapExpenseError({ message: "Expense has already been reviewed" })).toBe(
       "This expense has already been reviewed.",
     );
+    expect(mapExpenseError({ message: "Only the payer can update this expense" })).toBe(
+      "Only the payer can edit this expense.",
+    );
+    expect(mapExpenseError({ message: "Expenses in a settled month cannot be updated" })).toBe(
+      "Expenses in a settled month cannot be changed.",
+    );
   });
 
   it("requires a concise decline reason", () => {
@@ -60,5 +66,19 @@ describe("expense balance inputs", () => {
     expect(balance.approvedAmount.toFixed(2)).toBe("10.50");
     expect(balance.toReviewAmount.toFixed(2)).toBe("2.25");
     expect(balance.settlement).toMatchObject({ kind: "payment", fromParentId: "parent-b", toParentId: "parent-a" });
+  });
+
+  it("moves an edited approved amount back into the review total", async () => {
+    const balance = await loadMonthlyBalance({
+      repository: {
+        listActiveParentIds: () => Promise.resolve(["parent-a", "parent-b"]),
+        listMonthExpenses: () => Promise.resolve([{ amount_pln: "10.50", payer_id: "parent-a", status: "pending" }]),
+      },
+      familyId: "family-a",
+      userId: "user-a",
+      month: "2026-07",
+    });
+    expect(balance.approvedAmount.toFixed(2)).toBe("0.00");
+    expect(balance.toReviewAmount.toFixed(2)).toBe("10.50");
   });
 });
