@@ -19,6 +19,10 @@ const supabase = createClient(Astro.request.headers, Astro.cookies);
 const state = supabase ? await loadExpenseWorkspaceState(supabase, { familyId, userId, month }) : null;
 const today = new Date().toISOString().slice(0, 10);
 const defaultDate = month === today.slice(0, 7) ? today : `${month}-01`;
+const lockedMessage =
+  state?.settlement.kind === "settled"
+    ? "This month is settled and permanently locked."
+    : "This month is locked while settlement is being confirmed.";
 ---
 
 <section class="border-t border-white/10 pt-8">
@@ -50,13 +54,20 @@ const defaultDate = month === today.slice(0, 7) ? today : `${month}-01`;
       month={month}
       maxDate={today}
       defaultDate={defaultDate}
+      isMonthLocked={state?.settlement.isLocked ?? false}
+      lockedMessage={lockedMessage}
       serverError={serverError}
     />
   </div>
   <div id="monthly-balance-container" class="mt-5">
     {
       state?.balance && state.currentMembershipId && (
-        <MonthlyBalancePanel balance={state.balance} currentMembershipId={state.currentMembershipId} />
+        <MonthlyBalancePanel
+          balance={state.balance}
+          currentMembershipId={state.currentMembershipId}
+          month={month}
+          settlement={state.settlement}
+        />
       )
     }
   </div>
@@ -67,25 +78,147 @@ const defaultDate = month === today.slice(0, 7) ? today : `${month}-01`;
     maxDate={today}
     currentMembershipId={state?.currentMembershipId ?? null}
     canApprove={Boolean(state?.balance && state.currentMembershipId)}
-    isMonthSettled={state?.isMonthSettled ?? false}
+    isMonthLocked={state?.settlement.isLocked ?? false}
   />
-  <MonthlyReportHistory reports={state?.history ?? []} selectedMonth={month} />
+  <div id="monthly-report-history-container">
+    <MonthlyReportHistory reports={state?.history ?? []} selectedMonth={month} />
+  </div>
 </section>
 
 <script>
   async function refreshExpenseWorkspace(month: string) {
+    const historyWasOpen =
+      document.querySelector<HTMLDetailsElement>("#monthly-report-history-container details")?.open ?? false;
     const response = await fetch(`/dashboard?${new URLSearchParams({ month })}`);
     if (!response.ok) throw new Error("Unable to refresh expenses");
 
     const parsedDocument = new DOMParser().parseFromString(await response.text(), "text/html");
     const updatedBalance = parsedDocument.querySelector<HTMLElement>("#monthly-balance-container");
     const updatedList = parsedDocument.querySelector<HTMLElement>("#expense-list-container");
-    if (!updatedBalance || !updatedList) throw new Error("Unable to refresh expenses");
+    const updatedHistory = parsedDocument.querySelector<HTMLElement>("#monthly-report-history-container");
+    if (!updatedBalance || !updatedList || !updatedHistory) throw new Error("Unable to refresh expenses");
 
     document.querySelector("#monthly-balance-container")?.replaceWith(updatedBalance);
     document.querySelector("#expense-list-container")?.replaceWith(updatedList);
+    document.querySelector("#monthly-report-history-container")?.replaceWith(updatedHistory);
+    const refreshedHistory = document.querySelector<HTMLDetailsElement>("#monthly-report-history-container details");
+    if (refreshedHistory) refreshedHistory.open = historyWasOpen;
   }
 
   (window as typeof window & { refreshExpenseWorkspace?: (month: string) => Promise<void> }).refreshExpenseWorkspace =
     refreshExpenseWorkspace;
+
+  function showEditError(form: HTMLFormElement, message: string) {
+    const existing = form.querySelector<HTMLElement>("[role='alert']");
+    if (existing) {
+      existing.textContent = message;
+      return;
+    }
+    const error = document.createElement("p");
+    error.className = "sm:col-span-2 text-sm text-red-200";
+    error.setAttribute("role", "alert");
+    error.textContent = message;
+    form.append(error);
+  }
+
+  document.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    const editOpener = target.closest<HTMLButtonElement>("[data-open-edit]");
+    if (editOpener) {
+      const expenseId = editOpener.dataset.openEdit;
+      const dialog = document.querySelector<HTMLDialogElement>(`[data-edit-dialog='${expenseId ?? ""}']`);
+      dialog?.addEventListener("close", () => editOpener.focus(), { once: true });
+      return;
+    }
+    const editCancel = target.closest<HTMLButtonElement>("[data-cancel-edit]");
+    if (editCancel) {
+      editCancel.closest<HTMLDialogElement>("dialog")?.close();
+      return;
+    }
+    const opener = target.closest<HTMLElement>("[data-open-settlement-dialog]");
+    const dialogId = opener?.dataset.openSettlementDialog;
+    const dialog = dialogId ? document.getElementById(dialogId) : null;
+    if (dialog instanceof HTMLDialogElement) dialog.showModal();
+    if (target.matches("[data-cancel-settlement]")) target.closest("dialog")?.close();
+  });
+
+  document.addEventListener("submit", async (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement) || !form.matches("[data-edit-expense]")) return;
+    event.preventDefault();
+    const submitButton = form.querySelector<HTMLButtonElement>("button[type='submit']");
+    submitButton?.setAttribute("disabled", "true");
+    if (submitButton) submitButton.textContent = "Saving…";
+    form.querySelector("[role='alert']")?.remove();
+
+    try {
+      const response = await fetch(form.action, {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        body: new FormData(form),
+      });
+      const result = (await response.json()) as { expenseId?: string; month?: string; error?: string };
+      if (!response.ok || !result.expenseId || !result.month) {
+        showEditError(form, result.error ?? "We could not update that expense. Please try again.");
+        return;
+      }
+      form.closest<HTMLDialogElement>("dialog")?.close();
+      const url = new URL(window.location.href);
+      url.searchParams.set("month", result.month);
+      url.searchParams.delete("success");
+      window.history.replaceState(null, "", url);
+      await refreshExpenseWorkspace(result.month);
+    } catch {
+      showEditError(form, "We could not update that expense. Please try again.");
+    } finally {
+      submitButton?.removeAttribute("disabled");
+      if (submitButton) submitButton.textContent = "Save changes";
+    }
+  });
+
+  document.addEventListener("submit", async (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement) || !form.matches("[data-confirm-settlement]")) return;
+    event.preventDefault();
+    const button = form.querySelector<HTMLButtonElement>("button[type='submit']");
+    const error = form.querySelector<HTMLElement>("[data-settlement-error]");
+    let confirmationSaved = false;
+    if (error) {
+      error.textContent = "";
+      error.classList.add("hidden");
+    }
+    button?.setAttribute("disabled", "true");
+    if (button) button.textContent = "Confirming…";
+    try {
+      const response = await fetch(form.action, {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        body: new FormData(form),
+      });
+      const result = (await response.json()) as { error?: string; month?: string };
+      if (!response.ok || result.error || !result.month)
+        throw new Error(result.error ?? "We could not confirm this settlement. Please try again.");
+      confirmationSaved = true;
+      await refreshExpenseWorkspace(result.month);
+      form.closest("dialog")?.close();
+    } catch (cause) {
+      if (error) {
+        error.textContent = confirmationSaved
+          ? "Settlement was confirmed, but the view could not refresh. Reload the page."
+          : cause instanceof Error
+            ? cause.message
+            : "We could not confirm this settlement. Please try again.";
+        error.classList.remove("hidden");
+      }
+    } finally {
+      if (confirmationSaved) {
+        button?.setAttribute("disabled", "true");
+        if (button) button.textContent = "Confirmed";
+      } else {
+        button?.removeAttribute("disabled");
+        if (button) button.textContent = "Confirm";
+      }
+    }
+  });
 </script>

@@ -1,10 +1,10 @@
 ---
-change_id: unsettled-expense-corrections
-title: Unsettled expense corrections
-status: implemented
-created: 2026-07-22
+change_id: monthly-report-history
+title: Monthly report history
+status: archived
+created: 2026-07-29
 updated: 2026-07-29
-archived_at: null
+archived_at: 2026-07-30T11:08:49Z
 ---
 
 ## Notes

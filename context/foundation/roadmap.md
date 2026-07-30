@@ -3,7 +3,7 @@ project: FairShare Family
 version: 1
 status: draft
 created: 2026-07-17
-updated: 2026-07-21
+updated: 2026-07-30
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -29,12 +29,12 @@ FairShare Family gives separated or divorced co-parents a shared record of child
 
 | ID | Change ID | Outcome (user can …) | Prerequisites | PRD refs | Status |
 |---|---|---|---|---|---|
-| F-01 | financial-rules-verification | (foundation) verify exact financial rules before shared balances depend on them | — | Business Logic; Non-Functional Requirements — financial accuracy | completed |
-| S-01 | family-onboarding | create an account, establish a family, add children, and join as the second parent | F-01 | FR-001, FR-002, FR-003, FR-004, FR-005; Non-Functional Requirements — responsive Android-installable web experience | completed |
-| S-02 | approved-expense-balance | add, review, and see an approved expense affect the selected month’s balance | S-01, F-01 | US-01, FR-006, FR-009, FR-011, FR-013 | completed |
-| S-03 | unsettled-expense-corrections | correct or remove their own unsettled expense without corrupting the shared balance | S-02, F-01 | FR-007, FR-008 | proposed |
-| S-04 | monthly-report-history | browse previous monthly reports and distinguish settled from unsettled months | S-02 | FR-012 | proposed |
-| S-05 | joint-monthly-settlement | jointly settle and lock an eligible monthly report | S-03, S-04, F-01 | FR-014 | proposed |
+| F-01 | financial-rules-verification | (foundation) verify exact financial rules before shared balances depend on them | — | Business Logic; Non-Functional Requirements — financial accuracy | done |
+| S-01 | family-onboarding | create an account, establish a family, add children, and join as the second parent | F-01 | FR-001, FR-002, FR-003, FR-004, FR-005; Non-Functional Requirements — responsive Android-installable web experience | done |
+| S-02 | approved-expense-balance | add, review, and see an approved expense affect the selected month’s balance | S-01, F-01 | US-01, FR-006, FR-009, FR-011, FR-013 | done |
+| S-03 | unsettled-expense-corrections | correct or remove their own unsettled expense without corrupting the shared balance | S-02, F-01 | FR-007, FR-008 | done |
+| S-04 | monthly-report-history | browse previous monthly reports and distinguish settled from unsettled months | S-02 | FR-012 | done |
+| S-05 | joint-monthly-settlement | jointly settle and lock an eligible monthly report | S-03, S-04, F-01 | FR-014 | done |
 
 ## Streams
 
@@ -69,7 +69,7 @@ What’s already in place in the codebase as of `2026-07-17` (auto-researched + 
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Financial rules are the product’s trust boundary; the PLN-only decision prevents a fast path from encoding ambiguous amount semantics.
-- **Status:** completed
+- **Status:** done
 
 ## Slices
 
@@ -83,7 +83,7 @@ What’s already in place in the codebase as of `2026-07-17` (auto-researched + 
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** This reuses the existing account access rather than expanding it; the scope stays focused on a usable two-parent starting point.
-- **Status:** completed
+- **Status:** done
 
 ### S-02: Approved expense changes the shared monthly balance
 
@@ -95,7 +95,7 @@ What’s already in place in the codebase as of `2026-07-17` (auto-researched + 
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** This is the first complete shared-money flow; it must separate approved and pending values clearly so provisional spending is not presented as final.
-- **Status:** completed
+- **Status:** done
 
 ### S-03: Unsettled expense corrections
 
@@ -108,7 +108,7 @@ What’s already in place in the codebase as of `2026-07-17` (auto-researched + 
 - **Unknowns:**
   - No currency decision remains: the MVP is PLN only.
 - **Risk:** Correction rules change shared totals, so they follow the first review flow instead of adding alternate state changes before it is proven.
-- **Status:** proposed
+- **Status:** done
 
 ### S-04: Monthly report history
 
@@ -120,7 +120,7 @@ What’s already in place in the codebase as of `2026-07-17` (auto-researched + 
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** History is sequenced after the current-month flow so it extends a real report rather than creating a second, disconnected view.
-- **Status:** proposed
+- **Status:** done
 
 ### S-05: Joint monthly settlement
 
@@ -133,7 +133,7 @@ What’s already in place in the codebase as of `2026-07-17` (auto-researched + 
 - **Unknowns:**
   - No currency decision remains: the MVP is PLN only.
 - **Risk:** Settlement is intentionally last because it makes prior data irreversible and depends on the complete correction and report rules.
-- **Status:** proposed
+- **Status:** done
 
 ## Backlog Handoff
 
@@ -160,3 +160,10 @@ What’s already in place in the codebase as of `2026-07-17` (auto-researched + 
 - **In-app money transfer and native mobile applications.** — Why parked: PRD Non-Goals limits the product to calculating settlement and an Android-installable web experience.
 
 ## Done
+
+- **S-05: user can jointly settle and lock a past month only after all expenses are approved and no declined or pending expenses remain.** — Archived 2026-07-30 → `context/archive/2026-07-29-joint-monthly-settlement/`. Lesson: —.
+- **F-01: (foundation) exact amount handling, fixed 50/50 balance rules, and settlement eligibility have a shared verification path before user-facing balances rely on them.** — Archived 2026-07-30 → `context/archive/2026-07-17-financial-rules-verification/`. Lesson: —.
+- **S-01: user can create an account, sign in, create a family, add children, and share a join code so the second parent can enter the same family.** — Archived 2026-07-30 → `context/archive/2026-07-20-family-onboarding/`. Lesson: —.
+- **S-02: user can add an expense, the other parent can approve or decline it, and an approved expense appears in the selected month’s list and balance while a declined expense remains visible but excluded.** — Archived 2026-07-30 → `context/archive/2026-07-21-approved-expense-balance/`. Lesson: —.
+- **S-03: user can edit an unsettled expense for re-review or delete their own unapproved unsettled expense without changing a locked month.** — Archived 2026-07-30 → `context/archive/2026-07-22-unsettled-expense-corrections/`. Lesson: —.
+- **S-04: user can browse previous monthly reports and clearly see whether each month is settled or unsettled.** — Archived 2026-07-30 → `context/archive/2026-07-29-monthly-report-history/`. Lesson: —.

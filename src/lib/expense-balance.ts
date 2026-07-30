@@ -6,7 +6,7 @@ import {
   sumApprovedExpenseAmounts,
   type FinancialExpenseRow,
 } from "./financial-service";
-import { parsePlnAmount, type MonthlyBalance } from "./financial-rules";
+import { isSettlementEligible, parsePlnAmount, type MonthlyBalance } from "./financial-rules";
 
 type ExpenseClient = SupabaseClient;
 
@@ -30,8 +30,25 @@ export interface ExpenseWorkspaceState {
   history: readonly MonthlyReportHistoryEntry[];
   currentMembershipId: string | null;
   balance: MonthlyBalance | null;
-  isMonthSettled: boolean;
+  settlement: SettlementState;
 }
+
+export type SettlementState =
+  | { kind: "unavailable"; isLocked: false; reason: SettlementUnavailableReason }
+  | { kind: "eligible"; isLocked: false }
+  | { kind: "awaiting-other-parent"; isLocked: true }
+  | { kind: "requires-your-confirmation"; isLocked: true }
+  | {
+      kind: "settled";
+      isLocked: true;
+      approvedAmount: string;
+      firstConfirmedContribution: string;
+      secondConfirmedContribution: string;
+      paymentAmount: string;
+      paymentFromCurrentParent: boolean | null;
+    };
+
+export type SettlementUnavailableReason = "current-month" | "one-parent" | "no-expenses" | "pending" | "declined";
 
 export interface MonthlyReportHistoryEntry {
   month: string;
@@ -46,6 +63,17 @@ interface HistoricalExpenseRow extends FinancialExpenseRow {
 interface HistoricalSettlementRow {
   report_month: string;
   status: "open" | "settled";
+}
+
+interface SettlementRow {
+  status: "open" | "settled";
+  first_confirmed_by: string | null;
+  second_confirmed_by: string | null;
+  approved_amount_pln: unknown;
+  first_confirmed_contribution_pln: unknown;
+  second_confirmed_contribution_pln: unknown;
+  payment_from_membership_id: string | null;
+  payment_amount_pln: unknown;
 }
 
 export function normalizeExpenseAmount(value: string): string {
@@ -101,7 +129,12 @@ export function mapExpenseError(error: unknown): string {
   if (message.includes("Only the payer can update")) return "Only the payer can edit this expense.";
   if (message.includes("Only the payer can delete")) return "Only the payer can delete this expense.";
   if (message.includes("Only pending or declined")) return "Approved expenses cannot be deleted.";
-  if (message.includes("settled month")) return "Expenses in a settled month cannot be changed.";
+  if (message.includes("confirmation-locked") || message.includes("settled month"))
+    return "Expenses in a confirmation-locked or settled month cannot be changed.";
+  if (message.includes("already confirmed")) return "You have already confirmed this settlement.";
+  if (message.includes("already been settled")) return "This month has already been settled.";
+  if (message.includes("All expenses must be approved")) return "Approve every expense before confirming settlement.";
+  if (message.includes("Only past months")) return "Only a past month can be settled.";
   if (message.includes("Exactly two active parents"))
     return "Both active parents must be in the family before an expense can be approved.";
   if (message.includes("already been reviewed")) return "This expense has already been reviewed.";
@@ -109,6 +142,27 @@ export function mapExpenseError(error: unknown): string {
   if (message.toLowerCase().includes("decline reason")) return "Enter a decline reason of up to 500 characters.";
   if (message.includes("Authentication is required")) return "Please sign in and try again.";
   return "We could not save that expense. Please try again.";
+}
+
+export function mapSettlementError(error: unknown): string {
+  if (error instanceof ExpenseBalanceError) return error.message;
+  const message =
+    error instanceof Error
+      ? error.message
+      : error && typeof error === "object" && typeof (error as { message?: unknown }).message === "string"
+        ? (error as { message: string }).message
+        : "";
+  if (message.includes("already confirmed")) return "You have already confirmed this settlement.";
+  if (message.includes("already been settled")) return "This month has already been settled.";
+  if (message.includes("A month with no expenses")) return "Add at least one expense before confirming settlement.";
+  if (message.includes("All expenses must be approved")) return "Approve every expense before confirming settlement.";
+  if (message.includes("Only past months")) return "Only a past month can be settled.";
+  if (message.includes("first day of a month")) return "Choose a valid report month.";
+  if (message.includes("Exactly two active parents"))
+    return "Both active parents must be in the family before confirming settlement.";
+  if (message.includes("Authentication is required")) return "Please sign in and try again.";
+  if (message.includes("active family membership")) return "Join an active family before confirming settlement.";
+  return "We could not confirm this settlement. Please try again.";
 }
 
 export function normalizeDeclineReason(value: string): string {
@@ -267,6 +321,12 @@ export async function deleteExpense(client: ExpenseClient, rawExpenseId: string)
   if (error) throw new ExpenseBalanceError(mapExpenseError(error));
 }
 
+export async function confirmMonthlySettlement(client: ExpenseClient, rawMonth: string): Promise<void> {
+  const month = normalizeSelectedMonth(rawMonth);
+  const { error } = await client.rpc("confirm_monthly_settlement", { p_report_month: `${month}-01` });
+  if (error) throw new ExpenseBalanceError(mapSettlementError(error));
+}
+
 async function loadCurrentMembershipId(
   client: ExpenseClient,
   familyId: string,
@@ -287,16 +347,112 @@ async function loadCurrentMembershipId(
     : null;
 }
 
-async function loadIsMonthSettled(client: ExpenseClient, familyId: string, month: string): Promise<boolean> {
+async function loadSettlementRow(
+  client: ExpenseClient,
+  familyId: string,
+  month: string,
+): Promise<SettlementRow | null> {
   const result = await client
     .from("monthly_settlements")
-    .select("status")
+    .select(
+      "status, first_confirmed_by, second_confirmed_by, approved_amount_pln, first_confirmed_contribution_pln, second_confirmed_contribution_pln, payment_from_membership_id, payment_amount_pln",
+    )
     .eq("family_id", familyId)
     .eq("report_month", `${month}-01`)
     .maybeSingle();
   if (result.error) throw new ExpenseBalanceError("We could not load the family balance.");
   const value = result.data as unknown;
-  return Boolean(value && typeof value === "object" && (value as { status?: unknown }).status === "settled");
+  if (!value || typeof value !== "object") return null;
+  const row = value as Record<string, unknown>;
+  if (
+    (row.status !== "open" && row.status !== "settled") ||
+    (row.first_confirmed_by !== null && typeof row.first_confirmed_by !== "string") ||
+    (row.second_confirmed_by !== null && typeof row.second_confirmed_by !== "string") ||
+    (row.payment_from_membership_id !== null && typeof row.payment_from_membership_id !== "string")
+  ) {
+    return null;
+  }
+  return row as SettlementRow;
+}
+
+export function getSettlementUnavailableReason(input: {
+  expenses: readonly Pick<ExpenseDisplay, "status">[];
+  parentIds: readonly string[];
+  month: string;
+  currentMonth: string;
+}): SettlementUnavailableReason | null {
+  if (input.month >= input.currentMonth) return "current-month";
+  if (new Set(input.parentIds).size !== 2 || input.parentIds.length !== 2) return "one-parent";
+  if (input.expenses.length === 0) return "no-expenses";
+  if (input.expenses.some((expense) => expense.status === "pending")) return "pending";
+  if (input.expenses.some((expense) => expense.status === "declined")) return "declined";
+  return null;
+}
+
+export function deriveSettlementState(input: {
+  row: SettlementRow | null;
+  expenses: readonly ExpenseDisplay[];
+  parentIds: readonly string[];
+  currentMembershipId: string | null;
+  balance: MonthlyBalance | null;
+  month: string;
+  today?: Date;
+}): SettlementState {
+  if (input.row?.status === "settled") {
+    const approvedAmount = parseApprovedReportAmount(input.row.approved_amount_pln);
+    const firstConfirmedContribution = parseApprovedReportAmount(input.row.first_confirmed_contribution_pln);
+    const secondConfirmedContribution = parseApprovedReportAmount(input.row.second_confirmed_contribution_pln);
+    const paymentAmount = parseApprovedReportAmount(input.row.payment_amount_pln);
+    if (!approvedAmount || !firstConfirmedContribution || !secondConfirmedContribution || !paymentAmount) {
+      throw new ExpenseBalanceError("We could not load the family balance.");
+    }
+    return {
+      kind: "settled",
+      isLocked: true,
+      approvedAmount,
+      firstConfirmedContribution,
+      secondConfirmedContribution,
+      paymentAmount: new Decimal(paymentAmount).toFixed(0),
+      paymentFromCurrentParent:
+        input.row.payment_from_membership_id === null
+          ? null
+          : input.row.payment_from_membership_id === input.currentMembershipId,
+    };
+  }
+
+  if (input.row?.first_confirmed_by) {
+    return {
+      kind:
+        input.row.first_confirmed_by === input.currentMembershipId
+          ? "awaiting-other-parent"
+          : "requires-your-confirmation",
+      isLocked: true,
+    };
+  }
+
+  const today = input.today ?? new Date();
+  const unavailableReason = getSettlementUnavailableReason({
+    expenses: input.expenses,
+    parentIds: input.parentIds,
+    month: input.month,
+    currentMonth: today.toISOString().slice(0, 7),
+  });
+  const eligible =
+    unavailableReason === null &&
+    input.balance !== null &&
+    isSettlementEligible({
+      expenses: input.expenses.map((expense) => ({
+        amountPln: expense.amountPln,
+        payerId: expense.payerId,
+        status: expense.status,
+      })),
+      parentIds: input.parentIds,
+      reportMonth: new Date(`${input.month}-01T00:00:00Z`),
+      today,
+    });
+  return eligible
+    ? { kind: "eligible", isLocked: false }
+    : { kind: "unavailable", isLocked: false, reason: unavailableReason ?? "pending" };
 }
 
 export async function loadMonthlyReportHistory(
@@ -318,12 +474,12 @@ export async function loadExpenseWorkspaceState(
   input: { familyId: string; userId: string; month: string },
 ): Promise<ExpenseWorkspaceState> {
   const repository = createSupabaseFinancialRepository(client);
-  const [expenses, history, parentIds, currentMembershipId, isMonthSettled] = await Promise.all([
+  const [expenses, history, parentIds, currentMembershipId, settlementRow] = await Promise.all([
     listMonthExpenses(client, input.familyId, input.month),
     loadMonthlyReportHistory(client, { familyId: input.familyId, currentMonth: new Date().toISOString().slice(0, 7) }),
     repository.listActiveParentIds(input.familyId, input.userId),
     loadCurrentMembershipId(client, input.familyId, input.userId),
-    loadIsMonthSettled(client, input.familyId, input.month),
+    loadSettlementRow(client, input.familyId, input.month),
   ]);
   const balance =
     parentIds.length === 2
@@ -334,7 +490,20 @@ export async function loadExpenseWorkspaceState(
           month: input.month,
         })
       : null;
-  return { expenses, history, currentMembershipId, balance, isMonthSettled };
+  return {
+    expenses,
+    history,
+    currentMembershipId,
+    balance,
+    settlement: deriveSettlementState({
+      row: settlementRow,
+      expenses,
+      parentIds,
+      currentMembershipId,
+      balance,
+      month: input.month,
+    }),
+  };
 }
 
 export async function listMonthExpenses(
