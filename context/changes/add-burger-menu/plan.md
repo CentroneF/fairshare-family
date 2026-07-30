@@ -202,11 +202,11 @@ No migration is required. The existing family-scoped report-history RPC, RLS enf
 
 #### Automated
 
-- [ ] 1.1 Report-history route tests, lint, and production build pass.
+- [x] 1.1 Report-history route tests, lint, and production build pass.
 
 #### Manual
 
-- [ ] 1.2 Verify authenticated history access, report rows, dashboard links, and setup-state redirect.
+- [x] 1.2 Verify authenticated history access, report rows, dashboard links, and setup-state redirect.
 
 ### Phase 2: Add Responsive Established-Family Navigation
 

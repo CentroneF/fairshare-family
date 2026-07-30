@@ -27,7 +27,6 @@ export interface ExpenseDisplay {
 
 export interface ExpenseWorkspaceState {
   expenses: readonly ExpenseDisplay[];
-  history: readonly MonthlyReportHistoryEntry[];
   currentMembershipId: string | null;
   balance: MonthlyBalance | null;
   settlement: SettlementState;
@@ -474,9 +473,8 @@ export async function loadExpenseWorkspaceState(
   input: { familyId: string; userId: string; month: string },
 ): Promise<ExpenseWorkspaceState> {
   const repository = createSupabaseFinancialRepository(client);
-  const [expenses, history, parentIds, currentMembershipId, settlementRow] = await Promise.all([
+  const [expenses, parentIds, currentMembershipId, settlementRow] = await Promise.all([
     listMonthExpenses(client, input.familyId, input.month),
-    loadMonthlyReportHistory(client, { familyId: input.familyId, currentMonth: new Date().toISOString().slice(0, 7) }),
     repository.listActiveParentIds(input.familyId, input.userId),
     loadCurrentMembershipId(client, input.familyId, input.userId),
     loadSettlementRow(client, input.familyId, input.month),
@@ -492,7 +490,6 @@ export async function loadExpenseWorkspaceState(
       : null;
   return {
     expenses,
-    history,
     currentMembershipId,
     balance,
     settlement: deriveSettlementState({

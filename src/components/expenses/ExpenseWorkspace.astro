@@ -2,7 +2,6 @@
 import CreateExpenseForm from "@/components/expenses/CreateExpenseForm.astro";
 import ExpenseList from "@/components/expenses/ExpenseList.astro";
 import MonthlyBalancePanel from "@/components/expenses/MonthlyBalancePanel.astro";
-import MonthlyReportHistory from "@/components/expenses/MonthlyReportHistory.astro";
 import { loadExpenseWorkspaceState } from "@/lib/expense-balance";
 import { createClient } from "@/lib/supabase";
 
@@ -80,9 +79,6 @@ const lockedMessage =
     canApprove={Boolean(state?.balance && state.currentMembershipId)}
     isMonthLocked={state?.settlement.isLocked ?? false}
   />
-  <div id="monthly-report-history-container">
-    <MonthlyReportHistory reports={state?.history ?? []} selectedMonth={month} />
-  </div>
 </section>
 
 <script>

@@ -1,0 +1,35 @@
+---
+import MonthlyReportHistory from "@/components/expenses/MonthlyReportHistory.astro";
+import Layout from "@/layouts/Layout.astro";
+import { loadMonthlyReportHistory } from "@/lib/expense-balance";
+import { resolveOnboardingState } from "@/lib/family-onboarding";
+import { createClient } from "@/lib/supabase";
+
+const { user } = Astro.locals;
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+
+if (!supabase || !user) {
+  return Astro.redirect("/auth/signin");
+}
+
+const onboarding = await resolveOnboardingState(supabase, user.id);
+if (onboarding.kind !== "two-parent-family") {
+  return Astro.redirect("/dashboard");
+}
+
+const reports = await loadMonthlyReportHistory(supabase, {
+  familyId: onboarding.family.id,
+  currentMonth: new Date().toISOString().slice(0, 7),
+});
+---
+
+<Layout title="Monthly report history">
+  <main class="bg-cosmic min-h-screen p-4 text-white sm:p-8">
+    <div class="mx-auto w-full max-w-3xl rounded-2xl border border-white/10 bg-white/10 p-6 backdrop-blur-xl sm:p-8">
+      <a href="/dashboard" class="inline-flex text-sm text-purple-100 hover:text-white">← Back to dashboard</a>
+      <div class="mt-6">
+        <MonthlyReportHistory reports={reports} />
+      </div>
+    </div>
+  </main>
+</Layout>
