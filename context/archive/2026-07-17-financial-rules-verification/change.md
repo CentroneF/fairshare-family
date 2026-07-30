@@ -1,10 +1,10 @@
 ---
 change_id: financial-rules-verification
 title: Financial rules verification
-status: implemented
+status: archived
 created: 2026-07-17
 updated: 2026-07-17
-archived_at: null
+archived_at: 2026-07-30T11:05:56Z
 ---
 
 ## Notes

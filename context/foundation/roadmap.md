@@ -29,7 +29,7 @@ FairShare Family gives separated or divorced co-parents a shared record of child
 
 | ID | Change ID | Outcome (user can …) | Prerequisites | PRD refs | Status |
 |---|---|---|---|---|---|
-| F-01 | financial-rules-verification | (foundation) verify exact financial rules before shared balances depend on them | — | Business Logic; Non-Functional Requirements — financial accuracy | completed |
+| F-01 | financial-rules-verification | (foundation) verify exact financial rules before shared balances depend on them | — | Business Logic; Non-Functional Requirements — financial accuracy | done |
 | S-01 | family-onboarding | create an account, establish a family, add children, and join as the second parent | F-01 | FR-001, FR-002, FR-003, FR-004, FR-005; Non-Functional Requirements — responsive Android-installable web experience | completed |
 | S-02 | approved-expense-balance | add, review, and see an approved expense affect the selected month’s balance | S-01, F-01 | US-01, FR-006, FR-009, FR-011, FR-013 | completed |
 | S-03 | unsettled-expense-corrections | correct or remove their own unsettled expense without corrupting the shared balance | S-02, F-01 | FR-007, FR-008 | proposed |
@@ -69,7 +69,7 @@ What’s already in place in the codebase as of `2026-07-17` (auto-researched + 
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Financial rules are the product’s trust boundary; the PLN-only decision prevents a fast path from encoding ambiguous amount semantics.
-- **Status:** completed
+- **Status:** done
 
 ## Slices
 
@@ -162,3 +162,4 @@ What’s already in place in the codebase as of `2026-07-17` (auto-researched + 
 ## Done
 
 - **S-05: user can jointly settle and lock a past month only after all expenses are approved and no declined or pending expenses remain.** — Archived 2026-07-30 → `context/archive/2026-07-29-joint-monthly-settlement/`. Lesson: —.
+- **F-01: (foundation) exact amount handling, fixed 50/50 balance rules, and settlement eligibility have a shared verification path before user-facing balances rely on them.** — Archived 2026-07-30 → `context/archive/2026-07-17-financial-rules-verification/`. Lesson: —.
