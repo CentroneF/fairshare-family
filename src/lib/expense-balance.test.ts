@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { loadMonthlyBalance } from "./financial-service";
 import {
   deriveMonthlyReportHistory,
+  getSettlementUnavailableReason,
   mapMonthlyReportHistoryRows,
   mapExpenseError,
   normalizeExpenseAmount,
@@ -121,5 +122,48 @@ describe("expense balance inputs", () => {
     expect(
       mapMonthlyReportHistoryRows([{ report_month: "2026-06-01", status: "open", approved_amount: "0.00" }]),
     ).toEqual([{ month: "2026-06", status: "unsettled", approvedAmount: "0.00" }]);
+  });
+
+  it("explains why a selected month cannot be settled", () => {
+    expect(
+      getSettlementUnavailableReason({
+        expenses: [],
+        parentIds: ["parent-a", "parent-b"],
+        month: "2026-07",
+        currentMonth: "2026-07",
+      }),
+    ).toBe("current-month");
+    expect(
+      getSettlementUnavailableReason({
+        expenses: [],
+        parentIds: ["parent-a"],
+        month: "2026-06",
+        currentMonth: "2026-07",
+      }),
+    ).toBe("one-parent");
+    expect(
+      getSettlementUnavailableReason({
+        expenses: [],
+        parentIds: ["parent-a", "parent-b"],
+        month: "2026-06",
+        currentMonth: "2026-07",
+      }),
+    ).toBe("no-expenses");
+    expect(
+      getSettlementUnavailableReason({
+        expenses: [{ status: "pending" }],
+        parentIds: ["parent-a", "parent-b"],
+        month: "2026-06",
+        currentMonth: "2026-07",
+      }),
+    ).toBe("pending");
+    expect(
+      getSettlementUnavailableReason({
+        expenses: [{ status: "declined" }],
+        parentIds: ["parent-a", "parent-b"],
+        month: "2026-06",
+        currentMonth: "2026-07",
+      }),
+    ).toBe("declined");
   });
 });

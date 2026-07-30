@@ -19,6 +19,10 @@ const supabase = createClient(Astro.request.headers, Astro.cookies);
 const state = supabase ? await loadExpenseWorkspaceState(supabase, { familyId, userId, month }) : null;
 const today = new Date().toISOString().slice(0, 10);
 const defaultDate = month === today.slice(0, 7) ? today : `${month}-01`;
+const lockedMessage =
+  state?.settlement.kind === "settled"
+    ? "This month is settled and permanently locked."
+    : "This month is locked while settlement is being confirmed.";
 ---
 
 <section class="border-t border-white/10 pt-8">
@@ -51,6 +55,7 @@ const defaultDate = month === today.slice(0, 7) ? today : `${month}-01`;
       maxDate={today}
       defaultDate={defaultDate}
       isMonthLocked={state?.settlement.isLocked ?? false}
+      lockedMessage={lockedMessage}
       serverError={serverError}
     />
   </div>
@@ -82,6 +87,8 @@ const defaultDate = month === today.slice(0, 7) ? today : `${month}-01`;
 
 <script>
   async function refreshExpenseWorkspace(month: string) {
+    const historyWasOpen =
+      document.querySelector<HTMLDetailsElement>("#monthly-report-history-container details")?.open ?? false;
     const response = await fetch(`/dashboard?${new URLSearchParams({ month })}`);
     if (!response.ok) throw new Error("Unable to refresh expenses");
 
@@ -94,8 +101,55 @@ const defaultDate = month === today.slice(0, 7) ? today : `${month}-01`;
     document.querySelector("#monthly-balance-container")?.replaceWith(updatedBalance);
     document.querySelector("#expense-list-container")?.replaceWith(updatedList);
     document.querySelector("#monthly-report-history-container")?.replaceWith(updatedHistory);
+    const refreshedHistory = document.querySelector<HTMLDetailsElement>("#monthly-report-history-container details");
+    if (refreshedHistory) refreshedHistory.open = historyWasOpen;
   }
 
   (window as typeof window & { refreshExpenseWorkspace?: (month: string) => Promise<void> }).refreshExpenseWorkspace =
     refreshExpenseWorkspace;
+
+  document.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    const opener = target.closest<HTMLElement>("[data-open-settlement-dialog]");
+    const dialogId = opener?.dataset.openSettlementDialog;
+    const dialog = dialogId ? document.getElementById(dialogId) : null;
+    if (dialog instanceof HTMLDialogElement) dialog.showModal();
+    if (target.matches("[data-cancel-settlement]")) target.closest("dialog")?.close();
+  });
+
+  document.addEventListener("submit", async (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement) || !form.matches("[data-confirm-settlement]")) return;
+    event.preventDefault();
+    const button = form.querySelector<HTMLButtonElement>("button[type='submit']");
+    const error = form.querySelector<HTMLElement>("[data-settlement-error]");
+    if (error) {
+      error.textContent = "";
+      error.classList.add("hidden");
+    }
+    button?.setAttribute("disabled", "true");
+    if (button) button.textContent = "Confirming…";
+    try {
+      const response = await fetch(form.action, {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        body: new FormData(form),
+      });
+      const result = (await response.json()) as { error?: string; month?: string };
+      if (!response.ok || result.error || !result.month)
+        throw new Error(result.error ?? "We could not confirm this settlement. Please try again.");
+      form.closest("dialog")?.close();
+      await refreshExpenseWorkspace(result.month);
+    } catch (cause) {
+      if (error) {
+        error.textContent =
+          cause instanceof Error ? cause.message : "We could not confirm this settlement. Please try again.";
+        error.classList.remove("hidden");
+      }
+    } finally {
+      button?.removeAttribute("disabled");
+      if (button) button.textContent = "Confirm";
+    }
+  });
 </script>

@@ -5,16 +5,17 @@ interface Props {
   maxDate: string;
   defaultDate: string;
   isMonthLocked: boolean;
+  lockedMessage?: string;
   serverError?: string | null;
 }
 
-const { children, month, maxDate, defaultDate, isMonthLocked, serverError } = Astro.props;
+const { children, month, maxDate, defaultDate, isMonthLocked, lockedMessage, serverError } = Astro.props;
 ---
 
 {
   isMonthLocked ? (
     <p class="rounded-xl border border-amber-300/30 bg-amber-500/10 p-4 text-sm text-amber-100">
-      This month is locked while settlement is being confirmed.
+      {lockedMessage ?? "This month is locked while settlement is being confirmed."}
     </p>
   ) : (
     <form

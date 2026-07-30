@@ -34,7 +34,7 @@ export interface ExpenseWorkspaceState {
 }
 
 export type SettlementState =
-  | { kind: "unavailable"; isLocked: false }
+  | { kind: "unavailable"; isLocked: false; reason: SettlementUnavailableReason }
   | { kind: "eligible"; isLocked: false }
   | { kind: "awaiting-other-parent"; isLocked: true }
   | { kind: "requires-your-confirmation"; isLocked: true }
@@ -47,6 +47,8 @@ export type SettlementState =
       paymentAmount: string;
       paymentFromCurrentParent: boolean | null;
     };
+
+export type SettlementUnavailableReason = "current-month" | "one-parent" | "no-expenses" | "pending" | "declined";
 
 export interface MonthlyReportHistoryEntry {
   month: string;
@@ -352,6 +354,20 @@ async function loadSettlementRow(
   return row as SettlementRow;
 }
 
+export function getSettlementUnavailableReason(input: {
+  expenses: readonly Pick<ExpenseDisplay, "status">[];
+  parentIds: readonly string[];
+  month: string;
+  currentMonth: string;
+}): SettlementUnavailableReason | null {
+  if (input.month >= input.currentMonth) return "current-month";
+  if (new Set(input.parentIds).size !== 2 || input.parentIds.length !== 2) return "one-parent";
+  if (input.expenses.length === 0) return "no-expenses";
+  if (input.expenses.some((expense) => expense.status === "pending")) return "pending";
+  if (input.expenses.some((expense) => expense.status === "declined")) return "declined";
+  return null;
+}
+
 function deriveSettlementState(input: {
   row: SettlementRow | null;
   expenses: readonly ExpenseDisplay[];
@@ -392,7 +408,14 @@ function deriveSettlementState(input: {
     };
   }
 
+  const unavailableReason = getSettlementUnavailableReason({
+    expenses: input.expenses,
+    parentIds: input.parentIds,
+    month: input.month,
+    currentMonth: new Date().toISOString().slice(0, 7),
+  });
   const eligible =
+    unavailableReason === null &&
     input.balance !== null &&
     isSettlementEligible({
       expenses: input.expenses.map((expense) => ({
@@ -404,7 +427,9 @@ function deriveSettlementState(input: {
       reportMonth: new Date(`${input.month}-01T00:00:00Z`),
       today: new Date(),
     });
-  return { kind: eligible ? "eligible" : "unavailable", isLocked: false };
+  return eligible
+    ? { kind: "eligible", isLocked: false }
+    : { kind: "unavailable", isLocked: false, reason: unavailableReason ?? "pending" };
 }
 
 export async function loadMonthlyReportHistory(

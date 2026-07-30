@@ -226,27 +226,27 @@ Create a new forward-only migration; never modify applied migrations. Apply it i
 
 #### Automated
 
-- [x] 1.1 Settlement RPC, snapshot, authorization, and complete expense-mutation lock pgTAP coverage pass.
-- [x] 1.2 Settlement server state, route, unit tests, lint, and production build pass.
+- [x] 1.1 Settlement RPC, snapshot, authorization, and complete expense-mutation lock pgTAP coverage pass. — 38823a8
+- [x] 1.2 Settlement server state, route, unit tests, lint, and production build pass. — 38823a8
 
 #### Manual
 
-- [x] 1.3 First parent confirmation visibly locks an eligible past report without a page refresh.
-- [x] 1.4 Second parent confirmation settles the report, records the payment/no-payment snapshot, and refreshes history.
-- [x] 1.5 Confirm no expense mutation is available or succeeds after first confirmation or settlement.
+- [x] 1.3 First parent confirmation visibly locks an eligible past report without a page refresh. — 38823a8
+- [x] 1.4 Second parent confirmation settles the report, records the payment/no-payment snapshot, and refreshes history. — 38823a8
+- [x] 1.5 Confirm no expense mutation is available or succeeds after first confirmation or settlement. — 38823a8
 
 ### Phase 2: Explain Eligibility and Preserve the Locked Report Experience
 
 #### Automated
 
-- [ ] 2.1 Eligibility, lock, snapshot, and binary-history state regressions pass with lint and production build.
-- [ ] 2.2 Database family-read and binary-history regressions pass.
+- [x] 2.1 Eligibility, lock, snapshot, and binary-history state regressions pass with lint and production build.
+- [x] 2.2 Database family-read and binary-history regressions pass.
 
 #### Manual
 
-- [ ] 2.3 Ineligible reports expose a disabled action with clear visible and touch-accessible guidance.
-- [ ] 2.4 First-confirmed and settled report states are clear and immutable on desktop and narrow viewport.
-- [ ] 2.5 Selected report and history refresh in the background without losing scroll position.
+- [x] 2.3 Ineligible reports expose a disabled action with clear visible and touch-accessible guidance.
+- [x] 2.4 First-confirmed and settled report states are clear and immutable on desktop and narrow viewport.
+- [x] 2.5 Selected report and history refresh in the background without losing scroll position.
 
 ### Phase 3: Prove the Complete Two-Parent Settlement Boundary
 
