@@ -31,7 +31,7 @@ FairShare Family gives separated or divorced co-parents a shared record of child
 |---|---|---|---|---|---|
 | F-01 | financial-rules-verification | (foundation) verify exact financial rules before shared balances depend on them | — | Business Logic; Non-Functional Requirements — financial accuracy | done |
 | S-01 | family-onboarding | create an account, establish a family, add children, and join as the second parent | F-01 | FR-001, FR-002, FR-003, FR-004, FR-005; Non-Functional Requirements — responsive Android-installable web experience | done |
-| S-02 | approved-expense-balance | add, review, and see an approved expense affect the selected month’s balance | S-01, F-01 | US-01, FR-006, FR-009, FR-011, FR-013 | completed |
+| S-02 | approved-expense-balance | add, review, and see an approved expense affect the selected month’s balance | S-01, F-01 | US-01, FR-006, FR-009, FR-011, FR-013 | done |
 | S-03 | unsettled-expense-corrections | correct or remove their own unsettled expense without corrupting the shared balance | S-02, F-01 | FR-007, FR-008 | proposed |
 | S-04 | monthly-report-history | browse previous monthly reports and distinguish settled from unsettled months | S-02 | FR-012 | proposed |
 | S-05 | joint-monthly-settlement | jointly settle and lock an eligible monthly report | S-03, S-04, F-01 | FR-014 | done |
@@ -95,7 +95,7 @@ What’s already in place in the codebase as of `2026-07-17` (auto-researched + 
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** This is the first complete shared-money flow; it must separate approved and pending values clearly so provisional spending is not presented as final.
-- **Status:** completed
+- **Status:** done
 
 ### S-03: Unsettled expense corrections
 
@@ -164,3 +164,4 @@ What’s already in place in the codebase as of `2026-07-17` (auto-researched + 
 - **S-05: user can jointly settle and lock a past month only after all expenses are approved and no declined or pending expenses remain.** — Archived 2026-07-30 → `context/archive/2026-07-29-joint-monthly-settlement/`. Lesson: —.
 - **F-01: (foundation) exact amount handling, fixed 50/50 balance rules, and settlement eligibility have a shared verification path before user-facing balances rely on them.** — Archived 2026-07-30 → `context/archive/2026-07-17-financial-rules-verification/`. Lesson: —.
 - **S-01: user can create an account, sign in, create a family, add children, and share a join code so the second parent can enter the same family.** — Archived 2026-07-30 → `context/archive/2026-07-20-family-onboarding/`. Lesson: —.
+- **S-02: user can add an expense, the other parent can approve or decline it, and an approved expense appears in the selected month’s list and balance while a declined expense remains visible but excluded.** — Archived 2026-07-30 → `context/archive/2026-07-21-approved-expense-balance/`. Lesson: —.
