@@ -252,10 +252,10 @@ Create a new forward-only migration; never modify applied migrations. Apply it i
 
 #### Automated
 
-- [x] 3.1 Complete two-parent settlement lifecycle, snapshot, locking, and direct-write-denial pgTAP suite passes.
-- [x] 3.2 Settlement state and exact financial unit regressions, lint, and production build pass.
+- [x] 3.1 Complete two-parent settlement lifecycle, snapshot, locking, and direct-write-denial pgTAP suite passes. — 2ff5eea
+- [x] 3.2 Settlement state and exact financial unit regressions, lint, and production build pass. — 2ff5eea
 
 #### Manual
 
-- [x] 3.3 Two parents complete payment and balanced settlements; only a second distinct confirmation finalizes each.
-- [x] 3.4 Stale confirmation and mutation attempts fail safely across desktop and narrow viewport without full-page refresh.
+- [x] 3.3 Two parents complete payment and balanced settlements; only a second distinct confirmation finalizes each. — 2ff5eea
+- [x] 3.4 Stale confirmation and mutation attempts fail safely across desktop and narrow viewport without full-page refresh. — 2ff5eea
