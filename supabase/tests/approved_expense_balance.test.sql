@@ -1,6 +1,6 @@
 begin;
 
-select plan(62);
+select plan(71);
 
 insert into auth.users (id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values
@@ -25,16 +25,19 @@ insert into public.children (id, family_id, name)
 values ('54300000-0000-0000-0000-000000000001', '54000000-0000-0000-0000-000000000001', 'Child A');
 
 insert into public.monthly_settlements (
-  family_id, report_month, status, first_confirmed_by, first_confirmed_at, second_confirmed_by, second_confirmed_at, settled_at
+  family_id, report_month, status, first_confirmed_by, first_confirmed_at, second_confirmed_by, second_confirmed_at, settled_at,
+  approved_amount_pln, first_confirmed_contribution_pln, second_confirmed_contribution_pln, payment_amount_pln
 )
 values
   (
     '54000000-0000-0000-0000-000000000001', date_trunc('month', current_date - interval '2 months')::date, 'settled',
-    '54100000-0000-0000-0000-000000000001', now(), '54200000-0000-0000-0000-000000000001', now(), now()
+    '54100000-0000-0000-0000-000000000001', now(), '54200000-0000-0000-0000-000000000001', now(), now(),
+    0.00, 0.00, 0.00, 0
   ),
   (
     '54000000-0000-0000-0000-000000000001', date_trunc('month', current_date - interval '3 months')::date, 'settled',
-    '54100000-0000-0000-0000-000000000001', now(), '54200000-0000-0000-0000-000000000001', now(), now()
+    '54100000-0000-0000-0000-000000000001', now(), '54200000-0000-0000-0000-000000000001', now(), now(),
+    0.00, 0.00, 0.00, 0
   );
 
 insert into public.expenses (
@@ -48,6 +51,10 @@ values
   (
     '54000000-0000-0000-0000-000000000001', '54200000-0000-0000-0000-000000000001', 'History approved two',
     (current_date - interval '1 month')::date, 0.10, 'approved', '54100000-0000-0000-0000-000000000001', now()
+  ),
+  (
+    '54000000-0000-0000-0000-000000000001', '54100000-0000-0000-0000-000000000001', 'Settled correction candidate',
+    (current_date - interval '3 months')::date, 10.00, 'pending', null, null
   );
 
 set local role authenticated;
@@ -197,15 +204,11 @@ select lives_ok(
 );
 select throws_ok(
   $$select public.update_expense((select id from public.expenses where description = 'Open correction candidate'), null, 'Blocked destination', (current_date - interval '2 months')::date, 11.00)$$,
-  'P0001', 'Expenses in a settled month cannot be updated', 'editing rejects a settled destination month'
-);
-select lives_ok(
-  $$select public.create_expense(null, 'Settled correction candidate', (current_date - interval '3 months')::date, 10.00)$$,
-  'a settled-month expense can be prepared for source-settlement testing'
+  'P0001', 'Expenses in a confirmation-locked or settled month cannot be changed', 'editing rejects a settled destination month'
 );
 select throws_ok(
   $$select public.update_expense((select id from public.expenses where description = 'Settled correction candidate'), null, 'Blocked source', (current_date - interval '1 month')::date, 10.00)$$,
-  'P0001', 'Expenses in a settled month cannot be updated', 'editing rejects a settled source month'
+  'P0001', 'Expenses in a confirmation-locked or settled month cannot be changed', 'editing rejects a settled source month'
 );
 
 select set_config('request.jwt.claim.sub', '52000000-0000-0000-0000-000000000001', true);
@@ -255,7 +258,7 @@ select throws_ok(
 );
 select throws_ok(
   $$select public.delete_expense((select id from public.expenses where description = 'Settled correction candidate'))$$,
-  'P0001', 'Expenses in a settled month cannot be deleted', 'settled-month expenses cannot be deleted'
+  'P0001', 'Expenses in a confirmation-locked or settled month cannot be changed', 'settled-month expenses cannot be deleted'
 );
 select set_config('request.jwt.claim.sub', '52000000-0000-0000-0000-000000000001', true);
 select throws_ok(
@@ -275,6 +278,51 @@ select throws_ok(
 select throws_ok(
   $$update public.monthly_settlements set status = 'open' where family_id = '54000000-0000-0000-0000-000000000001'$$,
   '42501', 'permission denied for table monthly_settlements', 'direct authenticated settlement updates are denied'
+);
+select throws_ok(
+  $$insert into public.monthly_settlements (family_id, report_month) values ('54000000-0000-0000-0000-000000000001', date_trunc('month', current_date - interval '5 months')::date)$$,
+  '42501', 'permission denied for table monthly_settlements', 'direct authenticated settlement inserts are denied'
+);
+
+select lives_ok(
+  $$select public.create_expense(null, 'Settlement confirmation candidate', (current_date - interval '4 months')::date, 10.00)$$,
+  'an unsettled past expense can be prepared for joint settlement'
+);
+select set_config('request.jwt.claim.sub', '52000000-0000-0000-0000-000000000001', true);
+select lives_ok(
+  $$select public.approve_expense((select id from public.expenses where description = 'Settlement confirmation candidate'))$$,
+  'the other parent approves a settlement candidate'
+);
+select set_config('request.jwt.claim.sub', '51000000-0000-0000-0000-000000000001', true);
+select lives_ok(
+  $$select public.confirm_monthly_settlement(date_trunc('month', current_date - interval '4 months')::date)$$,
+  'the first parent confirms an eligible past month'
+);
+select is(
+  (select status::text from public.monthly_settlements where family_id = '54000000-0000-0000-0000-000000000001' and report_month = date_trunc('month', current_date - interval '4 months')::date),
+  'open', 'the first confirmation leaves the settlement open'
+);
+select throws_ok(
+  $$select public.confirm_monthly_settlement(date_trunc('month', current_date - interval '4 months')::date)$$,
+  'P0001', 'You have already confirmed this settlement', 'the first parent cannot confirm twice'
+);
+select throws_ok(
+  $$select public.create_expense(null, 'Blocked after confirmation', (current_date - interval '4 months')::date, 1.00)$$,
+  'P0001', 'Expenses in a confirmation-locked or settled month cannot be changed', 'first confirmation locks expense creation'
+);
+select set_config('request.jwt.claim.sub', '52000000-0000-0000-0000-000000000001', true);
+select lives_ok(
+  $$select public.confirm_monthly_settlement(date_trunc('month', current_date - interval '4 months')::date)$$,
+  'the second parent settles the unchanged month'
+);
+select is(
+  (select status::text from public.monthly_settlements where family_id = '54000000-0000-0000-0000-000000000001' and report_month = date_trunc('month', current_date - interval '4 months')::date),
+  'settled', 'the second confirmation settles the month'
+);
+select is(
+  (select approved_amount_pln::text || ':' || first_confirmed_contribution_pln::text || ':' || second_confirmed_contribution_pln::text || ':' || payment_amount_pln::text
+    from public.monthly_settlements where family_id = '54000000-0000-0000-0000-000000000001' and report_month = date_trunc('month', current_date - interval '4 months')::date),
+  '10.00:10.00:0.00:5', 'final settlement stores the exact amount and both contributions'
 );
 
 select set_config('request.jwt.claim.sub', '56000000-0000-0000-0000-000000000001', true);

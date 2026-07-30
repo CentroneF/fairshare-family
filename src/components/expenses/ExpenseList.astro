@@ -11,25 +11,25 @@ interface Props {
   maxDate: string;
   currentMembershipId: string | null;
   canApprove: boolean;
-  isMonthSettled: boolean;
+  isMonthLocked: boolean;
 }
 
-const { expenses, children, month, maxDate, currentMembershipId, canApprove, isMonthSettled } = Astro.props;
+const { expenses, children, month, maxDate, currentMembershipId, canApprove, isMonthLocked } = Astro.props;
 const activeExpenses = expenses.filter((expense) => expense.status !== "declined");
 const declinedExpenses = expenses.filter((expense) => expense.status === "declined");
 const canEditExpense = (expense: ExpenseDisplay) =>
-  Boolean(currentMembershipId && expense.payerId === currentMembershipId && !isMonthSettled);
+  Boolean(currentMembershipId && expense.payerId === currentMembershipId && !isMonthLocked);
 const canReviewExpense = (expense: ExpenseDisplay) =>
   Boolean(
     canApprove &&
     currentMembershipId &&
     expense.status === "pending" &&
     expense.payerId !== currentMembershipId &&
-    !isMonthSettled,
+    !isMonthLocked,
   );
 const canDeleteExpense = (expense: ExpenseDisplay) =>
   Boolean(
-    currentMembershipId && expense.payerId === currentMembershipId && !isMonthSettled && expense.status !== "approved",
+    currentMembershipId && expense.payerId === currentMembershipId && !isMonthLocked && expense.status !== "approved",
   );
 ---
 

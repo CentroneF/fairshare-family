@@ -226,14 +226,14 @@ Create a new forward-only migration; never modify applied migrations. Apply it i
 
 #### Automated
 
-- [ ] 1.1 Settlement RPC, snapshot, authorization, and complete expense-mutation lock pgTAP coverage pass.
-- [ ] 1.2 Settlement server state, route, unit tests, lint, and production build pass.
+- [x] 1.1 Settlement RPC, snapshot, authorization, and complete expense-mutation lock pgTAP coverage pass.
+- [x] 1.2 Settlement server state, route, unit tests, lint, and production build pass.
 
 #### Manual
 
-- [ ] 1.3 First parent confirmation visibly locks an eligible past report without a page refresh.
-- [ ] 1.4 Second parent confirmation settles the report, records the payment/no-payment snapshot, and refreshes history.
-- [ ] 1.5 Confirm no expense mutation is available or succeeds after first confirmation or settlement.
+- [x] 1.3 First parent confirmation visibly locks an eligible past report without a page refresh.
+- [x] 1.4 Second parent confirmation settles the report, records the payment/no-payment snapshot, and refreshes history.
+- [x] 1.5 Confirm no expense mutation is available or succeeds after first confirmation or settlement.
 
 ### Phase 2: Explain Eligibility and Preserve the Locked Report Experience
 

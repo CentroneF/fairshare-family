@@ -4,72 +4,82 @@ interface Props {
   month: string;
   maxDate: string;
   defaultDate: string;
+  isMonthLocked: boolean;
   serverError?: string | null;
 }
 
-const { children, month, maxDate, defaultDate, serverError } = Astro.props;
+const { children, month, maxDate, defaultDate, isMonthLocked, serverError } = Astro.props;
 ---
 
-<form
-  id="create-expense-form"
-  method="POST"
-  action="/api/expenses/create"
-  class="grid gap-3 rounded-xl border border-white/15 bg-white/5 p-4 sm:grid-cols-2"
->
-  <input type="hidden" name="month" value={month} />
-  <label class="sm:col-span-2">
-    <span class="mb-1 block text-sm text-blue-100/80">Description</span>
-    <input
-      name="description"
-      required
-      class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2"
-      placeholder="e.g. School supplies"
-    />
-  </label>
-  <label>
-    <span class="mb-1 block text-sm text-blue-100/80">Child</span>
-    <select name="childId" class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2">
-      <option value="">No specific child</option>
-      {children.map((child) => <option value={child.id}>{child.name}</option>)}
-    </select>
-  </label>
-  <label>
-    <span class="mb-1 block text-sm text-blue-100/80">Amount (PLN)</span>
-    <input
-      name="amount"
-      inputmode="decimal"
-      required
-      class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2"
-      placeholder="12,50"
-    />
-  </label>
-  <label>
-    <span class="mb-1 block text-sm text-blue-100/80">Expense date</span>
-    <input
-      name="expenseDate"
-      type="date"
-      max={maxDate}
-      value={defaultDate}
-      required
-      class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2"
-    />
-  </label>
-  <div class="flex items-end">
-    <button
-      id="create-expense-submit"
-      type="submit"
-      class="w-full rounded-lg bg-purple-600 px-4 py-2 font-medium hover:bg-purple-500 disabled:cursor-wait disabled:opacity-70"
-      >Add expense</button
+{
+  isMonthLocked ? (
+    <p class="rounded-xl border border-amber-300/30 bg-amber-500/10 p-4 text-sm text-amber-100">
+      This month is locked while settlement is being confirmed.
+    </p>
+  ) : (
+    <form
+      id="create-expense-form"
+      method="POST"
+      action="/api/expenses/create"
+      class="grid gap-3 rounded-xl border border-white/15 bg-white/5 p-4 sm:grid-cols-2"
     >
-  </div>
-  {
-    serverError && (
-      <p class="sm:col-span-2" role="alert">
-        {serverError}
-      </p>
-    )
-  }
-</form>
+      <input type="hidden" name="month" value={month} />
+      <label class="sm:col-span-2">
+        <span class="mb-1 block text-sm text-blue-100/80">Description</span>
+        <input
+          name="description"
+          required
+          class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2"
+          placeholder="e.g. School supplies"
+        />
+      </label>
+      <label>
+        <span class="mb-1 block text-sm text-blue-100/80">Child</span>
+        <select name="childId" class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2">
+          <option value="">No specific child</option>
+          {children.map((child) => (
+            <option value={child.id}>{child.name}</option>
+          ))}
+        </select>
+      </label>
+      <label>
+        <span class="mb-1 block text-sm text-blue-100/80">Amount (PLN)</span>
+        <input
+          name="amount"
+          inputmode="decimal"
+          required
+          class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2"
+          placeholder="12,50"
+        />
+      </label>
+      <label>
+        <span class="mb-1 block text-sm text-blue-100/80">Expense date</span>
+        <input
+          name="expenseDate"
+          type="date"
+          max={maxDate}
+          value={defaultDate}
+          required
+          class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2"
+        />
+      </label>
+      <div class="flex items-end">
+        <button
+          id="create-expense-submit"
+          type="submit"
+          class="w-full rounded-lg bg-purple-600 px-4 py-2 font-medium hover:bg-purple-500 disabled:cursor-wait disabled:opacity-70"
+        >
+          Add expense
+        </button>
+      </div>
+      {serverError && (
+        <p class="sm:col-span-2" role="alert">
+          {serverError}
+        </p>
+      )}
+    </form>
+  )
+}
 
 <script>
   const form = document.querySelector<HTMLFormElement>("#create-expense-form");

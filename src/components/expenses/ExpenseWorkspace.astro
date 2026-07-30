@@ -50,13 +50,19 @@ const defaultDate = month === today.slice(0, 7) ? today : `${month}-01`;
       month={month}
       maxDate={today}
       defaultDate={defaultDate}
+      isMonthLocked={state?.settlement.isLocked ?? false}
       serverError={serverError}
     />
   </div>
   <div id="monthly-balance-container" class="mt-5">
     {
       state?.balance && state.currentMembershipId && (
-        <MonthlyBalancePanel balance={state.balance} currentMembershipId={state.currentMembershipId} />
+        <MonthlyBalancePanel
+          balance={state.balance}
+          currentMembershipId={state.currentMembershipId}
+          month={month}
+          settlement={state.settlement}
+        />
       )
     }
   </div>
@@ -67,9 +73,11 @@ const defaultDate = month === today.slice(0, 7) ? today : `${month}-01`;
     maxDate={today}
     currentMembershipId={state?.currentMembershipId ?? null}
     canApprove={Boolean(state?.balance && state.currentMembershipId)}
-    isMonthSettled={state?.isMonthSettled ?? false}
+    isMonthLocked={state?.settlement.isLocked ?? false}
   />
-  <MonthlyReportHistory reports={state?.history ?? []} selectedMonth={month} />
+  <div id="monthly-report-history-container">
+    <MonthlyReportHistory reports={state?.history ?? []} selectedMonth={month} />
+  </div>
 </section>
 
 <script>
@@ -80,10 +88,12 @@ const defaultDate = month === today.slice(0, 7) ? today : `${month}-01`;
     const parsedDocument = new DOMParser().parseFromString(await response.text(), "text/html");
     const updatedBalance = parsedDocument.querySelector<HTMLElement>("#monthly-balance-container");
     const updatedList = parsedDocument.querySelector<HTMLElement>("#expense-list-container");
-    if (!updatedBalance || !updatedList) throw new Error("Unable to refresh expenses");
+    const updatedHistory = parsedDocument.querySelector<HTMLElement>("#monthly-report-history-container");
+    if (!updatedBalance || !updatedList || !updatedHistory) throw new Error("Unable to refresh expenses");
 
     document.querySelector("#monthly-balance-container")?.replaceWith(updatedBalance);
     document.querySelector("#expense-list-container")?.replaceWith(updatedList);
+    document.querySelector("#monthly-report-history-container")?.replaceWith(updatedHistory);
   }
 
   (window as typeof window & { refreshExpenseWorkspace?: (month: string) => Promise<void> }).refreshExpenseWorkspace =

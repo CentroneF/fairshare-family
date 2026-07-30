@@ -39,7 +39,7 @@ describe("expense balance inputs", () => {
       "Only the payer can edit this expense.",
     );
     expect(mapExpenseError({ message: "Expenses in a settled month cannot be updated" })).toBe(
-      "Expenses in a settled month cannot be changed.",
+      "Expenses in a confirmation-locked or settled month cannot be changed.",
     );
   });
 

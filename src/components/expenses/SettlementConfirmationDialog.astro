@@ -1,0 +1,96 @@
+---
+interface Props {
+  month: string;
+  paymentMessage: string;
+}
+
+const { month, paymentMessage } = Astro.props;
+const dialogId = `settlement-confirmation-${month}`;
+---
+
+<button
+  type="button"
+  data-open-settlement-dialog={dialogId}
+  class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium hover:bg-emerald-500"
+>
+  Confirm settlement
+</button>
+
+<dialog
+  id={dialogId}
+  class="m-auto w-[min(100%-2rem,34rem)] rounded-xl border border-white/20 bg-slate-950 p-0 text-white shadow-2xl backdrop:bg-slate-950/70"
+>
+  <form data-confirm-settlement method="POST" action="/api/settlements/confirm" class="space-y-4 p-6">
+    <input type="hidden" name="month" value={month} />
+    <div>
+      <h3 class="text-xl font-semibold">Confirm monthly settlement</h3>
+      <p class="mt-2 text-sm text-blue-100/80">{paymentMessage}</p>
+      <p class="mt-3 text-sm text-amber-100">This locks all expense changes for this month immediately.</p>
+    </div>
+    <p data-settlement-error role="alert" class="hidden text-sm text-red-200"></p>
+    <div class="flex justify-end gap-3">
+      <button
+        type="button"
+        data-cancel-settlement
+        class="rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/10">Cancel</button
+      >
+      <button type="submit" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium hover:bg-emerald-500"
+        >Confirm</button
+      >
+    </div>
+  </form>
+</dialog>
+
+<script>
+  function refreshExpenseWorkspace(month: string) {
+    const refresh = (window as typeof window & { refreshExpenseWorkspace?: (value: string) => Promise<void> })
+      .refreshExpenseWorkspace;
+    if (!refresh) return Promise.reject(new Error("Unable to refresh expenses"));
+    return refresh(month);
+  }
+
+  document.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    const opener = target.closest<HTMLElement>("[data-open-settlement-dialog]");
+    const dialogId = opener?.dataset.openSettlementDialog;
+    const dialog = dialogId ? document.getElementById(dialogId) : null;
+    if (dialog instanceof HTMLDialogElement) dialog.showModal();
+    if (target.matches("[data-cancel-settlement]")) target.closest("dialog")?.close();
+  });
+
+  document.addEventListener("submit", async (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement) || !form.matches("[data-confirm-settlement]")) return;
+    event.preventDefault();
+    const button = form.querySelector<HTMLButtonElement>("button[type='submit']");
+    const error = form.querySelector<HTMLElement>("[data-settlement-error]");
+    if (error) {
+      error.textContent = "";
+      error.classList.add("hidden");
+    }
+    button?.setAttribute("disabled", "true");
+    if (button) button.textContent = "Confirming…";
+    try {
+      const response = await fetch(form.action, {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        body: new FormData(form),
+      });
+      const result = (await response.json()) as { error?: string; month?: string };
+      if (!response.ok || result.error || !result.month)
+        throw new Error(result.error ?? "We could not confirm this settlement. Please try again.");
+      form.closest("dialog")?.close();
+      await refreshExpenseWorkspace(result.month);
+    } catch (cause) {
+      if (error) {
+        error.textContent =
+          cause instanceof Error ? cause.message : "We could not confirm this settlement. Please try again.";
+        error.classList.remove("hidden");
+      }
+    } finally {
+      button?.removeAttribute("disabled");
+      if (button) button.textContent = "Confirm";
+    }
+  });
+</script>
