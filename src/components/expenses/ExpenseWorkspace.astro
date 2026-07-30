@@ -183,6 +183,7 @@ const lockedMessage =
     event.preventDefault();
     const button = form.querySelector<HTMLButtonElement>("button[type='submit']");
     const error = form.querySelector<HTMLElement>("[data-settlement-error]");
+    let confirmationSaved = false;
     if (error) {
       error.textContent = "";
       error.classList.add("hidden");
@@ -198,17 +199,26 @@ const lockedMessage =
       const result = (await response.json()) as { error?: string; month?: string };
       if (!response.ok || result.error || !result.month)
         throw new Error(result.error ?? "We could not confirm this settlement. Please try again.");
-      form.closest("dialog")?.close();
+      confirmationSaved = true;
       await refreshExpenseWorkspace(result.month);
+      form.closest("dialog")?.close();
     } catch (cause) {
       if (error) {
-        error.textContent =
-          cause instanceof Error ? cause.message : "We could not confirm this settlement. Please try again.";
+        error.textContent = confirmationSaved
+          ? "Settlement was confirmed, but the view could not refresh. Reload the page."
+          : cause instanceof Error
+            ? cause.message
+            : "We could not confirm this settlement. Please try again.";
         error.classList.remove("hidden");
       }
     } finally {
-      button?.removeAttribute("disabled");
-      if (button) button.textContent = "Confirm";
+      if (confirmationSaved) {
+        button?.setAttribute("disabled", "true");
+        if (button) button.textContent = "Confirmed";
+      } else {
+        button?.removeAttribute("disabled");
+        if (button) button.textContent = "Confirm";
+      }
     }
   });
 </script>

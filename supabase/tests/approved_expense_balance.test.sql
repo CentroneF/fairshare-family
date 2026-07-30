@@ -1,6 +1,6 @@
 begin;
 
-select plan(101);
+select plan(103);
 
 insert into auth.users (id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values
@@ -398,6 +398,29 @@ select throws_ok(
 select throws_ok(
   $$select public.create_expense(null, 'Blocked after settlement', (current_date - interval '4 months')::date, 1.00)$$,
   'P0001', 'Expenses in a confirmation-locked or settled month cannot be changed', 'final settlement keeps expense creation locked'
+);
+
+set local role postgres;
+insert into public.expenses (family_id, payer_id, description, expense_date, amount_pln)
+values
+  (
+    '54000000-0000-0000-0000-000000000001', '54100000-0000-0000-0000-000000000001',
+    'Settled approval candidate', (current_date - interval '4 months')::date, 2.00
+  ),
+  (
+    '54000000-0000-0000-0000-000000000001', '54100000-0000-0000-0000-000000000001',
+    'Settled decline candidate', (current_date - interval '4 months')::date, 3.00
+  );
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '52000000-0000-0000-0000-000000000001', true);
+select throws_ok(
+  $$select public.approve_expense((select id from public.expenses where description = 'Settled approval candidate'))$$,
+  'P0001', 'Expenses in a confirmation-locked or settled month cannot be changed', 'final settlement locks expense approval'
+);
+select throws_ok(
+  $$select public.decline_expense((select id from public.expenses where description = 'Settled decline candidate'), 'Still wrong')$$,
+  'P0001', 'Expenses in a confirmation-locked or settled month cannot be changed', 'final settlement locks expense decline'
 );
 
 select set_config('request.jwt.claim.sub', '51000000-0000-0000-0000-000000000001', true);
