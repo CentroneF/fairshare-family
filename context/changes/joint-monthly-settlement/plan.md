@@ -239,23 +239,23 @@ Create a new forward-only migration; never modify applied migrations. Apply it i
 
 #### Automated
 
-- [x] 2.1 Eligibility, lock, snapshot, and binary-history state regressions pass with lint and production build.
-- [x] 2.2 Database family-read and binary-history regressions pass.
+- [x] 2.1 Eligibility, lock, snapshot, and binary-history state regressions pass with lint and production build. — 4343124
+- [x] 2.2 Database family-read and binary-history regressions pass. — 4343124
 
 #### Manual
 
-- [x] 2.3 Ineligible reports expose a disabled action with clear visible and touch-accessible guidance.
-- [x] 2.4 First-confirmed and settled report states are clear and immutable on desktop and narrow viewport.
-- [x] 2.5 Selected report and history refresh in the background without losing scroll position.
+- [x] 2.3 Ineligible reports expose a disabled action with clear visible and touch-accessible guidance. — 4343124
+- [x] 2.4 First-confirmed and settled report states are clear and immutable on desktop and narrow viewport. — 4343124
+- [x] 2.5 Selected report and history refresh in the background without losing scroll position. — 4343124
 
 ### Phase 3: Prove the Complete Two-Parent Settlement Boundary
 
 #### Automated
 
-- [ ] 3.1 Complete two-parent settlement lifecycle, snapshot, locking, and direct-write-denial pgTAP suite passes.
-- [ ] 3.2 Settlement state and exact financial unit regressions, lint, and production build pass.
+- [x] 3.1 Complete two-parent settlement lifecycle, snapshot, locking, and direct-write-denial pgTAP suite passes.
+- [x] 3.2 Settlement state and exact financial unit regressions, lint, and production build pass.
 
 #### Manual
 
-- [ ] 3.3 Two parents complete payment and balanced settlements; only a second distinct confirmation finalizes each.
-- [ ] 3.4 Stale confirmation and mutation attempts fail safely across desktop and narrow viewport without full-page refresh.
+- [x] 3.3 Two parents complete payment and balanced settlements; only a second distinct confirmation finalizes each.
+- [x] 3.4 Stale confirmation and mutation attempts fail safely across desktop and narrow viewport without full-page refresh.

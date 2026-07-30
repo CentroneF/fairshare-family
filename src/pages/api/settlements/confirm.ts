@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { confirmMonthlySettlement, mapExpenseError, normalizeSelectedMonth } from "@/lib/expense-balance";
+import { confirmMonthlySettlement, mapSettlementError, normalizeSelectedMonth } from "@/lib/expense-balance";
 import { formValue } from "@/lib/family-onboarding";
 import { createClient } from "@/lib/supabase";
 
@@ -21,7 +21,7 @@ export const POST: APIRoute = async (context) => {
       ? Response.json({ month })
       : context.redirect(`/dashboard?month=${month}&success=settlement-confirmed`);
   } catch (error) {
-    const message = mapExpenseError(error);
+    const message = mapSettlementError(error);
     if (acceptsJson) return Response.json({ error: message }, { status: 400 });
     const query = new URLSearchParams({ error: message });
     if (month) query.set("month", month);

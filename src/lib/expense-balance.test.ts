@@ -1,10 +1,13 @@
+import Decimal from "decimal.js";
 import { describe, expect, it } from "vitest";
 import { loadMonthlyBalance } from "./financial-service";
 import {
+  deriveSettlementState,
   deriveMonthlyReportHistory,
   getSettlementUnavailableReason,
   mapMonthlyReportHistoryRows,
   mapExpenseError,
+  mapSettlementError,
   normalizeExpenseAmount,
   normalizeDeclineReason,
   normalizeExpenseDate,
@@ -165,5 +168,146 @@ describe("expense balance inputs", () => {
         currentMonth: "2026-07",
       }),
     ).toBe("declined");
+  });
+
+  it("maps settlement failures to safe, settlement-specific feedback", () => {
+    expect(mapSettlementError({ message: "You have already confirmed this settlement" })).toBe(
+      "You have already confirmed this settlement.",
+    );
+    expect(mapSettlementError({ message: "A month with no expenses cannot be settled" })).toBe(
+      "Add at least one expense before confirming settlement.",
+    );
+    expect(mapSettlementError({ message: "Settlement month must be the first day of a month" })).toBe(
+      "Choose a valid report month.",
+    );
+    expect(mapSettlementError({ message: "internal database detail" })).toBe(
+      "We could not confirm this settlement. Please try again.",
+    );
+  });
+
+  it("distinguishes which parent must provide the second confirmation", () => {
+    const common = {
+      row: {
+        status: "open" as const,
+        first_confirmed_by: "parent-a",
+        second_confirmed_by: null,
+        approved_amount_pln: null,
+        first_confirmed_contribution_pln: null,
+        second_confirmed_contribution_pln: null,
+        payment_from_membership_id: null,
+        payment_amount_pln: null,
+      },
+      expenses: [],
+      parentIds: ["parent-a", "parent-b"],
+      balance: null,
+      month: "2026-06",
+      today: new Date("2026-07-15T12:00:00Z"),
+    };
+    expect(deriveSettlementState({ ...common, currentMembershipId: "parent-a" })).toEqual({
+      kind: "awaiting-other-parent",
+      isLocked: true,
+    });
+    expect(deriveSettlementState({ ...common, currentMembershipId: "parent-b" })).toEqual({
+      kind: "requires-your-confirmation",
+      isLocked: true,
+    });
+  });
+
+  it("maps exact payment and balanced snapshots without number coercion", () => {
+    const common = {
+      expenses: [],
+      parentIds: ["parent-a", "parent-b"],
+      currentMembershipId: "parent-a",
+      balance: null,
+      month: "2026-06",
+      today: new Date("2026-07-15T12:00:00Z"),
+    };
+    expect(
+      deriveSettlementState({
+        ...common,
+        row: {
+          status: "settled",
+          first_confirmed_by: "parent-a",
+          second_confirmed_by: "parent-b",
+          approved_amount_pln: "20.10",
+          first_confirmed_contribution_pln: "20.10",
+          second_confirmed_contribution_pln: "0.00",
+          payment_from_membership_id: "parent-b",
+          payment_amount_pln: "10",
+        },
+      }),
+    ).toEqual({
+      kind: "settled",
+      isLocked: true,
+      approvedAmount: "20.10",
+      firstConfirmedContribution: "20.10",
+      secondConfirmedContribution: "0.00",
+      paymentAmount: "10",
+      paymentFromCurrentParent: false,
+    });
+    expect(
+      deriveSettlementState({
+        ...common,
+        row: {
+          status: "settled",
+          first_confirmed_by: "parent-a",
+          second_confirmed_by: "parent-b",
+          approved_amount_pln: "20.00",
+          first_confirmed_contribution_pln: "10.00",
+          second_confirmed_contribution_pln: "10.00",
+          payment_from_membership_id: null,
+          payment_amount_pln: "0",
+        },
+      }),
+    ).toMatchObject({ kind: "settled", paymentAmount: "0", paymentFromCurrentParent: null });
+  });
+
+  it("derives eligible and current-month states at an explicit date boundary", () => {
+    const expenses = [
+      {
+        id: "expense-a",
+        description: "School",
+        expenseDate: "2026-06-10",
+        amountPln: "20.00",
+        status: "approved" as const,
+        payerId: "parent-a",
+        childId: null,
+        childName: null,
+        declineReason: null,
+        previousDeclineReason: null,
+      },
+    ];
+    const balance = {
+      totalAmount: new Decimal("20.00"),
+      approvedAmount: new Decimal("20.00"),
+      toReviewAmount: new Decimal(0),
+      contributions: new Map([
+        ["parent-a", new Decimal("20.00")],
+        ["parent-b", new Decimal(0)],
+      ]),
+      settlement: {
+        kind: "payment" as const,
+        amount: new Decimal(10),
+        fromParentId: "parent-b",
+        toParentId: "parent-a",
+      },
+    };
+    const common = {
+      row: null,
+      expenses,
+      parentIds: ["parent-a", "parent-b"],
+      currentMembershipId: "parent-a",
+      balance,
+      today: new Date("2026-07-01T00:00:00Z"),
+    };
+    expect(deriveSettlementState({ ...common, month: "2026-06" })).toEqual({
+      kind: "eligible",
+      isLocked: false,
+    });
+    expect(deriveSettlementState({ ...common, month: "2026-07" })).toEqual({
+      kind: "unavailable",
+      isLocked: false,
+      reason: "current-month",
+    });
   });
 });

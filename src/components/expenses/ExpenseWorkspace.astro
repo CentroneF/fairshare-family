@@ -108,14 +108,73 @@ const lockedMessage =
   (window as typeof window & { refreshExpenseWorkspace?: (month: string) => Promise<void> }).refreshExpenseWorkspace =
     refreshExpenseWorkspace;
 
+  function showEditError(form: HTMLFormElement, message: string) {
+    const existing = form.querySelector<HTMLElement>("[role='alert']");
+    if (existing) {
+      existing.textContent = message;
+      return;
+    }
+    const error = document.createElement("p");
+    error.className = "sm:col-span-2 text-sm text-red-200";
+    error.setAttribute("role", "alert");
+    error.textContent = message;
+    form.append(error);
+  }
+
   document.addEventListener("click", (event) => {
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
+    const editOpener = target.closest<HTMLButtonElement>("[data-open-edit]");
+    if (editOpener) {
+      const expenseId = editOpener.dataset.openEdit;
+      const dialog = document.querySelector<HTMLDialogElement>(`[data-edit-dialog='${expenseId ?? ""}']`);
+      dialog?.addEventListener("close", () => editOpener.focus(), { once: true });
+      return;
+    }
+    const editCancel = target.closest<HTMLButtonElement>("[data-cancel-edit]");
+    if (editCancel) {
+      editCancel.closest<HTMLDialogElement>("dialog")?.close();
+      return;
+    }
     const opener = target.closest<HTMLElement>("[data-open-settlement-dialog]");
     const dialogId = opener?.dataset.openSettlementDialog;
     const dialog = dialogId ? document.getElementById(dialogId) : null;
     if (dialog instanceof HTMLDialogElement) dialog.showModal();
     if (target.matches("[data-cancel-settlement]")) target.closest("dialog")?.close();
+  });
+
+  document.addEventListener("submit", async (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement) || !form.matches("[data-edit-expense]")) return;
+    event.preventDefault();
+    const submitButton = form.querySelector<HTMLButtonElement>("button[type='submit']");
+    submitButton?.setAttribute("disabled", "true");
+    if (submitButton) submitButton.textContent = "Saving…";
+    form.querySelector("[role='alert']")?.remove();
+
+    try {
+      const response = await fetch(form.action, {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        body: new FormData(form),
+      });
+      const result = (await response.json()) as { expenseId?: string; month?: string; error?: string };
+      if (!response.ok || !result.expenseId || !result.month) {
+        showEditError(form, result.error ?? "We could not update that expense. Please try again.");
+        return;
+      }
+      form.closest<HTMLDialogElement>("dialog")?.close();
+      const url = new URL(window.location.href);
+      url.searchParams.set("month", result.month);
+      url.searchParams.delete("success");
+      window.history.replaceState(null, "", url);
+      await refreshExpenseWorkspace(result.month);
+    } catch {
+      showEditError(form, "We could not update that expense. Please try again.");
+    } finally {
+      submitButton?.removeAttribute("disabled");
+      if (submitButton) submitButton.textContent = "Save changes";
+    }
   });
 
   document.addEventListener("submit", async (event) => {

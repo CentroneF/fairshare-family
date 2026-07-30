@@ -144,6 +144,27 @@ export function mapExpenseError(error: unknown): string {
   return "We could not save that expense. Please try again.";
 }
 
+export function mapSettlementError(error: unknown): string {
+  if (error instanceof ExpenseBalanceError) return error.message;
+  const message =
+    error instanceof Error
+      ? error.message
+      : error && typeof error === "object" && typeof (error as { message?: unknown }).message === "string"
+        ? (error as { message: string }).message
+        : "";
+  if (message.includes("already confirmed")) return "You have already confirmed this settlement.";
+  if (message.includes("already been settled")) return "This month has already been settled.";
+  if (message.includes("A month with no expenses")) return "Add at least one expense before confirming settlement.";
+  if (message.includes("All expenses must be approved")) return "Approve every expense before confirming settlement.";
+  if (message.includes("Only past months")) return "Only a past month can be settled.";
+  if (message.includes("first day of a month")) return "Choose a valid report month.";
+  if (message.includes("Exactly two active parents"))
+    return "Both active parents must be in the family before confirming settlement.";
+  if (message.includes("Authentication is required")) return "Please sign in and try again.";
+  if (message.includes("active family membership")) return "Join an active family before confirming settlement.";
+  return "We could not confirm this settlement. Please try again.";
+}
+
 export function normalizeDeclineReason(value: string): string {
   const reason = value.trim();
   if (!reason || reason.length > 500) throw new ExpenseBalanceError("Enter a decline reason of up to 500 characters.");
@@ -303,7 +324,7 @@ export async function deleteExpense(client: ExpenseClient, rawExpenseId: string)
 export async function confirmMonthlySettlement(client: ExpenseClient, rawMonth: string): Promise<void> {
   const month = normalizeSelectedMonth(rawMonth);
   const { error } = await client.rpc("confirm_monthly_settlement", { p_report_month: `${month}-01` });
-  if (error) throw new ExpenseBalanceError(mapExpenseError(error));
+  if (error) throw new ExpenseBalanceError(mapSettlementError(error));
 }
 
 async function loadCurrentMembershipId(
@@ -368,13 +389,14 @@ export function getSettlementUnavailableReason(input: {
   return null;
 }
 
-function deriveSettlementState(input: {
+export function deriveSettlementState(input: {
   row: SettlementRow | null;
   expenses: readonly ExpenseDisplay[];
   parentIds: readonly string[];
   currentMembershipId: string | null;
   balance: MonthlyBalance | null;
   month: string;
+  today?: Date;
 }): SettlementState {
   if (input.row?.status === "settled") {
     const approvedAmount = parseApprovedReportAmount(input.row.approved_amount_pln);
@@ -408,11 +430,12 @@ function deriveSettlementState(input: {
     };
   }
 
+  const today = input.today ?? new Date();
   const unavailableReason = getSettlementUnavailableReason({
     expenses: input.expenses,
     parentIds: input.parentIds,
     month: input.month,
-    currentMonth: new Date().toISOString().slice(0, 7),
+    currentMonth: today.toISOString().slice(0, 7),
   });
   const eligible =
     unavailableReason === null &&
@@ -425,7 +448,7 @@ function deriveSettlementState(input: {
       })),
       parentIds: input.parentIds,
       reportMonth: new Date(`${input.month}-01T00:00:00Z`),
-      today: new Date(),
+      today,
     });
   return eligible
     ? { kind: "eligible", isLocked: false }
