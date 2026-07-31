@@ -158,16 +158,16 @@ No migration, data update, or deployment sequence is required. Rollback is a com
 
 #### Automated
 
-- [ ] 1.1 Replace starter homepage content with the FairShare landing experience
-- [ ] 1.2 Set the FairShare-specific root page title
-- [ ] 1.3 Run `npm test`
-- [ ] 1.4 Run `npm run lint`
-- [ ] 1.5 Run `npm run build`
+- [x] 1.1 Replace starter homepage content with the FairShare landing experience
+- [x] 1.2 Set the FairShare-specific root page title
+- [x] 1.3 Run `npm test`
+- [x] 1.4 Run `npm run lint`
+- [x] 1.5 Run `npm run build`
 
 #### Manual
 
-- [ ] 1.6 Verify the anonymous landing experience, benefits, workflow, and auth CTAs
-- [ ] 1.7 Verify signed-in navigation and responsive mobile/desktop presentation
+- [x] 1.6 Verify the anonymous landing experience, benefits, workflow, and auth CTAs
+- [x] 1.7 Verify signed-in navigation and responsive mobile/desktop presentation
 
 ### Phase 2: Landing Navigation and Content Polish
 
