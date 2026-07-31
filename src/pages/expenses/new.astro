@@ -26,6 +26,7 @@ const state = await loadExpenseWorkspaceState(supabase, { familyId: onboarding.f
 const returnHref = month === currentMonth ? "/dashboard" : `/reports/${month}`;
 const successRedirectTo =
   month === currentMonth ? "/dashboard?success=expense-created" : `/reports/${month}?success=expense-created`;
+const defaultDate = today.slice(0, 7) === month ? today : `${month}-01`;
 ---
 
 <Layout title="Add expense">
@@ -42,7 +43,7 @@ const successRedirectTo =
           children={onboarding.family.children}
           month={month}
           maxDate={today}
-          defaultDate={today}
+          defaultDate={defaultDate}
           isMonthLocked={state.settlement.isLocked}
           successBehavior="return-to-dashboard"
           successRedirectTo={successRedirectTo}
