@@ -1,9 +1,8 @@
 import type { APIRoute } from "astro";
 import { formValue, mapOnboardingError, previewFamilyJoin } from "@/lib/family-onboarding";
-import { createClient } from "@/lib/supabase";
 
 export const POST: APIRoute = async (context) => {
-  const supabase = createClient(context.request.headers, context.cookies);
+  const { supabase } = context.locals;
   if (!supabase || !context.locals.user) {
     return Response.json({ error: "Please sign in and try again." }, { status: 401 });
   }

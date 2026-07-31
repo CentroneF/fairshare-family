@@ -1,10 +1,9 @@
 import type { APIRoute } from "astro";
 import { approveExpense, mapExpenseError, normalizeSelectedMonth } from "@/lib/expense-balance";
 import { formValue } from "@/lib/family-onboarding";
-import { createClient } from "@/lib/supabase";
 
 export const POST: APIRoute = async (context) => {
-  const supabase = createClient(context.request.headers, context.cookies);
+  const { supabase } = context.locals;
   const acceptsJson = context.request.headers.get("accept")?.includes("application/json");
   if (!supabase || !context.locals.user) {
     if (acceptsJson) {

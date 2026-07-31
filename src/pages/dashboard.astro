@@ -7,10 +7,8 @@ import ExpenseWorkspace from "@/components/expenses/ExpenseWorkspace.astro";
 import Layout from "@/layouts/Layout.astro";
 import { normalizeSelectedMonth } from "@/lib/expense-balance";
 import { resolveOnboardingState } from "@/lib/family-onboarding";
-import { createClient } from "@/lib/supabase";
 
-const { user } = Astro.locals;
-const supabase = createClient(Astro.request.headers, Astro.cookies);
+const { supabase, user } = Astro.locals;
 const onboarding = supabase && user ? await resolveOnboardingState(supabase, user.id) : { kind: "no-family" as const };
 const error = Astro.url.searchParams.get("error");
 const success = Astro.url.searchParams.get("success");
@@ -48,6 +46,7 @@ try {
             <ExpenseWorkspace
               familyId={onboarding.family.id}
               userId={user.id}
+              supabase={supabase}
               children={onboarding.family.children}
               month={selectedMonth}
               serverError={error}
@@ -98,6 +97,7 @@ try {
               <ExpenseWorkspace
                 familyId={onboarding.family.id}
                 userId={user.id}
+                supabase={supabase}
                 children={onboarding.family.children}
                 month={selectedMonth}
                 serverError={error}

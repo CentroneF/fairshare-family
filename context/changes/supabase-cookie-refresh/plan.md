@@ -159,15 +159,15 @@ No data migration or deployment ordering is required. The change is source-only 
 
 #### Automated
 
-- [ ] 1.1 `npm test` passes.
-- [ ] 1.2 `npm run lint` passes.
-- [ ] 1.3 `npm run build` passes.
-- [ ] 1.4 `createClient(` is invoked only from middleware.
+- [x] 1.1 `npm test` passes.
+- [x] 1.2 `npm run lint` passes.
+- [x] 1.3 `npm run build` passes.
+- [x] 1.4 `createClient(` is invoked only from middleware.
 
 #### Manual
 
-- [ ] 1.5 Signed-in dashboard, reports, and expense workspace behavior remains intact.
-- [ ] 1.6 Auth and authenticated API operations preserve their current response behavior.
+- [x] 1.5 Signed-in dashboard, reports, and expense workspace behavior remains intact.
+- [x] 1.6 Auth and authenticated API operations preserve their current response behavior.
 
 ### Phase 2: Verify Token-Refresh Persistence
 

@@ -3,18 +3,18 @@ import CreateExpenseForm from "@/components/expenses/CreateExpenseForm.astro";
 import ExpenseList from "@/components/expenses/ExpenseList.astro";
 import MonthlyBalancePanel from "@/components/expenses/MonthlyBalancePanel.astro";
 import { loadExpenseWorkspaceState } from "@/lib/expense-balance";
-import { createClient } from "@/lib/supabase";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 interface Props {
   familyId: string;
   userId: string;
+  supabase: SupabaseClient | null;
   children: readonly { id: string; name: string }[];
   month: string;
   serverError?: string | null;
 }
 
-const { familyId, userId, children, month, serverError } = Astro.props;
-const supabase = createClient(Astro.request.headers, Astro.cookies);
+const { familyId, userId, supabase, children, month, serverError } = Astro.props;
 const state = supabase ? await loadExpenseWorkspaceState(supabase, { familyId, userId, month }) : null;
 const today = new Date().toISOString().slice(0, 10);
 const defaultDate = month === today.slice(0, 7) ? today : `${month}-01`;
