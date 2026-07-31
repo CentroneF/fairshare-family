@@ -1,5 +1,4 @@
 ---
-import CreateExpenseForm from "@/components/expenses/CreateExpenseForm.astro";
 import ExpenseList from "@/components/expenses/ExpenseList.astro";
 import MonthlyBalancePanel from "@/components/expenses/MonthlyBalancePanel.astro";
 import { loadExpenseWorkspaceState } from "@/lib/expense-balance";
@@ -11,53 +10,22 @@ interface Props {
   supabase: SupabaseClient | null;
   children: readonly { id: string; name: string }[];
   month: string;
-  serverError?: string | null;
 }
 
-const { familyId, userId, supabase, children, month, serverError } = Astro.props;
+const { familyId, userId, supabase, children, month } = Astro.props;
 const state = supabase ? await loadExpenseWorkspaceState(supabase, { familyId, userId, month }) : null;
 const today = new Date().toISOString().slice(0, 10);
-const defaultDate = month === today.slice(0, 7) ? today : `${month}-01`;
-const lockedMessage =
-  state?.settlement.kind === "settled"
-    ? "This month is settled and permanently locked."
-    : "This month is locked while settlement is being confirmed.";
+const monthLabel = new Intl.DateTimeFormat("en", { month: "long", year: "numeric", timeZone: "UTC" }).format(
+  new Date(`${month}-01T00:00:00Z`),
+);
 ---
 
 <section class="border-t border-white/10 pt-8">
-  <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-    <div>
-      <p class="text-sm tracking-wide text-purple-200 uppercase">Shared expenses</p>
-      <h2 class="mt-1 text-2xl font-bold">Track an expense</h2>
-    </div>
-    <form method="GET" action="/dashboard">
-      <label class="block text-sm text-blue-100/80" for="expense-month">Month</label>
-      <div class="mt-1 flex gap-2">
-        <input
-          id="expense-month"
-          name="month"
-          type="month"
-          value={month}
-          max={today.slice(0, 7)}
-          class="rounded-lg border border-white/20 bg-white/10 px-3 py-2"
-        />
-        <button type="submit" class="rounded-lg border border-white/20 px-3 py-2 text-sm hover:bg-white/10">View</button
-        >
-      </div>
-    </form>
+  <div>
+    <p class="text-sm tracking-wide text-purple-200 uppercase">Shared expenses</p>
+    <h2 class="mt-1 text-2xl font-bold">{monthLabel}</h2>
   </div>
 
-  <div class="mt-5">
-    <CreateExpenseForm
-      children={children}
-      month={month}
-      maxDate={today}
-      defaultDate={defaultDate}
-      isMonthLocked={state?.settlement.isLocked ?? false}
-      lockedMessage={lockedMessage}
-      serverError={serverError}
-    />
-  </div>
   <div id="monthly-balance-container" class="mt-5">
     {
       state?.balance && state.currentMembershipId && (
@@ -67,6 +35,17 @@ const lockedMessage =
           month={month}
           settlement={state.settlement}
         />
+      )
+    }
+    {
+      !state?.balance && (
+        <section class="rounded-xl border border-amber-300/30 bg-amber-500/10 p-4">
+          <p class="text-sm tracking-wide text-amber-100 uppercase">Monthly balance</p>
+          <p class="mt-3 font-medium text-amber-50">Balance unavailable</p>
+          <p class="mt-1 text-sm text-amber-100/80">
+            Both parents must join the family before a monthly balance is available.
+          </p>
+        </section>
       )
     }
   </div>

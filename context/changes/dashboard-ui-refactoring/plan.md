@@ -218,14 +218,14 @@ No database migrations, data backfill, or release-time migration procedure is re
 
 #### Automated
 
-- [ ] 1.1 Run `npm run lint` after dashboard/layout changes
-- [ ] 1.2 Run `npm run build` and confirm the dashboard route builds
+- [x] 1.1 Run `npm run lint` after dashboard/layout changes
+- [x] 1.2 Run `npm run build` and confirm the dashboard route builds
 
 #### Manual
 
-- [ ] 1.3 Verify two-parent current-month heading, balance/list order, and no selector
-- [ ] 1.4 Verify one-parent unavailable balance card
-- [ ] 1.5 Verify `month` query parameters do not change the dashboard month
+- [x] 1.3 Verify two-parent current-month heading, balance/list order, and no selector
+- [x] 1.4 Verify one-parent unavailable balance card
+- [x] 1.5 Verify `month` query parameters do not change the dashboard month
 
 ### Phase 2: Responsive Add Expense Entry Points
 

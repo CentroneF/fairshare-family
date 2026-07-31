@@ -1,7 +1,7 @@
 ---
 change_id: dashboard-ui-refactoring
 title: Dashboard UI refactoring
-status: planned
+status: implementing
 created: 2026-07-31
 updated: 2026-07-31
 archived_at: null
