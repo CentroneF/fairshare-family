@@ -4,70 +4,55 @@
 
 ## What & Why
 
-Refactor the dashboard into a simpler current-month workspace: month/year first, balance second, expenses third. Expense creation becomes an intentional action rather than an always-visible form, using a dialog on desktop and a focused full-page flow on mobile.
+The dashboard is a current-month workspace, so older reports can no longer rely on its former `?month=` navigation. This revision adds a dedicated historical workspace so a report selected from history displays the correct prior month without weakening the current-month dashboard contract.
 
 ## Starting Point
 
-The dashboard currently lets users choose a URL-backed month and renders a selector, inline create form, balance, then expense list. The create form is coupled to dashboard-only refresh code, while a balance is unavailable until both parents have joined.
+The dashboard consistently renders the current UTC month and intentionally ignores `month` query parameters. Report-history cards still link to that ignored query, so selecting a prior report returns the user to the current dashboard instead.
 
 ## Desired End State
 
-The dashboard always displays the current month and year without a selector; historic information remains available through Report history. Users add a current-month expense through a desktop dialog or mobile full page, and successful submissions promptly return them to an updated dashboard without a normal form-post refresh.
+Report-history cards open an authenticated workspace for the selected previous month. Any valid past month can also open as an empty report. Historical workspaces preserve existing review, edit, decline, delete, refresh, and settlement availability, and allow expense creation until either parent confirms that month.
 
 ## Key Decisions Made
 
 | Decision | Choice | Why |
 | --- | --- | --- |
-| Dashboard month | Current month only | Removes hidden month-navigation state and matches the simplified dashboard request. |
-| Responsive split | Existing `md` breakpoint | Aligns with the project’s established desktop/mobile navigation behavior. |
-| Desktop entry | Header button + native dialog | Keeps the primary action visible while preserving dashboard context. |
-| Mobile entry | Floating action + full-page form | Gives small screens a focused creation flow. |
-| Expense date | Current month through today | Ensures a created expense appears in the dashboard users return to. |
-| One-parent balance | Informative unavailable card | Explains why balance cannot be calculated without showing incorrect zeroes. |
-| Submission lifecycle | Background submit | Preserves the project rule against normal full-page form posts. |
-| Verification | Existing checks + responsive manual testing | Matches the repository’s current test tooling without expanding scope. |
+| Historical content | Reuse the workspace | Keeps report detail and existing action behavior consistent. |
+| Route access | Any valid past month | Allows an empty historical report to be opened and populated. |
+| Invalid route | Redirect to report history | Keeps recovery in the historical-report flow. |
+| Historical creation | Available until first confirmation | Keeps past reports correctable before they are locked. |
+| Historical actions | Preserve existing availability rules | Supports corrections and eligible settlement for prior reports. |
+| Automated coverage | Unit access checks plus suite | Locks down route boundaries without new browser tooling. |
 
 ## Scope
 
-**In scope:**
+**In scope:** dedicated prior-report route, report-card links, route validation, workspace refresh target, historical creation before confirmation, and historical-route coverage.
 
-- Current-month dashboard heading and content order
-- Removed month selector
-- Unavailable balance presentation
-- Desktop dialog and mobile full-page expense creation
-- Client and server current-month date validation
-- Background submission/error/focus behavior
-
-**Out of scope:**
-
-- Historical dashboard month navigation
-- Database/RLS/settlement-rule changes
-- New browser-test infrastructure
-- Redesign of existing edit/review/settlement flows
+**Out of scope:** dashboard month navigation, changes to the existing confirmation lock, API/RLS changes, migrations, and a new browser-test framework.
 
 ## Architecture / Approach
 
-`dashboard.astro` becomes the current-month boundary and passes the month into `ExpenseWorkspace`. The workspace composes heading, balance, and list, while a reusable create form receives its presentation and success context from either a desktop dialog or the protected `/expenses/new` page. The existing create endpoint stays in place, with shared month-bound date validation added before persistence.
+`/reports/[month]` validates any previous `YYYY-MM` month and loads the existing workspace state, including an empty state. `ExpenseWorkspace` gains explicit configuration for its refresh destination and whether creation actions are available; historical creation remains available until the existing confirmation lock applies. Existing mutation handlers continue their background refresh using the configured route.
 
 ## Phases at a Glance
 
 | Phase | What it delivers | Key risk |
 | --- | --- | --- |
-| 1. Current-month foundation | Simplified dashboard order and unavailable balance state | Preserving both onboarding-family layouts |
-| 2. Responsive entry points | Desktop dialog, mobile route, and month-bound validation | Decoupling the form from global dashboard selectors |
-| 3. Lifecycle verification | Correct post-submit behavior and regression checks | Ensuring existing mutation refreshes still work |
+| 1. Current-month dashboard | Current-month layout and balance state | Completed |
+| 2. Responsive creation | Desktop dialog and mobile creation page | Completed |
+| 3. Completion and historical reports | Submission regressions plus prior-report route | Refreshing the wrong workspace after a mutation |
 
-**Prerequisites:** Local application dependencies installed; authenticated family test accounts for one- and two-parent states.
-**Estimated effort:** ~2–3 implementation sessions across 3 phases.
+**Prerequisites:** Phases 1–2 are committed; Phase 3 baseline checks passed.
+**Estimated effort:** One focused implementation session.
 
 ## Open Risks & Assumptions
 
-- “Month and year” means the current UTC calendar month, consistent with existing server-side date logic.
-- Report history remains the supported place to inspect past months.
-- Native `<dialog>` behavior is supported by the application’s target browsers, as it is already used for expense actions.
+- Historical mutation APIs remain the source of authorization; the route only controls which forms are presented.
+- A valid prior month may be opened directly even before it has expenses or a settlement row.
 
 ## Success Criteria (Summary)
 
-- The dashboard presents current month/year → balance → expenses, with no month selector.
-- Desktop and mobile users can add only current-month expenses through their respective responsive flows.
-- Submissions remain background operations, surface errors safely, and leave the dashboard data accurate.
+- Listed reports and valid empty past months open their exact workspace; malformed, current, and future routes return to history.
+- Historical mutations refresh the historical workspace, and Add Expense remains available only until first confirmation.
+- Tests, lint, and production build pass.

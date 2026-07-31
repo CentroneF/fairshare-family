@@ -55,6 +55,10 @@ export interface MonthlyReportHistoryEntry {
   approvedAmount: string;
 }
 
+export function isAccessibleHistoricalReportMonth(value: string, currentMonth: string): boolean {
+  return /^\d{4}-(0[1-9]|1[0-2])$/.test(value) && value < currentMonth;
+}
+
 interface HistoricalExpenseRow extends FinancialExpenseRow {
   expense_date: string;
 }

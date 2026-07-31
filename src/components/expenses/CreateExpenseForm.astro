@@ -8,6 +8,8 @@ interface Props {
   lockedMessage?: string;
   serverError?: string | null;
   successBehavior?: "refresh-workspace" | "return-to-dashboard";
+  successRedirectTo?: string;
+  refreshFallbackRedirectTo?: string;
 }
 
 const {
@@ -19,6 +21,8 @@ const {
   lockedMessage,
   serverError,
   successBehavior = "refresh-workspace",
+  successRedirectTo = "/dashboard?success=expense-created",
+  refreshFallbackRedirectTo = "/dashboard?success=expense-created",
 } = Astro.props;
 const minDate = `${month}-01`;
 ---
@@ -35,6 +39,8 @@ const minDate = `${month}-01`;
       class="grid gap-3 rounded-xl border border-white/15 bg-white/5 p-4 sm:grid-cols-2"
       data-create-expense-form
       data-success-behavior={successBehavior}
+      data-success-redirect-to={successRedirectTo}
+      data-refresh-fallback-redirect-to={refreshFallbackRedirectTo}
     >
       <input type="hidden" name="month" value={month} />
       <label class="sm:col-span-2">
@@ -60,6 +66,8 @@ const minDate = `${month}-01`;
         <input
           name="amount"
           inputmode="decimal"
+          pattern="(?!0+(?:[,.]0{1,2})?$)\d+(?:[,.]\d{1,2})?"
+          title="Enter a positive amount with at most two decimal places."
           required
           class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2"
           placeholder="12,50"
@@ -108,6 +116,15 @@ const minDate = `${month}-01`;
     form.append(error);
   }
 
+  function isValidExpenseAmount(value: FormDataEntryValue | null) {
+    if (typeof value !== "string") return false;
+
+    const amount = value.trim().replace(",", ".");
+    if (!/^\d+(?:\.\d{1,2})?$/.test(amount)) return false;
+
+    return Number(amount) > 0;
+  }
+
   function refreshExpenseWorkspace(month: string) {
     const refresh = (window as typeof window & { refreshExpenseWorkspace?: (value: string) => Promise<void> })
       .refreshExpenseWorkspace;
@@ -115,16 +132,29 @@ const minDate = `${month}-01`;
     return refresh(month);
   }
 
-  document.querySelectorAll<HTMLFormElement>("[data-create-expense-form]").forEach((form) => {
-    const submitButton = form.querySelector<HTMLButtonElement>("button[type='submit']");
-    form.addEventListener("submit", async (event) => {
+  const createExpenseWindow = window as typeof window & { createExpenseSubmitHandlerReady?: boolean };
+
+  if (!createExpenseWindow.createExpenseSubmitHandlerReady) {
+    createExpenseWindow.createExpenseSubmitHandlerReady = true;
+    document.addEventListener("submit", async (event) => {
+      const form = event.target instanceof HTMLFormElement ? event.target : null;
+      if (!form?.matches("[data-create-expense-form]")) return;
+
       event.preventDefault();
+      const submitButton = form.querySelector<HTMLButtonElement>("button[type='submit']");
       if (!submitButton) return;
 
       const data = new FormData(form);
+      form.querySelector("[role='alert']")?.remove();
+      const amountInput = form.elements.namedItem("amount");
+      if (!isValidExpenseAmount(data.get("amount"))) {
+        showError(form, "Enter a positive amount with at most two decimal places.");
+        if (amountInput instanceof HTMLInputElement) amountInput.focus();
+        return;
+      }
+
       submitButton.disabled = true;
       submitButton.textContent = "Saving…";
-      form.querySelector("[role='alert']")?.remove();
 
       try {
         const response = await fetch(form.action, {
@@ -138,10 +168,15 @@ const minDate = `${month}-01`;
           return;
         }
         if (form.dataset.successBehavior === "return-to-dashboard") {
-          window.location.assign("/dashboard?success=expense-created");
+          window.location.assign(form.dataset.successRedirectTo ?? "/dashboard?success=expense-created");
           return;
         }
-        await refreshExpenseWorkspace(result.month);
+        try {
+          await refreshExpenseWorkspace(result.month);
+        } catch {
+          window.location.assign(form.dataset.refreshFallbackRedirectTo ?? "/dashboard?success=expense-created");
+          return;
+        }
         form.reset();
         form.dispatchEvent(new CustomEvent("expense-created", { bubbles: true }));
       } catch {
@@ -151,5 +186,5 @@ const minDate = `${month}-01`;
         submitButton.textContent = "Add expense";
       }
     });
-  });
+  }
 </script>

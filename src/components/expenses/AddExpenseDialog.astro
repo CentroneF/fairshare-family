@@ -8,9 +8,10 @@ interface Props {
   defaultDate: string;
   isMonthLocked: boolean;
   lockedMessage?: string;
+  refreshFallbackRedirectTo?: string;
 }
 
-const { children, month, maxDate, defaultDate, isMonthLocked, lockedMessage } = Astro.props;
+const { children, month, maxDate, defaultDate, isMonthLocked, lockedMessage, refreshFallbackRedirectTo } = Astro.props;
 ---
 
 <div class="hidden md:block">
@@ -49,6 +50,7 @@ const { children, month, maxDate, defaultDate, isMonthLocked, lockedMessage } = 
         defaultDate={defaultDate}
         isMonthLocked={isMonthLocked}
         lockedMessage={lockedMessage}
+        refreshFallbackRedirectTo={refreshFallbackRedirectTo}
       />
     </div>
   </dialog>

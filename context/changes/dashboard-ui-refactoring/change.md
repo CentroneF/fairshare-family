@@ -18,3 +18,4 @@ Refactor the dashboard UX:
 - Place the new-expense form behind an Add Expense button:
   - use a dialog on large screens;
   - use a dedicated full-page form on small screens.
+- Allow expenses in any past-month report, including an empty report, until either parent confirms that month.

@@ -12,9 +12,19 @@ interface Props {
   currentMembershipId: string | null;
   canApprove: boolean;
   isMonthLocked: boolean;
+  refreshTarget?: string;
 }
 
-const { expenses, children, month, maxDate, currentMembershipId, canApprove, isMonthLocked } = Astro.props;
+const {
+  expenses,
+  children,
+  month,
+  maxDate,
+  currentMembershipId,
+  canApprove,
+  isMonthLocked,
+  refreshTarget = "/dashboard",
+} = Astro.props;
 const activeExpenses = expenses.filter((expense) => expense.status !== "declined");
 const declinedExpenses = expenses.filter((expense) => expense.status === "declined");
 const canEditExpense = (expense: ExpenseDisplay) =>
@@ -36,7 +46,7 @@ const canDeleteExpense = (expense: ExpenseDisplay) =>
 <section id="expense-list-container" class="mt-6">
   <div class="flex items-center justify-between gap-3">
     <h2 class="text-lg font-semibold">Expenses</h2>
-    <form data-refresh-expenses method="GET" action="/dashboard">
+    <form data-refresh-expenses method="GET" action={refreshTarget}>
       <input type="hidden" name="month" value={month} />
       <button type="submit" class="rounded-lg border border-white/20 px-3 py-1 text-sm hover:bg-white/10"
         >Refresh</button

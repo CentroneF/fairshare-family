@@ -1,0 +1,48 @@
+---
+import ExpenseWorkspace from "@/components/expenses/ExpenseWorkspace.astro";
+import Layout from "@/layouts/Layout.astro";
+import { isAccessibleHistoricalReportMonth } from "@/lib/expense-balance";
+import { resolveOnboardingState } from "@/lib/family-onboarding";
+
+const { supabase, user } = Astro.locals;
+
+if (!supabase || !user) {
+  return Astro.redirect("/auth/signin");
+}
+
+const onboarding = await resolveOnboardingState(supabase, user.id);
+if (onboarding.kind !== "two-parent-family") {
+  return Astro.redirect("/dashboard");
+}
+
+const month = Astro.params.month ?? "";
+const currentMonth = new Date().toISOString().slice(0, 7);
+if (!isAccessibleHistoricalReportMonth(month, currentMonth)) {
+  return Astro.redirect("/reports");
+}
+const success = Astro.url.searchParams.get("success");
+const successMessage = success === "expense-created" ? "Expense created and awaiting review." : null;
+---
+
+<Layout title="Monthly report">
+  <main class="bg-cosmic min-h-screen p-4 text-white sm:p-8">
+    <section
+      class="mx-auto w-full max-w-3xl rounded-2xl border border-white/10 bg-white/10 p-6 backdrop-blur-xl sm:p-8"
+    >
+      <a href="/reports" class="inline-flex text-sm text-purple-100 hover:text-white">← Back to report history</a>
+      <div class="mt-6">
+        {successMessage && <p class="mb-6 text-sm text-emerald-300">{successMessage}</p>}
+        <ExpenseWorkspace
+          familyId={onboarding.family.id}
+          userId={user.id}
+          supabase={supabase}
+          children={onboarding.family.children}
+          month={month}
+          refreshTarget={`/reports/${month}`}
+          mobileCreateHref={`/expenses/new?month=${month}`}
+          hideCreationWhenLocked={true}
+        />
+      </div>
+    </section>
+  </main>
+</Layout>

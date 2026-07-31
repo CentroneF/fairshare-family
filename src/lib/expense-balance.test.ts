@@ -5,6 +5,7 @@ import {
   deriveSettlementState,
   deriveMonthlyReportHistory,
   getSettlementUnavailableReason,
+  isAccessibleHistoricalReportMonth,
   mapMonthlyReportHistoryRows,
   mapExpenseError,
   mapSettlementError,
@@ -134,6 +135,14 @@ describe("expense balance inputs", () => {
     expect(
       mapMonthlyReportHistoryRows([{ report_month: "2026-06-01", status: "open", approved_amount: "0.00" }]),
     ).toEqual([{ month: "2026-06", status: "unsettled", approvedAmount: "0.00" }]);
+  });
+
+  it("allows every valid month before the current report month", () => {
+    expect(isAccessibleHistoricalReportMonth("2026-06", "2026-07")).toBe(true);
+    expect(isAccessibleHistoricalReportMonth("June 2026", "2026-07")).toBe(false);
+    expect(isAccessibleHistoricalReportMonth("2026-07", "2026-07")).toBe(false);
+    expect(isAccessibleHistoricalReportMonth("2026-08", "2026-07")).toBe(false);
+    expect(isAccessibleHistoricalReportMonth("2026-05", "2026-07")).toBe(true);
   });
 
   it("explains why a selected month cannot be settled", () => {
