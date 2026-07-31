@@ -3,10 +3,8 @@ import MonthlyReportHistory from "@/components/expenses/MonthlyReportHistory.ast
 import Layout from "@/layouts/Layout.astro";
 import { loadMonthlyReportHistory } from "@/lib/expense-balance";
 import { resolveOnboardingState } from "@/lib/family-onboarding";
-import { createClient } from "@/lib/supabase";
 
-const { user } = Astro.locals;
-const supabase = createClient(Astro.request.headers, Astro.cookies);
+const { supabase, user } = Astro.locals;
 
 if (!supabase || !user) {
   return Astro.redirect("/auth/signin");

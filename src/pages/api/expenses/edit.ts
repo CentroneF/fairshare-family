@@ -1,10 +1,9 @@
 import type { APIRoute } from "astro";
 import { mapExpenseError, normalizeExpenseDate, normalizeSelectedMonth, updateExpense } from "@/lib/expense-balance";
 import { formValue } from "@/lib/family-onboarding";
-import { createClient } from "@/lib/supabase";
 
 export const POST: APIRoute = async (context) => {
-  const supabase = createClient(context.request.headers, context.cookies);
+  const { supabase } = context.locals;
   const acceptsJson = context.request.headers.get("accept")?.includes("application/json");
   if (!supabase || !context.locals.user) {
     if (acceptsJson) return Response.json({ error: "Please sign in and try again." }, { status: 401 });
