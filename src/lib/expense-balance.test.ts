@@ -13,6 +13,7 @@ import {
   normalizeExpenseDate,
   normalizeExpenseId,
   normalizeSelectedMonth,
+  validateExpenseDateInMonth,
 } from "./expense-balance";
 
 describe("expense balance inputs", () => {
@@ -31,6 +32,14 @@ describe("expense balance inputs", () => {
     expect(normalizeSelectedMonth(null, today)).toBe("2026-07");
     expect(normalizeSelectedMonth("2026-06", today)).toBe("2026-06");
     expect(() => normalizeSelectedMonth("2026-08", today)).toThrow();
+  });
+
+  it("accepts only dates from the displayed month through today", () => {
+    const today = new Date("2026-07-22T12:00:00Z");
+    expect(validateExpenseDateInMonth("2026-07-01", "2026-07", today)).toBe("2026-07-01");
+    expect(validateExpenseDateInMonth("2026-07-22", "2026-07", today)).toBe("2026-07-22");
+    expect(() => validateExpenseDateInMonth("2026-06-30", "2026-07", today)).toThrow("displayed month");
+    expect(() => validateExpenseDateInMonth("2026-07-23", "2026-07", today)).toThrow("future");
   });
 
   it("validates approval IDs and maps safe approval errors", () => {

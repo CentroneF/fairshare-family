@@ -1,5 +1,6 @@
 ---
 import ExpenseList from "@/components/expenses/ExpenseList.astro";
+import AddExpenseDialog from "@/components/expenses/AddExpenseDialog.astro";
 import MonthlyBalancePanel from "@/components/expenses/MonthlyBalancePanel.astro";
 import { loadExpenseWorkspaceState } from "@/lib/expense-balance";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -15,15 +16,33 @@ interface Props {
 const { familyId, userId, supabase, children, month } = Astro.props;
 const state = supabase ? await loadExpenseWorkspaceState(supabase, { familyId, userId, month }) : null;
 const today = new Date().toISOString().slice(0, 10);
+const defaultDate = today.slice(0, 7) === month ? today : `${month}-01`;
 const monthLabel = new Intl.DateTimeFormat("en", { month: "long", year: "numeric", timeZone: "UTC" }).format(
   new Date(`${month}-01T00:00:00Z`),
 );
 ---
 
 <section class="border-t border-white/10 pt-8">
-  <div>
-    <p class="text-sm tracking-wide text-purple-200 uppercase">Shared expenses</p>
-    <h2 class="mt-1 text-2xl font-bold">{monthLabel}</h2>
+  <div class="flex items-start justify-between gap-4">
+    <div>
+      <p class="text-sm tracking-wide text-purple-200 uppercase">Shared expenses</p>
+      <h2 class="mt-1 text-2xl font-bold">{monthLabel}</h2>
+    </div>
+    <div>
+      <AddExpenseDialog
+        children={children}
+        month={month}
+        maxDate={today}
+        defaultDate={defaultDate}
+        isMonthLocked={state?.settlement.isLocked ?? false}
+      />
+      <a
+        href="/expenses/new"
+        class="rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium hover:bg-purple-500 md:hidden"
+      >
+        Add expense
+      </a>
+    </div>
   </div>
 
   <div id="monthly-balance-container" class="mt-5">

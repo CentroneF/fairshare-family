@@ -1,0 +1,40 @@
+---
+import CreateExpenseForm from "@/components/expenses/CreateExpenseForm.astro";
+import Layout from "@/layouts/Layout.astro";
+import { loadExpenseWorkspaceState } from "@/lib/expense-balance";
+import { resolveOnboardingState } from "@/lib/family-onboarding";
+
+const { supabase, user } = Astro.locals;
+const onboarding = supabase && user ? await resolveOnboardingState(supabase, user.id) : { kind: "no-family" as const };
+
+if (onboarding.kind === "no-family" || !supabase || !user) {
+  return Astro.redirect("/dashboard");
+}
+
+const month = new Date().toISOString().slice(0, 7);
+const today = new Date().toISOString().slice(0, 10);
+const state = await loadExpenseWorkspaceState(supabase, { familyId: onboarding.family.id, userId: user.id, month });
+---
+
+<Layout title="Add expense">
+  <main class="bg-cosmic min-h-screen p-4 text-white sm:p-8">
+    <section class="mx-auto w-full max-w-xl rounded-2xl border border-white/10 bg-white/10 p-6 backdrop-blur-xl sm:p-8">
+      <a href="/dashboard" class="inline-flex rounded-lg border border-white/20 px-3 py-2 text-sm hover:bg-white/10"
+        >← Back to dashboard</a
+      >
+      <p class="mt-8 text-sm tracking-wide text-purple-200 uppercase">{onboarding.family.name}</p>
+      <h1 class="mt-1 text-2xl font-bold">Add expense</h1>
+      <p class="mt-2 text-sm text-blue-100/70">Add an expense for {month}.</p>
+      <div class="mt-6">
+        <CreateExpenseForm
+          children={onboarding.family.children}
+          month={month}
+          maxDate={today}
+          defaultDate={today}
+          isMonthLocked={state.settlement.isLocked}
+          successBehavior="return-to-dashboard"
+        />
+      </div>
+    </section>
+  </main>
+</Layout>

@@ -95,6 +95,14 @@ export function normalizeExpenseDate(value: string, today = new Date()): string 
   return value;
 }
 
+export function validateExpenseDateInMonth(expenseDate: string, month: string, today = new Date()): string {
+  const normalizedDate = normalizeExpenseDate(expenseDate, today);
+  if (normalizedDate.slice(0, 7) !== month) {
+    throw new ExpenseBalanceError("Expense date must be in the displayed month.");
+  }
+  return normalizedDate;
+}
+
 export function normalizeSelectedMonth(value: string | null, today = new Date()): string {
   const currentMonth = today.toISOString().slice(0, 7);
   if (!value) return currentMonth;
@@ -123,6 +131,9 @@ export function mapExpenseError(error: unknown): string {
   if (message.includes("Expense description is required")) return "Enter an expense description.";
   if (message.includes("Amount must be")) return "Enter a positive amount with at most two decimal places.";
   if (message.includes("Expense date cannot")) return "Expense date cannot be in the future.";
+  if (message.includes("Expense date must be in the displayed month")) {
+    return "Choose an expense date in the displayed month.";
+  }
   if (message.includes("Selected child")) return "Choose a child from your family or leave it empty.";
   if (message.includes("Only the other parent")) return "Only the other parent can approve this expense.";
   if (message.includes("Only the payer can update")) return "Only the payer can edit this expense.";

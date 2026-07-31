@@ -218,28 +218,28 @@ No database migrations, data backfill, or release-time migration procedure is re
 
 #### Automated
 
-- [x] 1.1 Run `npm run lint` after dashboard/layout changes
-- [x] 1.2 Run `npm run build` and confirm the dashboard route builds
+- [x] 1.1 Run `npm run lint` after dashboard/layout changes — a3caf27
+- [x] 1.2 Run `npm run build` and confirm the dashboard route builds — a3caf27
 
 #### Manual
 
-- [x] 1.3 Verify two-parent current-month heading, balance/list order, and no selector
-- [x] 1.4 Verify one-parent unavailable balance card
-- [x] 1.5 Verify `month` query parameters do not change the dashboard month
+- [x] 1.3 Verify two-parent current-month heading, balance/list order, and no selector — a3caf27
+- [x] 1.4 Verify one-parent unavailable balance card — a3caf27
+- [x] 1.5 Verify `month` query parameters do not change the dashboard month — a3caf27
 
 ### Phase 2: Responsive Add Expense Entry Points
 
 #### Automated
 
-- [ ] 2.1 Add and pass month-bound date-validation unit coverage
-- [ ] 2.2 Run `npm test`
-- [ ] 2.3 Run `npm run lint` and `npm run build`
+- [x] 2.1 Add and pass month-bound date-validation unit coverage
+- [x] 2.2 Run `npm test`
+- [x] 2.3 Run `npm run lint` and `npm run build`
 
 #### Manual
 
-- [ ] 2.4 Verify desktop dialog open/close/focus behavior
-- [ ] 2.5 Verify mobile floating action and full-page form navigation
-- [ ] 2.6 Verify out-of-month date validation and locked creation state
+- [x] 2.4 Verify desktop dialog open/close/focus behavior
+- [x] 2.5 Verify mobile floating action and full-page form navigation
+- [x] 2.6 Verify out-of-month date validation and locked creation state
 
 ### Phase 3: Submission Lifecycle and Regression Verification
 
