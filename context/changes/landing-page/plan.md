@@ -173,11 +173,11 @@ No migration, data update, or deployment sequence is required. Rollback is a com
 
 #### Automated
 
-- [x] 2.1 Refine header or landing content only if verification identifies a clarity, route, or scope issue
-- [x] 2.2 Run `npm test` after any polish changes
-- [x] 2.3 Run `npm run lint` after any polish changes
-- [x] 2.4 Run `npm run build` after any polish changes
+- [x] 2.1 Refine header or landing content only if verification identifies a clarity, route, or scope issue — 3478af8
+- [x] 2.2 Run `npm test` after any polish changes — 3478af8
+- [x] 2.3 Run `npm run lint` after any polish changes — 3478af8
+- [x] 2.4 Run `npm run build` after any polish changes — 3478af8
 
 #### Manual
 
-- [x] 2.5 Verify every CTA destination, product-claim accuracy, keyboard focus, and responsive overflow
+- [x] 2.5 Verify every CTA destination, product-claim accuracy, keyboard focus, and responsive overflow — 3478af8
