@@ -259,13 +259,13 @@ No database migrations, data backfill, or release-time migration procedure is re
 
 #### Automated
 
-- [x] 3.1 Run `npm test`, `npm run lint`, and `npm run build`
-- [x] 3.2 Add and pass historical-month route-access unit coverage
-- [x] 3.3 Run `npm test`, `npm run lint`, and `npm run build` after historical-report changes
+- [x] 3.1 Run `npm test`, `npm run lint`, and `npm run build` — 4b5916b
+- [x] 3.2 Add and pass historical-month route-access unit coverage — 4b5916b
+- [x] 3.3 Run `npm test`, `npm run lint`, and `npm run build` after historical-report changes — 4b5916b
 
 #### Manual
 
-- [x] 3.4 Verify desktop creation updates the workspace and restores trigger focus
-- [x] 3.5 Verify mobile creation returns to the refreshed dashboard with success feedback
-- [x] 3.6 Verify creation error recovery and current-dashboard mutation refresh behavior
-- [x] 3.7 Verify historical report navigation, in-place refresh, unavailable Add Expense, and invalid-route redirect
+- [x] 3.4 Verify desktop creation updates the workspace and restores trigger focus — 4b5916b
+- [x] 3.5 Verify mobile creation returns to the refreshed dashboard with success feedback — 4b5916b
+- [x] 3.6 Verify creation error recovery and current-dashboard mutation refresh behavior — 4b5916b
+- [x] 3.7 Verify historical report navigation, in-place refresh, unavailable Add Expense, and invalid-route redirect — 4b5916b
