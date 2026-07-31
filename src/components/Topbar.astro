@@ -3,18 +3,24 @@ const { user } = Astro.locals;
 ---
 
 <div
-  class="mb-4 flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80"
+  class="mb-4 flex flex-col gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/80 sm:flex-row sm:items-center sm:justify-between sm:py-2"
 >
   {
     user ? (
       <>
-        <span class="text-blue-100/70">{user.email}</span>
-        <div class="flex items-center gap-3">
-          <a href="/dashboard" class="text-purple-300 transition-colors hover:text-purple-100 hover:underline">
+        <span class="min-w-0 truncate text-blue-100/70">{user.email}</span>
+        <div class="flex shrink-0 items-center gap-3">
+          <a
+            href="/dashboard"
+            class="rounded-sm text-purple-300 transition-colors hover:text-purple-100 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-200"
+          >
             Dashboard
           </a>
           <form method="POST" action="/api/auth/signout">
-            <button type="submit" class="text-purple-300 transition-colors hover:text-purple-100 hover:underline">
+            <button
+              type="submit"
+              class="rounded-sm text-purple-300 transition-colors hover:text-purple-100 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-200"
+            >
               Sign out
             </button>
           </form>
@@ -23,11 +29,17 @@ const { user } = Astro.locals;
     ) : (
       <>
         <span class="text-blue-100/70">Not signed in</span>
-        <div class="flex gap-3">
-          <a href="/auth/signin" class="text-purple-300 transition-colors hover:text-purple-100 hover:underline">
+        <div class="flex shrink-0 gap-3">
+          <a
+            href="/auth/signin"
+            class="rounded-sm text-purple-300 transition-colors hover:text-purple-100 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-200"
+          >
             Sign in
           </a>
-          <a href="/auth/signup" class="text-purple-300 transition-colors hover:text-purple-100 hover:underline">
+          <a
+            href="/auth/signup"
+            class="rounded-sm text-purple-300 transition-colors hover:text-purple-100 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-200"
+          >
             Sign up
           </a>
         </div>
