@@ -159,24 +159,24 @@ No data migration or deployment ordering is required. The change is source-only 
 
 #### Automated
 
-- [x] 1.1 `npm test` passes.
-- [x] 1.2 `npm run lint` passes.
-- [x] 1.3 `npm run build` passes.
-- [x] 1.4 `createClient(` is invoked only from middleware.
+- [x] 1.1 `npm test` passes. — f020308
+- [x] 1.2 `npm run lint` passes. — f020308
+- [x] 1.3 `npm run build` passes. — f020308
+- [x] 1.4 `createClient(` is invoked only from middleware. — f020308
 
 #### Manual
 
-- [x] 1.5 Signed-in dashboard, reports, and expense workspace behavior remains intact.
-- [x] 1.6 Auth and authenticated API operations preserve their current response behavior.
+- [x] 1.5 Signed-in dashboard, reports, and expense workspace behavior remains intact. — f020308
+- [x] 1.6 Auth and authenticated API operations preserve their current response behavior. — f020308
 
 ### Phase 2: Verify Token-Refresh Persistence
 
 #### Automated
 
-- [ ] 2.1 `npm run lint` and `npm run build` pass after final corrections.
+- [x] 2.1 `npm run lint` and `npm run build` pass after final corrections.
 
 #### Manual
 
-- [ ] 2.2 A refreshable session updates auth cookies on dashboard without the Astro warning.
-- [ ] 2.3 Refreshed dashboard and reports requests remain authenticated without another warning.
-- [ ] 2.4 An unauthenticated protected-route request still redirects to sign-in.
+- [x] 2.2 A refreshable session updates auth cookies on dashboard without the Astro warning.
+- [x] 2.3 Refreshed dashboard and reports requests remain authenticated without another warning.
+- [x] 2.4 An unauthenticated protected-route request still redirects to sign-in.
