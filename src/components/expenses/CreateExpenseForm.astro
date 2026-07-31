@@ -1,4 +1,6 @@
 ---
+import ExpenseDatePicker from "@/components/expenses/ExpenseDatePicker.astro";
+
 interface Props {
   children: readonly { id: string; name: string }[];
   month: string;
@@ -24,7 +26,6 @@ const {
   successRedirectTo = "/dashboard?success=expense-created",
   refreshFallbackRedirectTo = "/dashboard?success=expense-created",
 } = Astro.props;
-const minDate = `${month}-01`;
 ---
 
 {
@@ -66,25 +67,17 @@ const minDate = `${month}-01`;
         <input
           name="amount"
           inputmode="decimal"
-          pattern="(?!0+(?:[,.]0{1,2})?$)\d+(?:[,.]\d{1,2})?"
-          title="Enter a positive amount with at most two decimal places."
           required
           class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2"
           placeholder="12,50"
         />
       </label>
-      <label>
-        <span class="mb-1 block text-sm text-blue-100/80">Expense date</span>
-        <input
-          name="expenseDate"
-          type="date"
-          min={minDate}
-          max={maxDate}
-          value={defaultDate}
-          required
-          class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2"
-        />
-      </label>
+      <div role="group" aria-labelledby="expense-date-label">
+        <span id="expense-date-label" class="mb-1 block text-sm text-blue-100/80">
+          Expense date
+        </span>
+        <ExpenseDatePicker month={month} maxDate={maxDate} defaultDate={defaultDate} />
+      </div>
       <div class="flex items-end">
         <button
           type="submit"

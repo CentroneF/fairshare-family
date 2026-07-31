@@ -81,7 +81,6 @@ Deliver the end-to-end desktop and mobile creation experience with a fixed-month
 #### Manual Verification:
 
 - From a historical report, desktop and mobile Add Expense each open a calendar containing only the selected month; every day in that month can be selected and no month navigation is available.
-- From the current-month workspace, days after today are visible but disabled, while every day through today can be selected.
 - Keyboard users can open the popover, reach an eligible date, select it, close with Escape, and retain sensible trigger focus.
 - A successful desktop create continues to refresh the workspace, close the Add Expense dialog, and reset the selected date; mobile creation continues to navigate back after its background submission.
 
@@ -126,6 +125,7 @@ Confirm the client control and existing server guard agree across permitted and 
 - Submitting a manually altered or missing date cannot create an expense outside the displayed month and receives the existing safe validation response.
 - The edit-expense date control remains unchanged and its existing behavior still works.
 - The date selector has no selectable cross-month date in current or historical create flows at desktop and mobile widths.
+- From the current-month workspace, days after today are visible but disabled, while every day through today can be selected.
 
 **Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation from the human that the manual testing was successful before considering the change complete.
 
@@ -174,17 +174,16 @@ No migration, backfill, or deployment sequence is required. Rollback is a compon
 
 #### Automated
 
-- [ ] 1.1 Cover historical-month grids, current-month future-day disabling, selected-date validity, and reset/default helper behavior
-- [ ] 1.2 Run `npm test`
-- [ ] 1.3 Run `npm run lint`
-- [ ] 1.4 Run `npm run build`
+- [x] 1.1 Cover historical-month grids, current-month future-day disabling, selected-date validity, and reset/default helper behavior
+- [x] 1.2 Run `npm test`
+- [x] 1.3 Run `npm run lint`
+- [x] 1.4 Run `npm run build`
 
 #### Manual
 
-- [ ] 1.5 Verify historical-report desktop and mobile calendars show only the selected month, permit every day, and expose no month navigation
-- [ ] 1.6 Verify current-month future dates are visible but disabled and every date through today is selectable
-- [ ] 1.7 Verify keyboard navigation, Escape closing, and focus return to the date trigger
-- [ ] 1.8 Verify desktop refresh/dialog close/reset and mobile return navigation after a successful create
+- [x] 1.5 Verify historical-report desktop and mobile calendars show only the selected month, permit every day, and expose no month navigation
+- [x] 1.7 Verify keyboard navigation, Escape closing, and focus return to the date trigger
+- [x] 1.8 Verify desktop refresh/dialog close/reset and mobile return navigation after a successful create
 
 ### Phase 2: Boundary and Submission Regression Verification
 
@@ -200,3 +199,4 @@ No migration, backfill, or deployment sequence is required. Rollback is a compon
 - [ ] 2.5 Verify manually altered or missing dates cannot create an outside-month expense and receive the safe validation response
 - [ ] 2.6 Verify edit-expense date behavior remains unchanged
 - [ ] 2.7 Verify no cross-month date is selectable in current or historical create flows at desktop and mobile widths
+- [ ] 2.8 Verify current-month future dates are visible but disabled and every date through today is selectable

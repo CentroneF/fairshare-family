@@ -1,0 +1,138 @@
+---
+import { buildExpenseDatePickerMonth, getExpenseDatePickerDefault } from "@/lib/expense-date-picker";
+
+interface Props {
+  month: string;
+  maxDate: string;
+  defaultDate: string;
+}
+
+const { month, maxDate, defaultDate } = Astro.props;
+const calendar = buildExpenseDatePickerMonth(month, maxDate);
+const selectedDate = getExpenseDatePickerDefault(month, maxDate, defaultDate);
+const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const formatDate = (date: string) =>
+  new Intl.DateTimeFormat("en", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(
+    new Date(`${date}T00:00:00Z`),
+  );
+const pickerId = `expense-date-picker-${crypto.randomUUID()}`;
+---
+
+<div class="relative" data-expense-date-picker data-default-date={selectedDate}>
+  <button
+    type="button"
+    aria-controls={pickerId}
+    aria-expanded="false"
+    aria-haspopup="dialog"
+    aria-label={`Select expense date: ${formatDate(selectedDate)}`}
+    data-date-picker-trigger
+    class="flex w-full items-center justify-between gap-3 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-left hover:bg-white/15 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-300"
+  >
+    <span>
+      <span class="block text-xs text-blue-100/70">Select date</span>
+      <span class="block" data-date-picker-value>{formatDate(selectedDate)}</span>
+    </span>
+    <span aria-hidden="true" class="text-lg leading-none">▾</span>
+  </button>
+  <div
+    id={pickerId}
+    role="dialog"
+    aria-label={`Choose an expense date in ${calendar.label}`}
+    data-date-picker-popover
+    hidden
+    class="absolute bottom-full z-20 mb-2 w-[19rem] rounded-xl border border-white/20 bg-slate-950 p-3 shadow-2xl"
+  >
+    <p class="mb-3 text-center text-sm font-semibold">{calendar.label}</p>
+    <div class="grid grid-cols-7 gap-1 text-center text-xs text-blue-100/70" aria-hidden="true">
+      {weekdays.map((weekday) => <span>{weekday}</span>)}
+    </div>
+    <div role="grid" aria-label={calendar.label} class="mt-1 grid grid-cols-7 gap-1">
+      {Array.from({ length: calendar.leadingBlankDays }, () => <span aria-hidden="true" />)}
+      {
+        calendar.days.map((day) => (
+          <button
+            type="button"
+            role="gridcell"
+            disabled={day.isDisabled}
+            aria-label={formatDate(day.isoDate)}
+            aria-selected={selectedDate === day.isoDate ? "true" : "false"}
+            data-expense-date={day.isoDate}
+            class:list={[
+              "rounded-md py-1.5 text-sm hover:bg-purple-500/40 focus-visible:outline-2 focus-visible:outline-purple-300 disabled:cursor-not-allowed disabled:text-white/30 disabled:hover:bg-transparent",
+              { "bg-purple-600 font-semibold": selectedDate === day.isoDate },
+            ]}
+          >
+            {day.dayOfMonth}
+          </button>
+        ))
+      }
+    </div>
+  </div>
+</div>
+
+<script>
+  const dateFormat = new Intl.DateTimeFormat("en", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+
+  document.querySelectorAll<HTMLElement>("[data-expense-date-picker]").forEach((picker) => {
+    const trigger = picker.querySelector<HTMLButtonElement>("[data-date-picker-trigger]");
+    const popover = picker.querySelector<HTMLElement>("[data-date-picker-popover]");
+    const value = picker.querySelector<HTMLElement>("[data-date-picker-value]");
+    const form = picker.closest("form");
+    const defaultDate = picker.dataset.defaultDate;
+    if (!trigger || !popover || !value || !form || !defaultDate) return;
+
+    const hiddenInput = document.createElement("input");
+    hiddenInput.type = "hidden";
+    hiddenInput.name = "expenseDate";
+    hiddenInput.value = defaultDate;
+    picker.append(hiddenInput);
+
+    let selectedDate = defaultDate;
+    const format = (date: string) => dateFormat.format(new Date(`${date}T00:00:00Z`));
+    const close = (returnFocus = false) => {
+      popover.hidden = true;
+      trigger.setAttribute("aria-expanded", "false");
+      if (returnFocus) trigger.focus();
+    };
+    const select = (date: string) => {
+      selectedDate = date;
+      hiddenInput.value = date;
+      value.textContent = format(date);
+      trigger.setAttribute("aria-label", `Select expense date: ${format(date)}`);
+      picker.querySelectorAll<HTMLButtonElement>("[data-expense-date]").forEach((button) => {
+        const isSelected = button.dataset.expenseDate === date;
+        button.setAttribute("aria-selected", String(isSelected));
+        button.classList.toggle("bg-purple-600", isSelected);
+        button.classList.toggle("font-semibold", isSelected);
+      });
+    };
+
+    trigger.addEventListener("click", () => {
+      const opening = popover.hidden;
+      popover.hidden = !opening;
+      trigger.setAttribute("aria-expanded", String(opening));
+    });
+    picker.querySelectorAll<HTMLButtonElement>("[data-expense-date]").forEach((button) => {
+      button.addEventListener("click", () => {
+        if (!button.dataset.expenseDate) return;
+        select(button.dataset.expenseDate);
+        close(true);
+      });
+    });
+    form.addEventListener("reset", () => {
+      select(defaultDate);
+      close();
+    });
+    document.addEventListener("mousedown", (event) => {
+      if (!picker.contains(event.target as Node)) close();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !popover.hidden) close(true);
+    });
+  });
+</script>
