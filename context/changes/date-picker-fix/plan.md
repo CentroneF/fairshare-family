@@ -199,22 +199,22 @@ No migration or data backfill is required. Rollback is a component-and-route rev
 
 #### Automated
 
-- [x] 2.1 Cover first/last eligible, cross-month, empty, malformed, invalid-calendar-date, and future-date server validation boundaries
-- [x] 2.2 Replace the native edit date input with the shared fixed-month picker
-- [x] 2.3 Enforce the displayed report month in the edit API
-- [x] 2.4 Extend regression coverage for the common create/edit date boundary contract
-- [x] 2.5 Run `npm test` after the edit boundary changes
-- [x] 2.6 Run `npm run lint` after the edit boundary changes
-- [x] 2.7 Run `npm run build` after the edit boundary changes
-- [x] 2.8 Make the edit dialog close from Cancel and backdrop clicks
-- [x] 2.9 Run `npm test` after the dialog-close repair
-- [x] 2.10 Run `npm run lint` after the dialog-close repair
-- [x] 2.11 Run `npm run build` after the dialog-close repair
+- [x] 2.1 Cover first/last eligible, cross-month, empty, malformed, invalid-calendar-date, and future-date server validation boundaries — 0a1aa79
+- [x] 2.2 Replace the native edit date input with the shared fixed-month picker — 0a1aa79
+- [x] 2.3 Enforce the displayed report month in the edit API — 0a1aa79
+- [x] 2.4 Extend regression coverage for the common create/edit date boundary contract — 0a1aa79
+- [x] 2.5 Run `npm test` after the edit boundary changes — 0a1aa79
+- [x] 2.6 Run `npm run lint` after the edit boundary changes — 0a1aa79
+- [x] 2.7 Run `npm run build` after the edit boundary changes — 0a1aa79
+- [x] 2.8 Make the edit dialog close from Cancel and backdrop clicks — 0a1aa79
+- [x] 2.9 Run `npm test` after the dialog-close repair — 0a1aa79
+- [x] 2.10 Run `npm run lint` after the dialog-close repair — 0a1aa79
+- [x] 2.11 Run `npm run build` after the dialog-close repair — 0a1aa79
 
 #### Manual
 
-- [x] 2.12 Verify create dates that are missing or outside the displayed month receive the safe validation response
-- [x] 2.13 Verify edit calendars allow no cross-month date or month navigation and preserve the existing date
-- [x] 2.14 Verify altered edit dates outside the displayed month are rejected without updating the expense
-- [x] 2.15 Verify current-month create and edit calendars disable future dates while allowing all dates through today
-- [x] 2.16 Verify desktop and mobile creation and desktop edit retain their background-success behavior, including Cancel and backdrop closing
+- [x] 2.12 Verify create dates that are missing or outside the displayed month receive the safe validation response — 0a1aa79
+- [x] 2.13 Verify edit calendars allow no cross-month date or month navigation and preserve the existing date — 0a1aa79
+- [x] 2.14 Verify altered edit dates outside the displayed month are rejected without updating the expense — 0a1aa79
+- [x] 2.15 Verify current-month create and edit calendars disable future dates while allowing all dates through today — 0a1aa79
+- [x] 2.16 Verify desktop and mobile creation and desktop edit retain their background-success behavior, including Cancel and backdrop closing — 0a1aa79
