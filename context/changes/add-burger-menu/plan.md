@@ -222,8 +222,8 @@ No migration is required. The existing family-scoped report-history RPC, RLS enf
 
 #### Automated
 
-- [x] 3.1 Full unit suite, lint, and production build pass after refresh cleanup.
+- [x] 3.1 Full unit suite, lint, and production build pass after refresh cleanup. — ba0396d
 
 #### Manual
 
-- [x] 3.2 Verify all background expense and settlement actions refresh correctly and report navigation remains current.
+- [x] 3.2 Verify all background expense and settlement actions refresh correctly and report navigation remains current. — ba0396d
