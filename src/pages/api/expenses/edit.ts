@@ -1,6 +1,15 @@
 import type { APIRoute } from "astro";
-import { mapExpenseError, normalizeExpenseDate, normalizeSelectedMonth, updateExpense } from "@/lib/expense-balance";
+import {
+  mapExpenseError,
+  normalizeSelectedMonth,
+  updateExpense,
+  validateExpenseDateInMonth,
+} from "@/lib/expense-balance";
 import { formValue } from "@/lib/family-onboarding";
+
+function editDestination(month: string): string {
+  return month === new Date().toISOString().slice(0, 7) ? "/dashboard" : `/reports/${month}`;
+}
 
 export const POST: APIRoute = async (context) => {
   const { supabase } = context.locals;
@@ -14,7 +23,7 @@ export const POST: APIRoute = async (context) => {
   let month = "";
   try {
     month = normalizeSelectedMonth(formValue(form.get("month")) || null);
-    const expenseDate = normalizeExpenseDate(formValue(form.get("expenseDate")));
+    const expenseDate = validateExpenseDateInMonth(formValue(form.get("expenseDate")), month);
     const expenseId = formValue(form.get("expenseId"));
     await updateExpense(supabase, {
       expenseId,
@@ -25,12 +34,12 @@ export const POST: APIRoute = async (context) => {
     });
     const destinationMonth = expenseDate.slice(0, 7);
     if (acceptsJson) return Response.json({ expenseId, month: destinationMonth });
-    return context.redirect(`/dashboard?month=${destinationMonth}&success=expense-updated`);
+    return context.redirect(`${editDestination(destinationMonth)}?success=expense-updated`);
   } catch (error) {
     const message = mapExpenseError(error);
     if (acceptsJson) return Response.json({ error: message }, { status: 400 });
     const query = new URLSearchParams({ error: message });
     if (month) query.set("month", month);
-    return context.redirect(`/dashboard?${query.toString()}`);
+    return context.redirect(`${editDestination(month)}?${query.toString()}`);
   }
 };
