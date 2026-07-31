@@ -1,0 +1,138 @@
+---
+interface Props {
+  userEmail: string;
+  familyName: string;
+  children: readonly { id: string; name: string }[];
+  reportsHref: string;
+}
+
+const { userEmail, familyName, children, reportsHref } = Astro.props;
+---
+
+<aside class="hidden rounded-2xl border border-white/10 bg-white/10 p-6 backdrop-blur-xl md:block">
+  <nav aria-label="Dashboard navigation" class="space-y-8">
+    <div>
+      <p class="text-sm text-blue-100/60">Signed in as {userEmail}</p>
+      <form method="POST" action="/api/auth/signout" class="mt-4">
+        <button type="submit" class="rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/10"
+          >Sign out</button
+        >
+      </form>
+    </div>
+
+    <div class="border-t border-white/10 pt-6">
+      <p class="text-sm tracking-wide text-purple-200 uppercase">Shared family</p>
+      <h1 class="mt-1 text-3xl font-bold">{familyName}</h1>
+      <p class="mt-2 text-blue-100/70">Both parents now share this family.</p>
+      <div class="mt-6 rounded-xl border border-white/15 bg-white/5 p-4">
+        <h2 class="font-semibold">Children</h2>
+        {
+          children.length > 0 ? (
+            <ul class="mt-3 space-y-1 text-sm text-blue-100/80">
+              {children.map((child) => (
+                <li>{child.name}</li>
+              ))}
+            </ul>
+          ) : (
+            <p class="mt-2 text-sm text-blue-100/60">No children added yet.</p>
+          )
+        }
+      </div>
+    </div>
+
+    <a href={reportsHref} class="inline-flex rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/10"
+      >Report history</a
+    >
+  </nav>
+</aside>
+
+<div class="md:hidden">
+  <button
+    type="button"
+    data-open-dashboard-navigation
+    aria-controls="mobile-dashboard-navigation"
+    class="rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/10"
+  >
+    <span aria-hidden="true">☰</span> Menu
+  </button>
+
+  <dialog
+    id="mobile-dashboard-navigation"
+    data-dashboard-navigation-drawer
+    aria-labelledby="mobile-dashboard-navigation-title"
+    tabindex="-1"
+    class="m-0 h-dvh w-screen max-w-none bg-transparent p-0 text-white backdrop:bg-slate-950/70"
+  >
+    <div class="h-full w-[min(85vw,22rem)] overflow-y-auto border-r border-white/10 bg-slate-950 p-6 shadow-2xl">
+      <nav aria-label="Dashboard navigation" class="space-y-8">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h2 id="mobile-dashboard-navigation-title" class="text-xl font-semibold">Menu</h2>
+            <p class="mt-1 text-sm text-blue-100/60">Signed in as {userEmail}</p>
+          </div>
+          <button
+            type="button"
+            data-close-dashboard-navigation
+            class="rounded-lg border border-white/20 px-3 py-2 text-sm hover:bg-white/10"
+          >
+            Close
+          </button>
+        </div>
+
+        <div class="border-t border-white/10 pt-6">
+          <p class="text-sm tracking-wide text-purple-200 uppercase">Shared family</p>
+          <p class="mt-1 text-2xl font-bold">{familyName}</p>
+          <p class="mt-2 text-blue-100/70">Both parents now share this family.</p>
+          <div class="mt-6 rounded-xl border border-white/15 bg-white/5 p-4">
+            <h3 class="font-semibold">Children</h3>
+            {
+              children.length > 0 ? (
+                <ul class="mt-3 space-y-1 text-sm text-blue-100/80">
+                  {children.map((child) => (
+                    <li>{child.name}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p class="mt-2 text-sm text-blue-100/60">No children added yet.</p>
+              )
+            }
+          </div>
+        </div>
+
+        <div class="space-y-3 border-t border-white/10 pt-6">
+          <a href={reportsHref} class="block rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/10"
+            >Report history</a
+          >
+          <form method="POST" action="/api/auth/signout">
+            <button type="submit" class="w-full rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/10"
+              >Sign out</button
+            >
+          </form>
+        </div>
+      </nav>
+    </div>
+  </dialog>
+</div>
+
+<script>
+  const drawer = document.querySelector<HTMLDialogElement>("[data-dashboard-navigation-drawer]");
+  const trigger = document.querySelector<HTMLButtonElement>("[data-open-dashboard-navigation]");
+
+  trigger?.addEventListener("click", () => {
+    drawer?.showModal();
+    drawer?.focus();
+  });
+
+  drawer?.addEventListener("cancel", (event) => event.preventDefault());
+  drawer?.addEventListener("close", () => trigger?.focus());
+
+  drawer?.addEventListener("click", (event) => {
+    if (event.target === drawer) drawer.close();
+  });
+
+  document.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    target.closest<HTMLButtonElement>("[data-close-dashboard-navigation]")?.closest("dialog")?.close();
+  });
+</script>

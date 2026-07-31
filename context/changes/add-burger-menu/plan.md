@@ -202,21 +202,21 @@ No migration is required. The existing family-scoped report-history RPC, RLS enf
 
 #### Automated
 
-- [x] 1.1 Report-history route tests, lint, and production build pass.
+- [x] 1.1 Report-history route tests, lint, and production build pass. — 9903773
 
 #### Manual
 
-- [x] 1.2 Verify authenticated history access, report rows, dashboard links, and setup-state redirect.
+- [x] 1.2 Verify authenticated history access, report rows, dashboard links, and setup-state redirect. — 9903773
 
 ### Phase 2: Add Responsive Established-Family Navigation
 
 #### Automated
 
-- [ ] 2.1 Responsive navigation integration tests, lint, and production build pass.
+- [x] 2.1 Responsive navigation integration tests, lint, and production build pass.
 
 #### Manual
 
-- [ ] 2.2 Verify desktop sidebar, mobile drawer dismissal/focus, main workspace behavior, and unchanged setup states.
+- [x] 2.2 Verify desktop sidebar, mobile drawer dismissal/focus, main workspace behavior, and unchanged setup states.
 
 ### Phase 3: Verify Report Navigation and Refresh Boundaries
 
