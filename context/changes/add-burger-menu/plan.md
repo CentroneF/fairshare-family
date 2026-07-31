@@ -212,18 +212,18 @@ No migration is required. The existing family-scoped report-history RPC, RLS enf
 
 #### Automated
 
-- [x] 2.1 Responsive navigation integration tests, lint, and production build pass.
+- [x] 2.1 Responsive navigation integration tests, lint, and production build pass. — 16164a6
 
 #### Manual
 
-- [x] 2.2 Verify desktop sidebar, mobile drawer dismissal/focus, main workspace behavior, and unchanged setup states.
+- [x] 2.2 Verify desktop sidebar, mobile drawer dismissal/focus, main workspace behavior, and unchanged setup states. — 16164a6
 
 ### Phase 3: Verify Report Navigation and Refresh Boundaries
 
 #### Automated
 
-- [ ] 3.1 Full unit suite, lint, and production build pass after refresh cleanup.
+- [x] 3.1 Full unit suite, lint, and production build pass after refresh cleanup.
 
 #### Manual
 
-- [ ] 3.2 Verify all background expense and settlement actions refresh correctly and report navigation remains current.
+- [x] 3.2 Verify all background expense and settlement actions refresh correctly and report navigation remains current.
