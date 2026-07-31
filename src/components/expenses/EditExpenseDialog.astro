@@ -1,4 +1,6 @@
 ---
+import ExpenseDatePicker from "@/components/expenses/ExpenseDatePicker.astro";
+
 interface Props {
   expense: {
     id: string;
@@ -62,20 +64,27 @@ const { expense, children, month, maxDate } = Astro.props;
         class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2"
       />
     </label>
-    <label>
-      <span class="mb-1 block text-sm text-blue-100/80">Expense date</span>
-      <input
-        name="expenseDate"
-        type="date"
-        max={maxDate}
-        value={expense.expenseDate}
-        required
-        class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2"
-      />
-    </label>
+    <div role="group" aria-labelledby={`edit-expense-date-label-${expense.id}`}>
+      <span id={`edit-expense-date-label-${expense.id}`} class="mb-1 block text-sm text-blue-100/80">Expense date</span>
+      <ExpenseDatePicker month={month} maxDate={maxDate} defaultDate={expense.expenseDate} />
+    </div>
     <div class="flex items-end justify-end gap-3">
-      <button type="button" data-cancel-edit class="rounded px-3 py-2 hover:bg-white/10">Cancel</button>
+      <button type="submit" formmethod="dialog" data-cancel-edit class="rounded px-3 py-2 hover:bg-white/10">
+        Cancel
+      </button>
       <button type="submit" class="rounded bg-purple-600 px-3 py-2 text-sm hover:bg-purple-500">Save changes</button>
     </div>
   </form>
 </dialog>
+
+<script>
+  const editDialogWindow = window as typeof window & { editDialogBackdropHandlerReady?: boolean };
+
+  if (!editDialogWindow.editDialogBackdropHandlerReady) {
+    editDialogWindow.editDialogBackdropHandlerReady = true;
+    document.addEventListener("click", (event) => {
+      const target = event.target;
+      if (target instanceof HTMLDialogElement && target.matches("[data-edit-dialog]")) target.close();
+    });
+  }
+</script>

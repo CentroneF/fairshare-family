@@ -13,6 +13,7 @@ than the month currently being viewed.
 - **User's stated cause or approach**: The report month is selected before “Add expense” is clicked, so the date picker should stay in that month.
 - **User's proposed direction**: Allow every eligible day in the selected month only; users should not be able to navigate to other months in the picker.
 - **Pre-dispatch narrowing**: All days in the selected month only; no navigation to another month.
+- **Scope correction (2026-07-31)**: The same selected-report-month rule applies to editing: an expense must not be moved between months.
 
 ## Dimension Map
 
@@ -34,19 +35,19 @@ The observation could originate at any of these dimensions:
 
 ## Narrowing Signals
 
-- The requested scope is creation only: the selected report month determines the valid date range.
+- The selected report month determines the valid date range for both creation and editing.
 - The user requires all eligible days in that month, not a single default date.
 - Investigation found strong evidence for the client-boundary and native-control hypotheses and none for lost month state or missing server validation, so no additional hypothesis question was needed.
 
 ## Cross-System Convention
 
-The existing convention is defense in depth: the form carries the displayed month, and the API rejects a mismatched month. This was intentionally introduced in the dashboard refactor (`context/changes/dashboard-ui-refactoring/plan.md:94-98`) and is implemented in the create API. The UI needs to match that invariant; a native control cannot reliably guarantee its calendar navigation UI across browsers.
+The existing creation convention is defense in depth: the form carries the displayed month and the API rejects a mismatched month. This was intentionally introduced in the dashboard refactor (`context/changes/dashboard-ui-refactoring/plan.md:94-98`) and is implemented in the create API. The edit path currently diverges: its native control only caps future dates, and its API derives a new destination month from the submitted date. The selected-month invariant must now apply consistently to both paths.
 
 ## Reframed (or Confirmed) Problem Statement
 
-> **The actual problem to plan around is**: The create-expense UI does not faithfully express the existing selected-month business rule, and the native date control cannot guarantee the requested no-cross-month-navigation interaction.
+> **The actual problem to plan around is**: Create and edit expense flows must both enforce the displayed report month in their UI and server validation; an expense must not be moved between months.
 
-For historical months, the form's upper date bound is today rather than the end of the selected month, so users can select invalid dates and only discover the violation on submission. The server-side invariant is already correct. The plan must additionally treat “cannot navigate to other months” as a UI-control requirement, not something guaranteed merely by native date input bounds.
+For historical months, the create form's upper date bound was today rather than the end of the selected month, so users could select invalid dates and only discover the violation on submission. The edit control likewise allows dates outside the displayed month, and the edit API accepts them before navigating to that destination month. The plan must apply the fixed-month picker and server guard to both flows, with regression coverage for direct API tampering.
 
 ## Confidence
 
@@ -54,11 +55,14 @@ For historical months, the form's upper date bound is today rather than the end 
 
 ## What Changes for /10x-plan
 
-Plan the creation-form experience around the existing selected-month invariant across both desktop and mobile mounts. Preserve the no-future-date rule for the current month, correct the historical-month date range, and explicitly decide how the requested navigation guarantee will be met given native picker behavior. Do not broaden this change to the edit-expense flow, whose API intentionally permits a month move.
+Revise the active plan before completing Phase 2: include the edit dialog, edit API, database/RPC invariant, and their regression coverage. Preserve the no-future-date rule, retain background form submission, and use the selected report month as the fixed edit boundary.
+
+The edit dialog must also own its Cancel and backdrop-close behavior. Workspace-level delegation is insufficient because the workspace can be replaced after an in-place refresh.
 
 ## References
 
-- Source files: `src/components/expenses/CreateExpenseForm.astro:27,45,76-86`; `src/pages/expenses/new.astro:14-29,42-47`; `src/components/expenses/ExpenseWorkspace.astro:31-33,49-56`; `src/pages/api/expenses/create.ts:20-30`; `src/lib/expense-balance.ts:87-108`
+- Source files: `src/components/expenses/CreateExpenseForm.astro:27,45,76-86`; `src/components/expenses/EditExpenseDialog.astro:29-32,65-74`; `src/pages/expenses/new.astro:14-29,42-47`; `src/components/expenses/ExpenseWorkspace.astro:31-33,49-56,103-115,175-180`; `src/pages/api/expenses/create.ts:20-30`; `src/pages/api/expenses/edit.ts:14-28`; `src/lib/expense-balance.ts:87-108,313-329`
+- Database contract: `supabase/migrations/20260729170000_joint_monthly_settlement.sql:225-246`; `supabase/tests/approved_expense_balance.test.sql:201-211`
 - Tests: `src/lib/expense-balance.test.ts:38-44`
 - Related history: `context/changes/dashboard-ui-refactoring/plan.md:94-98`; `context/changes/dashboard-ui-refactoring/reviews/impl-review.md:35-43`
 - Investigation tasks: trace_date_constraints, trace_server_date, independent_date_check

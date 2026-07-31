@@ -1,5 +1,10 @@
 import type { APIRoute } from "astro";
-import { mapExpenseError, normalizeExpenseDate, normalizeSelectedMonth, updateExpense } from "@/lib/expense-balance";
+import {
+  mapExpenseError,
+  normalizeSelectedMonth,
+  updateExpense,
+  validateExpenseDateInMonth,
+} from "@/lib/expense-balance";
 import { formValue } from "@/lib/family-onboarding";
 
 export const POST: APIRoute = async (context) => {
@@ -14,7 +19,7 @@ export const POST: APIRoute = async (context) => {
   let month = "";
   try {
     month = normalizeSelectedMonth(formValue(form.get("month")) || null);
-    const expenseDate = normalizeExpenseDate(formValue(form.get("expenseDate")));
+    const expenseDate = validateExpenseDateInMonth(formValue(form.get("expenseDate")), month);
     const expenseId = formValue(form.get("expenseId"));
     await updateExpense(supabase, {
       expenseId,

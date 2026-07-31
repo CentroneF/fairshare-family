@@ -39,8 +39,25 @@ describe("expense balance inputs", () => {
     const today = new Date("2026-07-22T12:00:00Z");
     expect(validateExpenseDateInMonth("2026-07-01", "2026-07", today)).toBe("2026-07-01");
     expect(validateExpenseDateInMonth("2026-07-22", "2026-07", today)).toBe("2026-07-22");
+    expect(validateExpenseDateInMonth("2026-06-01", "2026-06", today)).toBe("2026-06-01");
+    expect(validateExpenseDateInMonth("2026-06-30", "2026-06", today)).toBe("2026-06-30");
     expect(() => validateExpenseDateInMonth("2026-06-30", "2026-07", today)).toThrow("displayed month");
     expect(() => validateExpenseDateInMonth("2026-07-23", "2026-07", today)).toThrow("future");
+  });
+
+  it("rejects missing, malformed, and invalid calendar dates before checking the displayed month", () => {
+    const today = new Date("2026-07-22T12:00:00Z");
+    expect(() => validateExpenseDateInMonth("", "2026-07", today)).toThrow("Enter an expense date.");
+    expect(() => validateExpenseDateInMonth("2026/07/01", "2026-07", today)).toThrow("Enter an expense date.");
+    expect(() => validateExpenseDateInMonth("2026-02-29", "2026-02", today)).toThrow("Enter a valid expense date.");
+    expect(() => validateExpenseDateInMonth("2026-04-31", "2026-04", today)).toThrow("Enter a valid expense date.");
+  });
+
+  it("uses the same selected-month boundary for edited expense dates", () => {
+    const today = new Date("2026-07-22T12:00:00Z");
+    expect(validateExpenseDateInMonth("2026-06-15", "2026-06", today)).toBe("2026-06-15");
+    expect(() => validateExpenseDateInMonth("2026-07-01", "2026-06", today)).toThrow("displayed month");
+    expect(() => validateExpenseDateInMonth("2026-06-31", "2026-06", today)).toThrow("valid expense date");
   });
 
   it("validates approval IDs and maps safe approval errors", () => {
