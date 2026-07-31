@@ -173,10 +173,10 @@ No data migration or deployment ordering is required. The change is source-only 
 
 #### Automated
 
-- [x] 2.1 `npm run lint` and `npm run build` pass after final corrections.
+- [x] 2.1 `npm run lint` and `npm run build` pass after final corrections. — 56536f1
 
 #### Manual
 
-- [x] 2.2 A refreshable session updates auth cookies on dashboard without the Astro warning.
-- [x] 2.3 Refreshed dashboard and reports requests remain authenticated without another warning.
-- [x] 2.4 An unauthenticated protected-route request still redirects to sign-in.
+- [x] 2.2 A refreshable session updates auth cookies on dashboard without the Astro warning. — 56536f1
+- [x] 2.3 Refreshed dashboard and reports requests remain authenticated without another warning. — 56536f1
+- [x] 2.4 An unauthenticated protected-route request still redirects to sign-in. — 56536f1
