@@ -7,6 +7,10 @@ import {
 } from "@/lib/expense-balance";
 import { formValue } from "@/lib/family-onboarding";
 
+function editDestination(month: string): string {
+  return month === new Date().toISOString().slice(0, 7) ? "/dashboard" : `/reports/${month}`;
+}
+
 export const POST: APIRoute = async (context) => {
   const { supabase } = context.locals;
   const acceptsJson = context.request.headers.get("accept")?.includes("application/json");
@@ -30,12 +34,12 @@ export const POST: APIRoute = async (context) => {
     });
     const destinationMonth = expenseDate.slice(0, 7);
     if (acceptsJson) return Response.json({ expenseId, month: destinationMonth });
-    return context.redirect(`/dashboard?month=${destinationMonth}&success=expense-updated`);
+    return context.redirect(`${editDestination(destinationMonth)}?success=expense-updated`);
   } catch (error) {
     const message = mapExpenseError(error);
     if (acceptsJson) return Response.json({ error: message }, { status: 400 });
     const query = new URLSearchParams({ error: message });
     if (month) query.set("month", month);
-    return context.redirect(`/dashboard?${query.toString()}`);
+    return context.redirect(`${editDestination(month)}?${query.toString()}`);
   }
 };

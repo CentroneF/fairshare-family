@@ -66,7 +66,7 @@ Deliver the end-to-end desktop and mobile creation experience with a fixed-month
 
 **Intent**: Mount the shared calendar in both creation contexts while retaining background submission.
 
-**Contract**: No native date fallback is rendered; the selected `month`, `maxDate`, default selection, and form reset remain compatible.
+**Contract**: No native date fallback is rendered; the selected `month`, `maxDate`, default selection, and form reset remain compatible. `src/components/expenses/AddExpenseDialog.astro` keeps the dialog overflow visible so the upward-opening calendar popover is not clipped.
 
 ### Success Criteria:
 

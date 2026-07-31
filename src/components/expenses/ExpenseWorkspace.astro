@@ -112,6 +112,11 @@ const refreshFallbackRedirectTo = `${refreshTarget}${refreshTarget.includes("?")
 
     document.querySelector("#monthly-balance-container")?.replaceWith(updatedBalance);
     document.querySelector("#expense-list-container")?.replaceWith(updatedList);
+    (
+      window as typeof window & {
+        initializeExpenseDatePickers?: (root?: ParentNode) => void;
+      }
+    ).initializeExpenseDatePickers?.(updatedList);
   }
 
   (window as typeof window & { refreshExpenseWorkspace?: (month: string) => Promise<void> }).refreshExpenseWorkspace =
@@ -173,10 +178,6 @@ const refreshFallbackRedirectTo = `${refreshTarget}${refreshTarget.includes("?")
         return;
       }
       form.closest<HTMLDialogElement>("dialog")?.close();
-      const url = new URL(window.location.href);
-      url.searchParams.set("month", result.month);
-      url.searchParams.delete("success");
-      window.history.replaceState(null, "", url);
       await refreshExpenseWorkspace(result.month);
     } catch {
       showEditError(form, "We could not update that expense. Please try again.");

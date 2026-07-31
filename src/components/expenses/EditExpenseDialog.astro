@@ -69,7 +69,12 @@ const { expense, children, month, maxDate } = Astro.props;
       <ExpenseDatePicker month={month} maxDate={maxDate} defaultDate={expense.expenseDate} />
     </div>
     <div class="flex items-end justify-end gap-3">
-      <button type="submit" formmethod="dialog" data-cancel-edit class="rounded px-3 py-2 hover:bg-white/10">
+      <button
+        type="button"
+        data-cancel-edit
+        onclick="this.closest('form')?.reset(); this.closest('dialog')?.close()"
+        class="rounded px-3 py-2 hover:bg-white/10"
+      >
         Cancel
       </button>
       <button type="submit" class="rounded bg-purple-600 px-3 py-2 text-sm hover:bg-purple-500">Save changes</button>
@@ -84,7 +89,10 @@ const { expense, children, month, maxDate } = Astro.props;
     editDialogWindow.editDialogBackdropHandlerReady = true;
     document.addEventListener("click", (event) => {
       const target = event.target;
-      if (target instanceof HTMLDialogElement && target.matches("[data-edit-dialog]")) target.close();
+      if (target instanceof HTMLDialogElement && target.matches("[data-edit-dialog]")) {
+        target.querySelector<HTMLFormElement>("form")?.reset();
+        target.close();
+      }
     });
   }
 </script>
