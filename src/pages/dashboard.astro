@@ -1,7 +1,7 @@
 ---
 import CreateFamilyForm from "@/components/family/CreateFamilyForm";
+import DashboardNavigation from "@/components/DashboardNavigation.astro";
 import FamilySetupPanel from "@/components/family/FamilySetupPanel.astro";
-import FamilySummaryPanel from "@/components/family/FamilySummaryPanel.astro";
 import JoinFamilyForm from "@/components/family/JoinFamilyForm";
 import ExpenseWorkspace from "@/components/expenses/ExpenseWorkspace.astro";
 import Layout from "@/layouts/Layout.astro";
@@ -34,70 +34,78 @@ try {
 
 <Layout title="Family dashboard">
   <main class="bg-cosmic min-h-screen p-4 text-white sm:p-8">
-    <div class="mx-auto w-full max-w-3xl rounded-2xl border border-white/10 bg-white/10 p-6 backdrop-blur-xl sm:p-8">
-      <div
-        class="mb-8 flex flex-col gap-3 border-b border-white/10 pb-6 sm:flex-row sm:items-center sm:justify-between"
-      >
-        <div>
-          <p class="text-sm text-blue-100/60">Signed in as {user?.email}</p>
-          {successMessage && <p class="mt-1 text-sm text-emerald-300">{successMessage}</p>}
+    {
+      onboarding.kind === "two-parent-family" ? (
+        <div class="mx-auto grid w-full max-w-6xl gap-6 md:grid-cols-[minmax(16rem,20rem)_minmax(0,1fr)] md:items-start">
+          <DashboardNavigation
+            userEmail={user.email ?? ""}
+            familyName={onboarding.family.name}
+            children={onboarding.family.children}
+            reportsHref="/reports"
+          />
+          <div class="min-w-0 rounded-2xl border border-white/10 bg-white/10 p-6 backdrop-blur-xl sm:p-8">
+            {successMessage && <p class="mb-6 text-sm text-emerald-300">{successMessage}</p>}
+            <ExpenseWorkspace
+              familyId={onboarding.family.id}
+              userId={user.id}
+              children={onboarding.family.children}
+              month={selectedMonth}
+              serverError={error}
+            />
+          </div>
         </div>
-        <form method="POST" action="/api/auth/signout">
-          <button type="submit" class="rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/10"
-            >Sign out</button
-          >
-        </form>
-      </div>
+      ) : (
+        <div class="mx-auto w-full max-w-3xl rounded-2xl border border-white/10 bg-white/10 p-6 backdrop-blur-xl sm:p-8">
+          <div class="mb-8 flex flex-col gap-3 border-b border-white/10 pb-6 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p class="text-sm text-blue-100/60">Signed in as {user?.email}</p>
+              {successMessage && <p class="mt-1 text-sm text-emerald-300">{successMessage}</p>}
+            </div>
+            <form method="POST" action="/api/auth/signout">
+              <button type="submit" class="rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/10">
+                Sign out
+              </button>
+            </form>
+          </div>
 
-      {
-        onboarding.kind === "no-family" ? (
-          <div class="grid gap-8 md:grid-cols-2">
-            <section>
-              <p class="text-sm tracking-wide text-purple-200 uppercase">Start a shared space</p>
-              <h1 class="mt-1 text-3xl font-bold">Create a family</h1>
-              <p class="mt-2 text-blue-100/70">Name your family, then share its code with the other parent.</p>
-              <div class="mt-6">
-                <CreateFamilyForm serverError={error} client:load />
-              </div>
-            </section>
-            <section class="border-t border-white/10 pt-8 md:border-t-0 md:border-l md:pt-0 md:pl-8">
-              <p class="text-sm tracking-wide text-purple-200 uppercase">Have a code?</p>
-              <h2 class="mt-1 text-2xl font-bold">Join a family</h2>
-              <p class="mt-2 text-blue-100/70">Enter the code shared by the first parent.</p>
-              <div class="mt-6">
-                <JoinFamilyForm serverError={error} client:load />
-              </div>
-            </section>
-          </div>
-        ) : onboarding.kind === "creator-awaiting-parent" ? (
-          <div class="space-y-8">
-            <FamilySetupPanel
-              familyName={onboarding.family.name}
-              children={onboarding.family.children}
-              joinCode={onboarding.joinCode}
-              serverError={error}
-            />
-            <ExpenseWorkspace
-              familyId={onboarding.family.id}
-              userId={user.id}
-              children={onboarding.family.children}
-              month={selectedMonth}
-              serverError={error}
-            />
-          </div>
-        ) : (
-          <div class="space-y-8">
-            <FamilySummaryPanel familyName={onboarding.family.name} children={onboarding.family.children} />
-            <ExpenseWorkspace
-              familyId={onboarding.family.id}
-              userId={user.id}
-              children={onboarding.family.children}
-              month={selectedMonth}
-              serverError={error}
-            />
-          </div>
-        )
-      }
-    </div>
+          {onboarding.kind === "no-family" ? (
+            <div class="grid gap-8 md:grid-cols-2">
+              <section>
+                <p class="text-sm tracking-wide text-purple-200 uppercase">Start a shared space</p>
+                <h1 class="mt-1 text-3xl font-bold">Create a family</h1>
+                <p class="mt-2 text-blue-100/70">Name your family, then share its code with the other parent.</p>
+                <div class="mt-6">
+                  <CreateFamilyForm serverError={error} client:load />
+                </div>
+              </section>
+              <section class="border-t border-white/10 pt-8 md:border-t-0 md:border-l md:pt-0 md:pl-8">
+                <p class="text-sm tracking-wide text-purple-200 uppercase">Have a code?</p>
+                <h2 class="mt-1 text-2xl font-bold">Join a family</h2>
+                <p class="mt-2 text-blue-100/70">Enter the code shared by the first parent.</p>
+                <div class="mt-6">
+                  <JoinFamilyForm serverError={error} client:load />
+                </div>
+              </section>
+            </div>
+          ) : onboarding.kind === "creator-awaiting-parent" ? (
+            <div class="space-y-8">
+              <FamilySetupPanel
+                familyName={onboarding.family.name}
+                children={onboarding.family.children}
+                joinCode={onboarding.joinCode}
+                serverError={error}
+              />
+              <ExpenseWorkspace
+                familyId={onboarding.family.id}
+                userId={user.id}
+                children={onboarding.family.children}
+                month={selectedMonth}
+                serverError={error}
+              />
+            </div>
+          ) : null}
+        </div>
+      )
+    }
   </main>
 </Layout>

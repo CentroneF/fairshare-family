@@ -2,7 +2,6 @@
 import CreateExpenseForm from "@/components/expenses/CreateExpenseForm.astro";
 import ExpenseList from "@/components/expenses/ExpenseList.astro";
 import MonthlyBalancePanel from "@/components/expenses/MonthlyBalancePanel.astro";
-import MonthlyReportHistory from "@/components/expenses/MonthlyReportHistory.astro";
 import { loadExpenseWorkspaceState } from "@/lib/expense-balance";
 import { createClient } from "@/lib/supabase";
 
@@ -80,29 +79,20 @@ const lockedMessage =
     canApprove={Boolean(state?.balance && state.currentMembershipId)}
     isMonthLocked={state?.settlement.isLocked ?? false}
   />
-  <div id="monthly-report-history-container">
-    <MonthlyReportHistory reports={state?.history ?? []} selectedMonth={month} />
-  </div>
 </section>
 
 <script>
   async function refreshExpenseWorkspace(month: string) {
-    const historyWasOpen =
-      document.querySelector<HTMLDetailsElement>("#monthly-report-history-container details")?.open ?? false;
     const response = await fetch(`/dashboard?${new URLSearchParams({ month })}`);
     if (!response.ok) throw new Error("Unable to refresh expenses");
 
     const parsedDocument = new DOMParser().parseFromString(await response.text(), "text/html");
     const updatedBalance = parsedDocument.querySelector<HTMLElement>("#monthly-balance-container");
     const updatedList = parsedDocument.querySelector<HTMLElement>("#expense-list-container");
-    const updatedHistory = parsedDocument.querySelector<HTMLElement>("#monthly-report-history-container");
-    if (!updatedBalance || !updatedList || !updatedHistory) throw new Error("Unable to refresh expenses");
+    if (!updatedBalance || !updatedList) throw new Error("Unable to refresh expenses");
 
     document.querySelector("#monthly-balance-container")?.replaceWith(updatedBalance);
     document.querySelector("#expense-list-container")?.replaceWith(updatedList);
-    document.querySelector("#monthly-report-history-container")?.replaceWith(updatedHistory);
-    const refreshedHistory = document.querySelector<HTMLDetailsElement>("#monthly-report-history-container details");
-    if (refreshedHistory) refreshedHistory.open = historyWasOpen;
   }
 
   (window as typeof window & { refreshExpenseWorkspace?: (month: string) => Promise<void> }).refreshExpenseWorkspace =
