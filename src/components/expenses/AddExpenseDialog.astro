@@ -1,0 +1,73 @@
+---
+import CreateExpenseForm from "@/components/expenses/CreateExpenseForm.astro";
+
+interface Props {
+  children: readonly { id: string; name: string }[];
+  month: string;
+  maxDate: string;
+  defaultDate: string;
+  isMonthLocked: boolean;
+  lockedMessage?: string;
+  refreshFallbackRedirectTo?: string;
+}
+
+const { children, month, maxDate, defaultDate, isMonthLocked, lockedMessage, refreshFallbackRedirectTo } = Astro.props;
+---
+
+<div class="hidden md:block">
+  <button
+    type="button"
+    data-open-add-expense
+    aria-controls="add-expense-dialog"
+    class="rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium hover:bg-purple-500"
+  >
+    Add expense
+  </button>
+  <dialog
+    id="add-expense-dialog"
+    data-add-expense-dialog
+    aria-labelledby="add-expense-dialog-title"
+    class="m-auto w-[min(100%-2rem,40rem)] rounded-2xl border border-white/15 bg-slate-950 p-0 text-white shadow-2xl backdrop:bg-slate-950/70"
+  >
+    <div class="p-6">
+      <div class="mb-5 flex items-start justify-between gap-4">
+        <div>
+          <h2 id="add-expense-dialog-title" class="text-xl font-semibold">Add expense</h2>
+          <p class="mt-1 text-sm text-blue-100/70">Add an expense for {month}.</p>
+        </div>
+        <button
+          type="button"
+          data-cancel-add-expense
+          class="rounded-lg border border-white/20 px-3 py-2 text-sm hover:bg-white/10"
+        >
+          Cancel
+        </button>
+      </div>
+      <CreateExpenseForm
+        children={children}
+        month={month}
+        maxDate={maxDate}
+        defaultDate={defaultDate}
+        isMonthLocked={isMonthLocked}
+        lockedMessage={lockedMessage}
+        refreshFallbackRedirectTo={refreshFallbackRedirectTo}
+      />
+    </div>
+  </dialog>
+</div>
+
+<script>
+  const dialog = document.querySelector<HTMLDialogElement>("[data-add-expense-dialog]");
+  const trigger = document.querySelector<HTMLButtonElement>("[data-open-add-expense]");
+
+  trigger?.addEventListener("click", () => dialog?.showModal());
+  dialog?.addEventListener("close", () => trigger?.focus());
+  dialog?.addEventListener("click", (event) => {
+    if (event.target === dialog) dialog.close();
+  });
+  document.addEventListener("click", (event) => {
+    const target = event.target;
+    if (target instanceof HTMLElement && target.closest("[data-cancel-add-expense]")) dialog?.close();
+  });
+  dialog?.addEventListener("expense-created", () => dialog.close());
+</script>

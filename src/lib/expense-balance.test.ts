@@ -5,6 +5,7 @@ import {
   deriveSettlementState,
   deriveMonthlyReportHistory,
   getSettlementUnavailableReason,
+  isAccessibleHistoricalReportMonth,
   mapMonthlyReportHistoryRows,
   mapExpenseError,
   mapSettlementError,
@@ -13,6 +14,7 @@ import {
   normalizeExpenseDate,
   normalizeExpenseId,
   normalizeSelectedMonth,
+  validateExpenseDateInMonth,
 } from "./expense-balance";
 
 describe("expense balance inputs", () => {
@@ -31,6 +33,14 @@ describe("expense balance inputs", () => {
     expect(normalizeSelectedMonth(null, today)).toBe("2026-07");
     expect(normalizeSelectedMonth("2026-06", today)).toBe("2026-06");
     expect(() => normalizeSelectedMonth("2026-08", today)).toThrow();
+  });
+
+  it("accepts only dates from the displayed month through today", () => {
+    const today = new Date("2026-07-22T12:00:00Z");
+    expect(validateExpenseDateInMonth("2026-07-01", "2026-07", today)).toBe("2026-07-01");
+    expect(validateExpenseDateInMonth("2026-07-22", "2026-07", today)).toBe("2026-07-22");
+    expect(() => validateExpenseDateInMonth("2026-06-30", "2026-07", today)).toThrow("displayed month");
+    expect(() => validateExpenseDateInMonth("2026-07-23", "2026-07", today)).toThrow("future");
   });
 
   it("validates approval IDs and maps safe approval errors", () => {
@@ -125,6 +135,14 @@ describe("expense balance inputs", () => {
     expect(
       mapMonthlyReportHistoryRows([{ report_month: "2026-06-01", status: "open", approved_amount: "0.00" }]),
     ).toEqual([{ month: "2026-06", status: "unsettled", approvedAmount: "0.00" }]);
+  });
+
+  it("allows every valid month before the current report month", () => {
+    expect(isAccessibleHistoricalReportMonth("2026-06", "2026-07")).toBe(true);
+    expect(isAccessibleHistoricalReportMonth("June 2026", "2026-07")).toBe(false);
+    expect(isAccessibleHistoricalReportMonth("2026-07", "2026-07")).toBe(false);
+    expect(isAccessibleHistoricalReportMonth("2026-08", "2026-07")).toBe(false);
+    expect(isAccessibleHistoricalReportMonth("2026-05", "2026-07")).toBe(true);
   });
 
   it("explains why a selected month cannot be settled", () => {

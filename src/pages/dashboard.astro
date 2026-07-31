@@ -5,7 +5,6 @@ import FamilySetupPanel from "@/components/family/FamilySetupPanel.astro";
 import JoinFamilyForm from "@/components/family/JoinFamilyForm";
 import ExpenseWorkspace from "@/components/expenses/ExpenseWorkspace.astro";
 import Layout from "@/layouts/Layout.astro";
-import { normalizeSelectedMonth } from "@/lib/expense-balance";
 import { resolveOnboardingState } from "@/lib/family-onboarding";
 
 const { supabase, user } = Astro.locals;
@@ -22,12 +21,7 @@ const successMessage =
         : success
           ? "Your family update was saved."
           : null;
-let selectedMonth: string;
-try {
-  selectedMonth = normalizeSelectedMonth(Astro.url.searchParams.get("month"));
-} catch {
-  selectedMonth = normalizeSelectedMonth(null);
-}
+const currentMonth = new Date().toISOString().slice(0, 7);
 ---
 
 <Layout title="Family dashboard">
@@ -48,8 +42,7 @@ try {
               userId={user.id}
               supabase={supabase}
               children={onboarding.family.children}
-              month={selectedMonth}
-              serverError={error}
+              month={currentMonth}
             />
           </div>
         </div>
@@ -99,8 +92,7 @@ try {
                 userId={user.id}
                 supabase={supabase}
                 children={onboarding.family.children}
-                month={selectedMonth}
-                serverError={error}
+                month={currentMonth}
               />
             </div>
           ) : null}

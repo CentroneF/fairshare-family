@@ -7,9 +7,24 @@ interface Props {
   isMonthLocked: boolean;
   lockedMessage?: string;
   serverError?: string | null;
+  successBehavior?: "refresh-workspace" | "return-to-dashboard";
+  successRedirectTo?: string;
+  refreshFallbackRedirectTo?: string;
 }
 
-const { children, month, maxDate, defaultDate, isMonthLocked, lockedMessage, serverError } = Astro.props;
+const {
+  children,
+  month,
+  maxDate,
+  defaultDate,
+  isMonthLocked,
+  lockedMessage,
+  serverError,
+  successBehavior = "refresh-workspace",
+  successRedirectTo = "/dashboard?success=expense-created",
+  refreshFallbackRedirectTo = "/dashboard?success=expense-created",
+} = Astro.props;
+const minDate = `${month}-01`;
 ---
 
 {
@@ -19,10 +34,13 @@ const { children, month, maxDate, defaultDate, isMonthLocked, lockedMessage, ser
     </p>
   ) : (
     <form
-      id="create-expense-form"
       method="POST"
       action="/api/expenses/create"
       class="grid gap-3 rounded-xl border border-white/15 bg-white/5 p-4 sm:grid-cols-2"
+      data-create-expense-form
+      data-success-behavior={successBehavior}
+      data-success-redirect-to={successRedirectTo}
+      data-refresh-fallback-redirect-to={refreshFallbackRedirectTo}
     >
       <input type="hidden" name="month" value={month} />
       <label class="sm:col-span-2">
@@ -48,6 +66,8 @@ const { children, month, maxDate, defaultDate, isMonthLocked, lockedMessage, ser
         <input
           name="amount"
           inputmode="decimal"
+          pattern="(?!0+(?:[,.]0{1,2})?$)\d+(?:[,.]\d{1,2})?"
+          title="Enter a positive amount with at most two decimal places."
           required
           class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2"
           placeholder="12,50"
@@ -58,6 +78,7 @@ const { children, month, maxDate, defaultDate, isMonthLocked, lockedMessage, ser
         <input
           name="expenseDate"
           type="date"
+          min={minDate}
           max={maxDate}
           value={defaultDate}
           required
@@ -66,7 +87,6 @@ const { children, month, maxDate, defaultDate, isMonthLocked, lockedMessage, ser
       </label>
       <div class="flex items-end">
         <button
-          id="create-expense-submit"
           type="submit"
           class="w-full rounded-lg bg-purple-600 px-4 py-2 font-medium hover:bg-purple-500 disabled:cursor-wait disabled:opacity-70"
         >
@@ -83,10 +103,7 @@ const { children, month, maxDate, defaultDate, isMonthLocked, lockedMessage, ser
 }
 
 <script>
-  const form = document.querySelector<HTMLFormElement>("#create-expense-form");
-  const submitButton = document.querySelector<HTMLButtonElement>("#create-expense-submit");
-
-  function showError(message: string) {
+  function showError(form: HTMLFormElement, message: string) {
     const existing = form?.querySelector<HTMLElement>("[role='alert']");
     if (existing) {
       existing.textContent = message;
@@ -96,7 +113,16 @@ const { children, month, maxDate, defaultDate, isMonthLocked, lockedMessage, ser
     error.className = "sm:col-span-2 text-sm text-red-200";
     error.setAttribute("role", "alert");
     error.textContent = message;
-    form?.append(error);
+    form.append(error);
+  }
+
+  function isValidExpenseAmount(value: FormDataEntryValue | null) {
+    if (typeof value !== "string") return false;
+
+    const amount = value.trim().replace(",", ".");
+    if (!/^\d+(?:\.\d{1,2})?$/.test(amount)) return false;
+
+    return Number(amount) > 0;
   }
 
   function refreshExpenseWorkspace(month: string) {
@@ -106,53 +132,59 @@ const { children, month, maxDate, defaultDate, isMonthLocked, lockedMessage, ser
     return refresh(month);
   }
 
-  form?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    if (!form || !submitButton) return;
+  const createExpenseWindow = window as typeof window & { createExpenseSubmitHandlerReady?: boolean };
 
-    const data = new FormData(form);
-    submitButton.disabled = true;
-    submitButton.textContent = "Saving…";
-    form.querySelector("[role='alert']")?.remove();
+  if (!createExpenseWindow.createExpenseSubmitHandlerReady) {
+    createExpenseWindow.createExpenseSubmitHandlerReady = true;
+    document.addEventListener("submit", async (event) => {
+      const form = event.target instanceof HTMLFormElement ? event.target : null;
+      if (!form?.matches("[data-create-expense-form]")) return;
 
-    try {
-      const response = await fetch(form.action, {
-        method: "POST",
-        headers: { Accept: "application/json" },
-        body: data,
-      });
-      const result = (await response.json()) as { error?: string; month?: string };
-      if (!response.ok || result.error) {
-        showError(result.error ?? "We could not save that expense. Please try again.");
+      event.preventDefault();
+      const submitButton = form.querySelector<HTMLButtonElement>("button[type='submit']");
+      if (!submitButton) return;
+
+      const data = new FormData(form);
+      form.querySelector("[role='alert']")?.remove();
+      const amountInput = form.elements.namedItem("amount");
+      if (!isValidExpenseAmount(data.get("amount"))) {
+        showError(form, "Enter a positive amount with at most two decimal places.");
+        if (amountInput instanceof HTMLInputElement) amountInput.focus();
         return;
       }
-      if (!result.month) {
-        showError("We could not refresh that expense. Please try again.");
-        return;
+
+      submitButton.disabled = true;
+      submitButton.textContent = "Saving…";
+
+      try {
+        const response = await fetch(form.action, {
+          method: "POST",
+          headers: { Accept: "application/json" },
+          body: data,
+        });
+        const result = (await response.json()) as { error?: string; month?: string };
+        if (!response.ok || result.error || !result.month) {
+          showError(form, result.error ?? "We could not save that expense. Please try again.");
+          return;
+        }
+        if (form.dataset.successBehavior === "return-to-dashboard") {
+          window.location.assign(form.dataset.successRedirectTo ?? "/dashboard?success=expense-created");
+          return;
+        }
+        try {
+          await refreshExpenseWorkspace(result.month);
+        } catch {
+          window.location.assign(form.dataset.refreshFallbackRedirectTo ?? "/dashboard?success=expense-created");
+          return;
+        }
+        form.reset();
+        form.dispatchEvent(new CustomEvent("expense-created", { bubbles: true }));
+      } catch {
+        showError(form, "We could not save that expense. Please try again.");
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = "Add expense";
       }
-      const url = new URL(window.location.href);
-      url.searchParams.set("month", result.month);
-      url.searchParams.delete("success");
-      window.history.replaceState(null, "", url);
-      await refreshExpenseWorkspace(result.month);
-      const monthInput = form.querySelector<HTMLInputElement>("[name='month']");
-      const expenseDateInput = form.querySelector<HTMLInputElement>("[name='expenseDate']");
-      if (monthInput) {
-        monthInput.defaultValue = result.month;
-        monthInput.value = result.month;
-      }
-      if (expenseDateInput) {
-        const today = new Date().toISOString().slice(0, 10);
-        const defaultDate = result.month === today.slice(0, 7) ? today : `${result.month}-01`;
-        expenseDateInput.defaultValue = defaultDate;
-        expenseDateInput.value = defaultDate;
-      }
-      form.reset();
-    } catch {
-      showError("We could not save that expense. Please try again.");
-    } finally {
-      submitButton.disabled = false;
-      submitButton.textContent = "Add expense";
-    }
-  });
+    });
+  }
 </script>
