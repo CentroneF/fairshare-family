@@ -1,10 +1,10 @@
 ---
 change_id: add-burger-menu
 title: Add burger menu
-status: impl_reviewed
+status: archived
 created: 2026-07-30
 updated: 2026-07-31
-archived_at: null
+archived_at: 2026-07-31T08:08:22Z
 ---
 
 ## Notes
