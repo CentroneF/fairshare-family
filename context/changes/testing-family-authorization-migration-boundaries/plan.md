@@ -241,14 +241,14 @@ existing family data, open a separate change to add an upgrade-fixture contract.
 
 #### Automated
 
-- [ ] 1.1 Add the standalone transactional two-family pgTAP authorization suite
-- [ ] 1.2 Cover complete RLS/direct-DML/foreign-expense ownership matrix with persisted-state assertions
-- [ ] 1.3 Cover caller-scoped settlement isolation and positive control
-- [ ] 1.4 Run `npx supabase test db`, `npm test`, `npm run lint`, and `npm run build`
+- [x] 1.1 Add the standalone transactional two-family pgTAP authorization suite
+- [x] 1.2 Cover complete RLS/direct-DML/foreign-expense ownership matrix with persisted-state assertions
+- [x] 1.3 Cover caller-scoped settlement isolation and positive control
+- [x] 1.4 Run `npx supabase test db`, `npm test`, `npm run lint`, and `npm run build`
 
 #### Manual
 
-- [ ] 1.5 Review test names, ownership oracles, and fixture rollback behavior
+- [x] 1.5 Review test names, ownership oracles, and fixture rollback behavior
 
 ### Phase 2: Capture the RLS and Migration Regression Pattern
 

@@ -1,7 +1,7 @@
 ---
 change_id: testing-family-authorization-migration-boundaries
 title: Testing family authorization migration boundaries
-status: planned
+status: implementing
 created: 2026-08-04
 updated: 2026-08-04
 archived_at: null
