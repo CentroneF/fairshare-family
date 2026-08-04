@@ -254,9 +254,9 @@ existing family data, open a separate change to add an upgrade-fixture contract.
 
 #### Automated
 
-- [x] 2.1 Update §6.2 with the shipped authorization-boundary cookbook pattern
-- [x] 2.2 Run `git diff --check` and the documented database-test command
+- [x] 2.1 Update §6.2 with the shipped authorization-boundary cookbook pattern — 96ae5d9
+- [x] 2.2 Run `git diff --check` and the documented database-test command — 96ae5d9
 
 #### Manual
 
-- [x] 2.3 Confirm §6.2 is actionable for a fresh contributor
+- [x] 2.3 Confirm §6.2 is actionable for a fresh contributor — 96ae5d9
