@@ -54,7 +54,9 @@ describe("financial rules", () => {
     expect(balance.totalAmount.toString()).toBe(expected.totalAmount);
     expect(balance.approvedAmount.toString()).toBe(expected.approvedAmount);
     expect(balance.toReviewAmount.toString()).toBe(expected.toReviewAmount);
-    expect(isSettlementEligible({ expenses: [expense], parentIds: parents, reportMonth, today })).toBe(expected.eligible);
+    expect(isSettlementEligible({ expenses: [expense], parentIds: parents, reportMonth, today })).toBe(
+      expected.eligible,
+    );
   });
 
   it("returns no settlement action for an equal or rounded-zero balance", () => {

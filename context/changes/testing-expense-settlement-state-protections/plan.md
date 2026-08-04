@@ -193,24 +193,24 @@ No migration is created or modified. Start the local Supabase stack and apply ex
 
 #### Automated
 
-- [x] 2.1 Local pgTAP suite passes with the adjusted assertion count
-- [x] 2.2 First-confirmed and settled rejection cases assert unchanged persisted state as well as expected errors
+- [x] 2.1 Local pgTAP suite passes with the adjusted assertion count — 3ef2c96
+- [x] 2.2 First-confirmed and settled rejection cases assert unchanged persisted state as well as expected errors — 3ef2c96
 
 #### Manual
 
-- [x] 2.3 Review the SQL sequence to verify authenticated RPC behavior drives rejection checks
-- [x] 2.4 Confirm the pgTAP plan count matches executed assertions
+- [x] 2.3 Review the SQL sequence to verify authenticated RPC behavior drives rejection checks — 3ef2c96
+- [x] 2.4 Confirm the pgTAP plan count matches executed assertions — 3ef2c96
 
 ### Phase 3: Cookbook and regression handoff
 
 #### Automated
 
-- [ ] 3.1 Focused financial-rules Vitest command passes
-- [ ] 3.2 Complete Vitest suite passes
-- [ ] 3.3 Local pgTAP suite passes
-- [ ] 3.4 Lint and production build pass
+- [x] 3.1 Focused financial-rules Vitest command passes
+- [x] 3.2 Complete Vitest suite passes
+- [x] 3.3 Local pgTAP suite passes
+- [x] 3.4 Lint and production build pass
 
 #### Manual
 
-- [ ] 3.5 Confirm §6.1 answers placement, naming/assertion, reference-test, and command questions
-- [ ] 3.6 Confirm the final diff contains only targeted tests and Phase-1 cookbook documentation
+- [x] 3.5 Confirm §6.1 answers placement, naming/assertion, reference-test, and command questions
+- [x] 3.6 Confirm the final diff contains only targeted tests and Phase-1 cookbook documentation

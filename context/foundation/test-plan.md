@@ -78,7 +78,24 @@ The Source column cites evidence that surfaced each risk, never a code anchor.
 
 ### 6.1 Financial and state-transition tests
 
-- TBD — see §3 Phase 1 for the settled-month mutation and exact-total patterns.
+- Put pure exact-total and settlement-eligibility regressions in
+  `src/lib/financial-rules.test.ts`. Name cases for the user-visible state
+  contract (for example, `pending expense remains under review and blocks
+  settlement`), use explicit date boundaries and PLN amount strings, and
+  compare monetary `Decimal` values with `toString()` rather than JavaScript
+  numbers. The state table in that file is the reference example for approved,
+  pending, and declined expenses.
+- Put authoritative RPC lock and no-side-effect regressions in
+  `supabase/tests/approved_expense_balance.test.sql`. Pair each rejected command
+  assertion with a narrow persisted-state assertion: status and review fields
+  for expenses, or confirmer/snapshot fields for settlements. Use `toFixed(2)`
+  when SQL assertions need a fixed two-decimal monetary representation. The
+  first-confirmed and settled rejection cases in that suite are the reference
+  examples.
+- Run the focused unit seam with
+  `npm test -- src/lib/financial-rules.test.ts`, the full Vitest suite with
+  `npm test`, and the integration seam with `npx supabase test db` after the
+  local Supabase stack is running.
 
 ### 6.2 RLS and migration-boundary tests
 
