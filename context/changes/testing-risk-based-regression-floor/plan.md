@@ -225,12 +225,12 @@ clarifies how existing migrations and RLS tests must be verified.
 
 #### Automated
 
-- [ ] 1.1 Add the canonical `npm run verify` test → lint → build script
-- [ ] 1.2 Run the aggregate command and preserve standalone Vitest execution
+- [x] 1.1 Add the canonical `npm run verify` test → lint → build script
+- [x] 1.2 Run the aggregate command and preserve standalone Vitest execution
 
 #### Manual
 
-- [ ] 1.3 Confirm the command is discoverable as the fast local pre-PR gate
+- [x] 1.3 Confirm the command is discoverable as the fast local pre-PR gate
 
 ### Phase 2: Enforce the Gate for Pull Requests
 
