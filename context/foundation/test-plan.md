@@ -99,7 +99,24 @@ The Source column cites evidence that surfaced each risk, never a code anchor.
 
 ### 6.2 RLS and migration-boundary tests
 
-- TBD — see §3 Phase 2 for family-isolation and migration-regression patterns.
+- Put family-isolation and migration-boundary regressions in
+  `supabase/tests/family_authorization_boundaries.test.sql`. Give the suite two
+  isolated families with active-parent fixtures, seed them while privileged,
+  then switch the transaction-local authenticated JWT subject for each actor.
+  Name cases for the family-visible behavior (for example, `a parent cannot
+  update another family expense`), not the policy or function implementation.
+- Use an own-family positive control alongside foreign-family invisibility for
+  `families`, `family_members`, `children`, `expenses`, and
+  `monthly_settlements`. Direct authenticated table writes must remain denied;
+  foreign RPC attempts must assert the domain error when one exists and always
+  pair it with a narrow persisted-state assertion for the victim row.
+- Settlement confirmation has no family parameter. Test its caller-scoped
+  isolation by preparing matching eligible months for both families, confirming
+  as one family, and proving only that family’s settlement changes. Do not
+  invent a foreign-ID failure case for this RPC.
+- Run `npx supabase test db` after the local Supabase stack is running. The
+  suite exercises complete migrations, real grants, RLS, and `SECURITY DEFINER`
+  behavior; route mocks and browser tests do not provide cheaper signal.
 
 ### 6.3 Running the risk-based suite
 

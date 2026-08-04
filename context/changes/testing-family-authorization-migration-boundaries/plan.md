@@ -241,22 +241,22 @@ existing family data, open a separate change to add an upgrade-fixture contract.
 
 #### Automated
 
-- [x] 1.1 Add the standalone transactional two-family pgTAP authorization suite
-- [x] 1.2 Cover complete RLS/direct-DML/foreign-expense ownership matrix with persisted-state assertions
-- [x] 1.3 Cover caller-scoped settlement isolation and positive control
-- [x] 1.4 Run `npx supabase test db`, `npm test`, `npm run lint`, and `npm run build`
+- [x] 1.1 Add the standalone transactional two-family pgTAP authorization suite — b30a6ab
+- [x] 1.2 Cover complete RLS/direct-DML/foreign-expense ownership matrix with persisted-state assertions — b30a6ab
+- [x] 1.3 Cover caller-scoped settlement isolation and positive control — b30a6ab
+- [x] 1.4 Run `npx supabase test db`, `npm test`, `npm run lint`, and `npm run build` — b30a6ab
 
 #### Manual
 
-- [x] 1.5 Review test names, ownership oracles, and fixture rollback behavior
+- [x] 1.5 Review test names, ownership oracles, and fixture rollback behavior — b30a6ab
 
 ### Phase 2: Capture the RLS and Migration Regression Pattern
 
 #### Automated
 
-- [ ] 2.1 Update §6.2 with the shipped authorization-boundary cookbook pattern
-- [ ] 2.2 Run `git diff --check` and the documented database-test command
+- [x] 2.1 Update §6.2 with the shipped authorization-boundary cookbook pattern
+- [x] 2.2 Run `git diff --check` and the documented database-test command
 
 #### Manual
 
-- [ ] 2.3 Confirm §6.2 is actionable for a fresh contributor
+- [x] 2.3 Confirm §6.2 is actionable for a fresh contributor
