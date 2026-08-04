@@ -205,12 +205,12 @@ No migration is created or modified. Start the local Supabase stack and apply ex
 
 #### Automated
 
-- [x] 3.1 Focused financial-rules Vitest command passes
-- [x] 3.2 Complete Vitest suite passes
-- [x] 3.3 Local pgTAP suite passes
-- [x] 3.4 Lint and production build pass
+- [x] 3.1 Focused financial-rules Vitest command passes — e6e7d33
+- [x] 3.2 Complete Vitest suite passes — e6e7d33
+- [x] 3.3 Local pgTAP suite passes — e6e7d33
+- [x] 3.4 Lint and production build pass — e6e7d33
 
 #### Manual
 
-- [x] 3.5 Confirm §6.1 answers placement, naming/assertion, reference-test, and command questions
-- [x] 3.6 Confirm the final diff contains only targeted tests and Phase-1 cookbook documentation
+- [x] 3.5 Confirm §6.1 answers placement, naming/assertion, reference-test, and command questions — e6e7d33
+- [x] 3.6 Confirm the final diff contains only targeted tests and Phase-1 cookbook documentation — e6e7d33
