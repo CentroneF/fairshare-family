@@ -236,13 +236,13 @@ clarifies how existing migrations and RLS tests must be verified.
 
 #### Automated
 
-- [x] 2.1 Configure the existing workflow for pull requests targeting `main`
-- [x] 2.2 Retain setup/env handling and replace duplicated checks with `npm run verify`
-- [x] 2.3 Validate workflow syntax and confirm pgTAP remains outside CI
+- [x] 2.1 Configure the existing workflow for pull requests targeting `main` — 74b7a91
+- [x] 2.2 Retain setup/env handling and replace duplicated checks with `npm run verify` — 74b7a91
+- [x] 2.3 Validate workflow syntax and confirm pgTAP remains outside CI — 74b7a91
 
 #### Manual
 
-- [ ] 2.4 Confirm a pull request to `main` starts and reports the aggregate CI gate
+- [x] 2.4 Confirm a pull request to `main` starts and reports the aggregate CI gate
 
 ### Phase 3: Publish the Gate Contract and Cookbook
 
