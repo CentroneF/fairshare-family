@@ -242,16 +242,16 @@ clarifies how existing migrations and RLS tests must be verified.
 
 #### Manual
 
-- [x] 2.4 Confirm a pull request to `main` starts and reports the aggregate CI gate
+- [x] 2.4 Confirm a pull request to `main` starts and reports the aggregate CI gate — 6d77902
 
 ### Phase 3: Publish the Gate Contract and Cookbook
 
 #### Automated
 
-- [ ] 3.1 Update README and CLAUDE command, CI, migration, and database-test guidance
-- [ ] 3.2 Update test-plan §5 and §6.3 with the automatic-versus-local gate split
-- [ ] 3.3 Run `git diff --check` and `npm run verify`
+- [x] 3.1 Update README and CLAUDE command, CI, migration, and database-test guidance
+- [x] 3.2 Update test-plan §5 and §6.3 with the automatic-versus-local gate split
+- [x] 3.3 Run `git diff --check` and `npm run verify`
 
 #### Manual
 
-- [ ] 3.4 Confirm a new contributor can identify the PR, fast-local, and conditional-database paths
+- [x] 3.4 Confirm a new contributor can identify the PR, fast-local, and conditional-database paths
