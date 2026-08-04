@@ -7,6 +7,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "test": "vitest run",
+    "verify": "npm run test && npm run lint && npm run build",
     "astro": "astro",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

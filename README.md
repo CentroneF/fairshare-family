@@ -52,6 +52,8 @@ npm run dev
 - `npm run dev` - Start development server (Cloudflare workerd runtime)
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
+- `npm test` - Run the full Vitest suite
+- `npm run verify` - Run tests, lint, and the production build before opening a PR
 - `npm run lint` - Run ESLint with type-checked rules
 - `npm run lint:fix` - Auto-fix ESLint issues
 - `npm run format` - Run Prettier
@@ -111,7 +113,15 @@ npx supabase stop
 
 The local Studio UI is available at `http://localhost:54323`.
 
-No database tables or migrations are required — this project uses Supabase Auth's built-in `auth.users` table only.
+This project includes database migrations and RLS policies. When a change
+touches `supabase/migrations/` or RLS, start the local stack and run:
+
+```bash
+npx supabase test db
+```
+
+Do not use `supabase db reset` during normal development; apply migrations
+incrementally instead.
 
 ### Using a cloud Supabase project instead
 
@@ -168,7 +178,12 @@ Set `SUPABASE_URL` and `SUPABASE_KEY` as secrets in your Cloudflare dashboard or
 
 ## CI
 
-GitHub Actions runs lint + build on every push and PR to `master`. Configure `SUPABASE_URL` and `SUPABASE_KEY` as repository secrets in GitHub for the build step.
+GitHub Actions runs `npm run verify` (Vitest, lint, and build) for pull
+requests targeting `main`. Configure `SUPABASE_URL` and `SUPABASE_KEY` as
+repository secrets for the build step. For a fast local pre-PR check, run
+`npm run verify` yourself. Database integration remains a required local check
+for migration or RLS changes: start Supabase, then run `npx supabase test db`.
+Repository branch-protection settings are managed separately.
 
 ## License
 
