@@ -1,7 +1,8 @@
 name: CI
 
 on:
-  workflow_dispatch:
+  pull_request:
+    branches: [main]
 
 jobs:
   ci:
@@ -14,8 +15,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx astro sync
-      - run: npm run lint
-      - run: npm run build
+      - run: npm run verify
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}

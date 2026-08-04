@@ -225,20 +225,20 @@ clarifies how existing migrations and RLS tests must be verified.
 
 #### Automated
 
-- [x] 1.1 Add the canonical `npm run verify` test → lint → build script
-- [x] 1.2 Run the aggregate command and preserve standalone Vitest execution
+- [x] 1.1 Add the canonical `npm run verify` test → lint → build script — 99621c3
+- [x] 1.2 Run the aggregate command and preserve standalone Vitest execution — 99621c3
 
 #### Manual
 
-- [x] 1.3 Confirm the command is discoverable as the fast local pre-PR gate
+- [x] 1.3 Confirm the command is discoverable as the fast local pre-PR gate — 99621c3
 
 ### Phase 2: Enforce the Gate for Pull Requests
 
 #### Automated
 
-- [ ] 2.1 Configure the existing workflow for pull requests targeting `main`
-- [ ] 2.2 Retain setup/env handling and replace duplicated checks with `npm run verify`
-- [ ] 2.3 Validate workflow syntax and confirm pgTAP remains outside CI
+- [x] 2.1 Configure the existing workflow for pull requests targeting `main`
+- [x] 2.2 Retain setup/env handling and replace duplicated checks with `npm run verify`
+- [x] 2.3 Validate workflow syntax and confirm pgTAP remains outside CI
 
 #### Manual
 
