@@ -182,24 +182,24 @@ No migration is created or modified. Start the local Supabase stack and apply ex
 
 #### Automated
 
-- [x] 1.1 Focused Vitest file passes with exact approved, pending, and declined totals plus eligibility assertions
-- [x] 1.2 Complete Vitest suite passes without production source changes
+- [x] 1.1 Focused Vitest file passes with exact approved, pending, and declined totals plus eligibility assertions — 5947142
+- [x] 1.2 Complete Vitest suite passes without production source changes — 5947142
 
 #### Manual
 
-- [x] 1.3 Review case names and expected strings as an independent financial contract
+- [x] 1.3 Review case names and expected strings as an independent financial contract — 5947142
 
 ### Phase 2: Locked-report immutability
 
 #### Automated
 
-- [ ] 2.1 Local pgTAP suite passes with the adjusted assertion count
-- [ ] 2.2 First-confirmed and settled rejection cases assert unchanged persisted state as well as expected errors
+- [x] 2.1 Local pgTAP suite passes with the adjusted assertion count
+- [x] 2.2 First-confirmed and settled rejection cases assert unchanged persisted state as well as expected errors
 
 #### Manual
 
-- [ ] 2.3 Review the SQL sequence to verify authenticated RPC behavior drives rejection checks
-- [ ] 2.4 Confirm the pgTAP plan count matches executed assertions
+- [x] 2.3 Review the SQL sequence to verify authenticated RPC behavior drives rejection checks
+- [x] 2.4 Confirm the pgTAP plan count matches executed assertions
 
 ### Phase 3: Cookbook and regression handoff
 

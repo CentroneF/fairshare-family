@@ -1,6 +1,6 @@
 begin;
 
-select plan(103);
+select plan(120);
 
 insert into auth.users (id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values
@@ -206,9 +206,21 @@ select throws_ok(
   $$select public.update_expense((select id from public.expenses where description = 'Open correction candidate'), null, 'Blocked destination', (current_date - interval '2 months')::date, 11.00)$$,
   'P0001', 'Expenses in a confirmation-locked or settled month cannot be changed', 'editing rejects a settled destination month'
 );
+select is(
+  (select description || ':' || expense_date::text || ':' || amount_pln::text || ':' || status::text
+     from public.expenses where description = 'Open correction candidate'),
+  'Open correction candidate:' || (current_date - interval '1 month')::date::text || ':11.00:pending',
+  'blocked settled destination edit preserves its expense'
+);
 select throws_ok(
   $$select public.update_expense((select id from public.expenses where description = 'Settled correction candidate'), null, 'Blocked source', (current_date - interval '1 month')::date, 10.00)$$,
   'P0001', 'Expenses in a confirmation-locked or settled month cannot be changed', 'editing rejects a settled source month'
+);
+select is(
+  (select description || ':' || expense_date::text || ':' || amount_pln::text || ':' || status::text
+     from public.expenses where description = 'Settled correction candidate'),
+  'Settled correction candidate:' || (current_date - interval '3 months')::date::text || ':10.00:pending',
+  'blocked settled source edit preserves its expense'
 );
 
 select set_config('request.jwt.claim.sub', '52000000-0000-0000-0000-000000000001', true);
@@ -259,6 +271,10 @@ select throws_ok(
 select throws_ok(
   $$select public.delete_expense((select id from public.expenses where description = 'Settled correction candidate'))$$,
   'P0001', 'Expenses in a confirmation-locked or settled month cannot be changed', 'settled-month expenses cannot be deleted'
+);
+select is(
+  (select status::text || ':' || amount_pln::text from public.expenses where description = 'Settled correction candidate'),
+  'pending:10.00', 'blocked settled deletion retains its expense'
 );
 select set_config('request.jwt.claim.sub', '52000000-0000-0000-0000-000000000001', true);
 select throws_ok(
@@ -318,13 +334,31 @@ select throws_ok(
   $$select public.confirm_monthly_settlement(date_trunc('month', current_date - interval '4 months')::date)$$,
   'P0001', 'You have already confirmed this settlement', 'the first parent cannot confirm twice'
 );
+select is(
+  (select status::text || ':' || first_confirmed_by::text || ':' || coalesce(second_confirmed_by::text, 'null') || ':' || coalesce(approved_amount_pln::text, 'null') || ':' || coalesce(first_confirmed_contribution_pln::text, 'null') || ':' || coalesce(second_confirmed_contribution_pln::text, 'null') || ':' || coalesce(payment_amount_pln::text, 'null') || ':' || coalesce(payment_from_membership_id::text, 'null') || ':' || coalesce(payment_to_membership_id::text, 'null')
+    from public.monthly_settlements
+   where family_id = '54000000-0000-0000-0000-000000000001'
+     and report_month = date_trunc('month', current_date - interval '4 months')::date),
+  'open:54100000-0000-0000-0000-000000000001:null:null:null:null:null:null:null',
+  'duplicate first confirmation preserves open state, first confirmer, and empty snapshots'
+);
 select throws_ok(
   $$select public.create_expense(null, 'Blocked after confirmation', (current_date - interval '4 months')::date, 1.00)$$,
   'P0001', 'Expenses in a confirmation-locked or settled month cannot be changed', 'first confirmation locks expense creation'
 );
+select is_empty(
+  $$select 1 from public.expenses where description = 'Blocked after confirmation'$$,
+  'blocked first-confirmed creation leaves no expense row'
+);
 select throws_ok(
   $$select public.update_expense((select id from public.expenses where description = 'Settlement confirmation candidate'), null, 'Blocked update after confirmation', (current_date - interval '4 months')::date, 10.00)$$,
   'P0001', 'Expenses in a confirmation-locked or settled month cannot be changed', 'first confirmation locks expense updates'
+);
+select is(
+  (select description || ':' || expense_date::text || ':' || amount_pln::text || ':' || status::text
+     from public.expenses where description = 'Settlement confirmation candidate'),
+  'Settlement confirmation candidate:' || (current_date - interval '4 months')::date::text || ':10.00:approved',
+  'blocked first-confirmed update preserves editable fields and status'
 );
 
 set local role postgres;
@@ -344,6 +378,14 @@ values
     '54000000-0000-0000-0000-000000000001', '54100000-0000-0000-0000-000000000001',
     'Locked delete candidate', (current_date - interval '4 months')::date, 4.00, 'declined',
     '54200000-0000-0000-0000-000000000001', now(), 'Duplicate'
+  ),
+  (
+    '54000000-0000-0000-0000-000000000001', '54100000-0000-0000-0000-000000000001',
+    'First-confirmed source edit candidate', (current_date - interval '4 months')::date, 5.00, 'pending', null, null, null
+  ),
+  (
+    '54000000-0000-0000-0000-000000000001', '54100000-0000-0000-0000-000000000001',
+    'First-confirmed destination edit candidate', (current_date - interval '1 month')::date, 6.00, 'pending', null, null, null
   );
 
 set local role authenticated;
@@ -352,19 +394,53 @@ select throws_ok(
   $$select public.delete_expense((select id from public.expenses where description = 'Locked delete candidate'))$$,
   'P0001', 'Expenses in a confirmation-locked or settled month cannot be changed', 'first confirmation locks expense deletion'
 );
+select is(
+  (select status::text || ':' || decline_reason from public.expenses where description = 'Locked delete candidate'),
+  'declined:Duplicate', 'blocked first-confirmed deletion retains its declined expense'
+);
+select throws_ok(
+  $$select public.update_expense((select id from public.expenses where description = 'First-confirmed source edit candidate'), null, 'Moved from first-confirmed month', (current_date - interval '1 month')::date, 5.00)$$,
+  'P0001', 'Expenses in a confirmation-locked or settled month cannot be changed', 'editing rejects a first-confirmed source month'
+);
+select is(
+  (select description || ':' || expense_date::text || ':' || amount_pln::text || ':' || status::text
+     from public.expenses where description = 'First-confirmed source edit candidate'),
+  'First-confirmed source edit candidate:' || (current_date - interval '4 months')::date::text || ':5.00:pending',
+  'blocked first-confirmed source edit preserves its expense'
+);
+select throws_ok(
+  $$select public.update_expense((select id from public.expenses where description = 'First-confirmed destination edit candidate'), null, 'Moved into first-confirmed month', (current_date - interval '4 months')::date, 6.00)$$,
+  'P0001', 'Expenses in a confirmation-locked or settled month cannot be changed', 'editing rejects a first-confirmed destination month'
+);
+select is(
+  (select description || ':' || expense_date::text || ':' || amount_pln::text || ':' || status::text
+     from public.expenses where description = 'First-confirmed destination edit candidate'),
+  'First-confirmed destination edit candidate:' || (current_date - interval '1 month')::date::text || ':6.00:pending',
+  'blocked first-confirmed destination edit preserves its expense'
+);
 select set_config('request.jwt.claim.sub', '52000000-0000-0000-0000-000000000001', true);
 select throws_ok(
   $$select public.approve_expense((select id from public.expenses where description = 'Locked approval candidate'))$$,
   'P0001', 'Expenses in a confirmation-locked or settled month cannot be changed', 'first confirmation locks expense approval'
 );
+select is(
+  (select status::text || ':' || coalesce(reviewed_by::text, 'null') || ':' || coalesce(reviewed_at::text, 'null')
+     from public.expenses where description = 'Locked approval candidate'),
+  'pending:null:null', 'blocked first-confirmed approval preserves pending review metadata'
+);
 select throws_ok(
   $$select public.decline_expense((select id from public.expenses where description = 'Locked decline candidate'), 'Still wrong')$$,
   'P0001', 'Expenses in a confirmation-locked or settled month cannot be changed', 'first confirmation locks expense decline'
 );
+select is(
+  (select status::text || ':' || coalesce(reviewed_by::text, 'null') || ':' || coalesce(reviewed_at::text, 'null') || ':' || coalesce(decline_reason, 'null')
+     from public.expenses where description = 'Locked decline candidate'),
+  'pending:null:null:null', 'blocked first-confirmed decline preserves pending review metadata'
+);
 
 set local role postgres;
 delete from public.expenses
- where description in ('Locked approval candidate', 'Locked decline candidate', 'Locked delete candidate');
+ where description in ('Locked approval candidate', 'Locked decline candidate', 'Locked delete candidate', 'First-confirmed source edit candidate', 'First-confirmed destination edit candidate');
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '52000000-0000-0000-0000-000000000001', true);
@@ -395,9 +471,21 @@ select throws_ok(
   $$select public.confirm_monthly_settlement(date_trunc('month', current_date - interval '4 months')::date)$$,
   'P0001', 'This month has already been settled', 'a settled month cannot be confirmed again'
 );
+select is(
+  (select status::text || ':' || first_confirmed_by::text || ':' || second_confirmed_by::text || ':' || approved_amount_pln::text || ':' || first_confirmed_contribution_pln::text || ':' || second_confirmed_contribution_pln::text || ':' || payment_amount_pln::text || ':' || payment_from_membership_id::text || ':' || payment_to_membership_id::text
+    from public.monthly_settlements
+   where family_id = '54000000-0000-0000-0000-000000000001'
+     and report_month = date_trunc('month', current_date - interval '4 months')::date),
+  'settled:54100000-0000-0000-0000-000000000001:54200000-0000-0000-0000-000000000001:10.00:10.00:0.00:5:54200000-0000-0000-0000-000000000001:54100000-0000-0000-0000-000000000001',
+  'duplicate final confirmation preserves identities, totals, and payment direction'
+);
 select throws_ok(
   $$select public.create_expense(null, 'Blocked after settlement', (current_date - interval '4 months')::date, 1.00)$$,
   'P0001', 'Expenses in a confirmation-locked or settled month cannot be changed', 'final settlement keeps expense creation locked'
+);
+select is_empty(
+  $$select 1 from public.expenses where description = 'Blocked after settlement'$$,
+  'blocked settled creation leaves no expense row'
 );
 
 set local role postgres;
@@ -418,9 +506,19 @@ select throws_ok(
   $$select public.approve_expense((select id from public.expenses where description = 'Settled approval candidate'))$$,
   'P0001', 'Expenses in a confirmation-locked or settled month cannot be changed', 'final settlement locks expense approval'
 );
+select is(
+  (select status::text || ':' || coalesce(reviewed_by::text, 'null') || ':' || coalesce(reviewed_at::text, 'null')
+     from public.expenses where description = 'Settled approval candidate'),
+  'pending:null:null', 'blocked settled approval preserves pending review metadata'
+);
 select throws_ok(
   $$select public.decline_expense((select id from public.expenses where description = 'Settled decline candidate'), 'Still wrong')$$,
   'P0001', 'Expenses in a confirmation-locked or settled month cannot be changed', 'final settlement locks expense decline'
+);
+select is(
+  (select status::text || ':' || coalesce(reviewed_by::text, 'null') || ':' || coalesce(reviewed_at::text, 'null') || ':' || coalesce(decline_reason, 'null')
+     from public.expenses where description = 'Settled decline candidate'),
+  'pending:null:null:null', 'blocked settled decline preserves pending review metadata'
 );
 
 select set_config('request.jwt.claim.sub', '51000000-0000-0000-0000-000000000001', true);
