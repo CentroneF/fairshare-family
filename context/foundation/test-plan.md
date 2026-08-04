@@ -47,7 +47,7 @@ The Source column cites evidence that surfaced each risk, never a code anchor.
 | # | Phase name | Goal (one line) | Risks covered | Test types | Status | Change folder |
 |---|---|---|---|---|---|---|
 | 1 | Expense and settlement state protections | Prove financial state transitions and settlement locking reject invalid changes. | #1, #2, #4, #5 | unit + database integration | complete | testing-expense-settlement-state-protections |
-| 2 | Family authorization and migration boundaries | Prove RLS and migration changes preserve family isolation and valid access. | #3, #6 | database integration | not started | — |
+| 2 | Family authorization and migration boundaries | Prove RLS and migration changes preserve family isolation and valid access. | #3, #6 | database integration | change opened | testing-family-authorization-migration-boundaries |
 | 3 | Risk-based regression floor | Make the shipped patterns runnable and align required local and CI gates. | cross-cutting | test commands + quality gates | not started | — |
 
 ## 4. Stack
