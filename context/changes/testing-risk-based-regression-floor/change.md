@@ -1,7 +1,7 @@
 ---
 change_id: testing-risk-based-regression-floor
 title: Establish a risk-based regression floor
-status: implementing
+status: implemented
 created: 2026-08-04
 updated: 2026-08-04
 archived_at: null

@@ -248,10 +248,10 @@ clarifies how existing migrations and RLS tests must be verified.
 
 #### Automated
 
-- [x] 3.1 Update README and CLAUDE command, CI, migration, and database-test guidance
-- [x] 3.2 Update test-plan §5 and §6.3 with the automatic-versus-local gate split
-- [x] 3.3 Run `git diff --check` and `npm run verify`
+- [x] 3.1 Update README and CLAUDE command, CI, migration, and database-test guidance — 1dce2b2
+- [x] 3.2 Update test-plan §5 and §6.3 with the automatic-versus-local gate split — 1dce2b2
+- [x] 3.3 Run `git diff --check` and `npm run verify` — 1dce2b2
 
 #### Manual
 
-- [x] 3.4 Confirm a new contributor can identify the PR, fast-local, and conditional-database paths
+- [x] 3.4 Confirm a new contributor can identify the PR, fast-local, and conditional-database paths — 1dce2b2
