@@ -182,12 +182,12 @@ No migration is created or modified. Start the local Supabase stack and apply ex
 
 #### Automated
 
-- [ ] 1.1 Focused Vitest file passes with exact approved, pending, and declined totals plus eligibility assertions
-- [ ] 1.2 Complete Vitest suite passes without production source changes
+- [x] 1.1 Focused Vitest file passes with exact approved, pending, and declined totals plus eligibility assertions
+- [x] 1.2 Complete Vitest suite passes without production source changes
 
 #### Manual
 
-- [ ] 1.3 Review case names and expected strings as an independent financial contract
+- [x] 1.3 Review case names and expected strings as an independent financial contract
 
 ### Phase 2: Locked-report immutability
 

@@ -30,6 +30,33 @@ describe("financial rules", () => {
     expect(balance.toReviewAmount.toString()).toBe("2.5");
   });
 
+  it.each([
+    {
+      name: "approved expense contributes to the balance and permits settlement",
+      expense: { amountPln: "10.50", payerId: "parent-a", status: "approved" as const },
+      expected: { totalAmount: "10.5", approvedAmount: "10.5", toReviewAmount: "0", eligible: true },
+    },
+    {
+      name: "pending expense remains under review and blocks settlement",
+      expense: { amountPln: "10.50", payerId: "parent-a", status: "pending" as const },
+      expected: { totalAmount: "10.5", approvedAmount: "0", toReviewAmount: "10.5", eligible: false },
+    },
+    {
+      name: "declined expense is excluded and blocks settlement",
+      expense: { amountPln: "10.50", payerId: "parent-a", status: "declined" as const },
+      expected: { totalAmount: "0", approvedAmount: "0", toReviewAmount: "0", eligible: false },
+    },
+  ])("$name", ({ expense, expected }) => {
+    const reportMonth = new Date(2026, 5, 1);
+    const today = new Date(2026, 6, 1);
+    const balance = deriveMonthlyBalance([expense], parents);
+
+    expect(balance.totalAmount.toString()).toBe(expected.totalAmount);
+    expect(balance.approvedAmount.toString()).toBe(expected.approvedAmount);
+    expect(balance.toReviewAmount.toString()).toBe(expected.toReviewAmount);
+    expect(isSettlementEligible({ expenses: [expense], parentIds: parents, reportMonth, today })).toBe(expected.eligible);
+  });
+
   it("returns no settlement action for an equal or rounded-zero balance", () => {
     expect(deriveMonthlyBalance([], parents).settlement.kind).toBe("balanced");
     expect(
