@@ -26,3 +26,7 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# Playwright local state and test artifacts
+.playwright-cli/
+test-results/
