@@ -386,7 +386,16 @@ async function loadSettlementRow(
   ) {
     return null;
   }
-  return row as SettlementRow;
+  return {
+    status: row.status,
+    first_confirmed_by: row.first_confirmed_by,
+    second_confirmed_by: row.second_confirmed_by,
+    approved_amount_pln: row.approved_amount_pln,
+    first_confirmed_contribution_pln: row.first_confirmed_contribution_pln,
+    second_confirmed_contribution_pln: row.second_confirmed_contribution_pln,
+    payment_from_membership_id: row.payment_from_membership_id,
+    payment_amount_pln: row.payment_amount_pln,
+  };
 }
 
 export function getSettlementUnavailableReason(input: {
