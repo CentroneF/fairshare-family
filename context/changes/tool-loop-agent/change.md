@@ -1,7 +1,7 @@
 ---
 change_id: tool-loop-agent
 title: Modular Codex code-review agent
-status: planned
+status: implementing
 created: 2026-08-17
 updated: 2026-08-17
 archived_at: null

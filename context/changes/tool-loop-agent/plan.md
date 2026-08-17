@@ -253,13 +253,13 @@ This is an internal package refactor with no persisted data migration. Existing 
 
 #### Automated
 
-- [ ] 1.1 `npm run check` succeeds with the extracted pure modules.
-- [ ] 1.2 Public schema types represent the required verdict and score fields.
+- [x] 1.1 `npm run check` succeeds with the extracted pure modules.
+- [x] 1.2 Public schema types represent the required verdict and score fields.
 
 #### Manual
 
-- [ ] 1.3 Validate valid and invalid review fixtures through the exported schema.
-- [ ] 1.4 Inspect a generated prompt with a fixture diff.
+- [x] 1.3 Validate valid and invalid review fixtures through the exported schema.
+- [x] 1.4 Inspect a generated prompt with a fixture diff.
 
 ### Phase 2: Create the Reusable Buffered Agent API
 
