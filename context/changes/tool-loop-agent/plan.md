@@ -277,22 +277,22 @@ This is an internal package refactor with no persisted data migration. Existing 
 
 #### Automated
 
-- [x] 3.1 `npm run check` succeeds after streamed code removal.
-- [x] 3.2 Confirm `npm run` retains `start` and removes `start-streamed`.
+- [x] 3.1 `npm run check` succeeds after streamed code removal. — 79b6755
+- [x] 3.2 Confirm `npm run` retains `start` and removes `start-streamed`. — 79b6755
 
 #### Manual
 
-- [x] 3.3 Pipe a Git diff to `npm run start` and validate the JSON result.
-- [x] 3.4 Verify stdin waiting and runtime failures report to stderr without corrupting stdout.
+- [x] 3.3 Pipe a Git diff to `npm run start` and validate the JSON result. — 79b6755
+- [x] 3.4 Verify stdin waiting and runtime failures report to stderr without corrupting stdout. — 79b6755
 
 ### Phase 4: Verify the Package Boundary and Handoff
 
 #### Automated
 
-- [ ] 4.1 Run `npm install` and `npm run check` from the package directory.
-- [ ] 4.2 Run `npm pack --dry-run` and inspect its contents.
+- [x] 4.1 Run `npm install` and `npm run check` from the package directory.
+- [x] 4.2 Run `npm pack --dry-run` and inspect its contents.
 
 #### Manual
 
-- [ ] 4.3 Follow the README CLI workflow with a small diff.
-- [ ] 4.4 Import the documented public API and confirm no side effects occur until review invocation.
+- [x] 4.3 Follow the README CLI workflow with a small diff.
+- [x] 4.4 Import the documented public API and confirm no side effects occur until review invocation.
