@@ -1,11 +1,6 @@
 import { z } from "zod";
 
-const scoreSchema = z
-  .number()
-  .int()
-  .min(1)
-  .max(10)
-  .describe("Score from 1 (serious gaps) through 10 (exemplary)");
+const scoreSchema = z.number().int().min(1).max(10).describe("Score from 1 (serious gaps) through 10 (exemplary)");
 
 export const reviewSchema = z.object({
   implementationCorrectness: scoreSchema.describe("Whether the code does what it declares"),
@@ -21,6 +16,6 @@ export const reviewJsonSchema = z.toJSONSchema(reviewSchema);
 
 export type Review = z.infer<typeof reviewSchema>;
 
-export type ReviewRequest = {
+export interface ReviewRequest {
   diff: string;
-};
+}

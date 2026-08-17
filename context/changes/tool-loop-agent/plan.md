@@ -253,25 +253,25 @@ This is an internal package refactor with no persisted data migration. Existing 
 
 #### Automated
 
-- [x] 1.1 `npm run check` succeeds with the extracted pure modules.
-- [x] 1.2 Public schema types represent the required verdict and score fields.
+- [x] 1.1 `npm run check` succeeds with the extracted pure modules. — b3c71ee
+- [x] 1.2 Public schema types represent the required verdict and score fields. — b3c71ee
 
 #### Manual
 
-- [x] 1.3 Validate valid and invalid review fixtures through the exported schema.
-- [x] 1.4 Inspect a generated prompt with a fixture diff.
+- [x] 1.3 Validate valid and invalid review fixtures through the exported schema. — b3c71ee
+- [x] 1.4 Inspect a generated prompt with a fixture diff. — b3c71ee
 
 ### Phase 2: Create the Reusable Buffered Agent API
 
 #### Automated
 
-- [ ] 2.1 `npm run check` succeeds with the agent interfaces and public index exports.
-- [ ] 2.2 Type-check a consumer-style import from `src/index.ts`.
+- [x] 2.1 `npm run check` succeeds with the agent interfaces and public index exports.
+- [x] 2.2 Type-check a consumer-style import from `src/index.ts`.
 
 #### Manual
 
-- [ ] 2.3 Invoke the public factory with a stubbed runner/client and validate the result.
-- [ ] 2.4 Verify malformed and invalid fixture results throw `CodeReviewError`.
+- [x] 2.3 Invoke the public factory with a stubbed runner/client and validate the result.
+- [x] 2.4 Verify malformed and invalid fixture results throw `CodeReviewError`.
 
 ### Phase 3: Migrate the Buffered CLI and Remove Streaming Duplication
 

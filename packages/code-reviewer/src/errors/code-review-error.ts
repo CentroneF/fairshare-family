@@ -1,7 +1,7 @@
-export type CodeReviewErrorContext = {
+export interface CodeReviewErrorContext {
   readonly stage: "execution" | "missing-output" | "invalid-json" | "invalid-output";
   readonly details?: unknown;
-};
+}
 
 export class CodeReviewError extends Error {
   readonly context: CodeReviewErrorContext;
