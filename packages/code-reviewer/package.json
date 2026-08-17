@@ -5,9 +5,8 @@
   "type": "module",
   "scripts": {
     "check": "tsc --noEmit",
-    "dev": "tsx watch src/review.ts",
-    "start": "tsx src/review.ts",
-    "start-streamed": "tsx src/review-streamed.ts"
+    "dev": "tsx watch src/cli.ts",
+    "start": "tsx src/cli.ts"
   },
   "dependencies": {
     "@openai/codex-sdk": "^0.147.0",

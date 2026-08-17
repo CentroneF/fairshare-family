@@ -265,25 +265,25 @@ This is an internal package refactor with no persisted data migration. Existing 
 
 #### Automated
 
-- [x] 2.1 `npm run check` succeeds with the agent interfaces and public index exports.
-- [x] 2.2 Type-check a consumer-style import from `src/index.ts`.
+- [x] 2.1 `npm run check` succeeds with the agent interfaces and public index exports. — de9184d
+- [x] 2.2 Type-check a consumer-style import from `src/index.ts`. — de9184d
 
 #### Manual
 
-- [x] 2.3 Invoke the public factory with a stubbed runner/client and validate the result.
-- [x] 2.4 Verify malformed and invalid fixture results throw `CodeReviewError`.
+- [x] 2.3 Invoke the public factory with a stubbed runner/client and validate the result. — de9184d
+- [x] 2.4 Verify malformed and invalid fixture results throw `CodeReviewError`. — de9184d
 
 ### Phase 3: Migrate the Buffered CLI and Remove Streaming Duplication
 
 #### Automated
 
-- [ ] 3.1 `npm run check` succeeds after streamed code removal.
-- [ ] 3.2 Confirm `npm run` retains `start` and removes `start-streamed`.
+- [x] 3.1 `npm run check` succeeds after streamed code removal.
+- [x] 3.2 Confirm `npm run` retains `start` and removes `start-streamed`.
 
 #### Manual
 
-- [ ] 3.3 Pipe a Git diff to `npm run start` and validate the JSON result.
-- [ ] 3.4 Verify stdin waiting and runtime failures report to stderr without corrupting stdout.
+- [x] 3.3 Pipe a Git diff to `npm run start` and validate the JSON result.
+- [x] 3.4 Verify stdin waiting and runtime failures report to stderr without corrupting stdout.
 
 ### Phase 4: Verify the Package Boundary and Handoff
 

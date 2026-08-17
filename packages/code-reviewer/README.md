@@ -1,11 +1,11 @@
 # Code Reviewer
 
-A command-line code-review agent powered by the Codex SDK. It reads a Git diff from standard input and returns a structured JSON review with scores, a pass/fail verdict, and an actionable Markdown summary.
+A reusable, buffered code-review agent powered by the Codex SDK. The library reviews a supplied Git diff and returns structured JSON with scores, a pass/fail verdict, and an actionable Markdown summary. The included CLI is a thin stdin-to-JSON adapter around that public API.
 
 ## Prerequisites
 
 - Node.js 18 or later
-- Codex authentication configured locally, or an `OPENAI_API_KEY` environment variable
+- Codex CLI authentication configured locally. If your Codex setup uses an API key, configure `OPENAI_API_KEY` through your normal environment management rather than this package's `.env` file.
 
 ## Install
 
@@ -35,4 +35,17 @@ Validate types:
 npm run check
 ```
 
-The entry point is `src/review.ts`. The agent runs with a read-only sandbox and requests approval only when required by Codex policy.
+The CLI entry point is `src/cli.ts`. The agent runs with a read-only sandbox and requests approval only when required by Codex policy.
+
+## Library API
+
+Import from `src/index.ts` when embedding the reviewer. Imports are side-effect free: they do not load dotenv, read stdin, write to the console, or start Codex until `review` is called.
+
+```ts
+import { createCodeReviewer } from "./src/index.js";
+
+const reviewer = createCodeReviewer({ model: process.env.CODEX_MODEL });
+const result = await reviewer.review({ diff: "...git diff..." });
+```
+
+For deterministic integrations, pass a compatible `runner` to `createCodeReviewer`. The package also exports `review`, `reviewSchema`, `reviewJsonSchema`, `buildCodeReviewPrompt`, and `CodeReviewError`.
