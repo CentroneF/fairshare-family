@@ -260,25 +260,25 @@ The first workflow PR cannot exercise the new workflow from the base branch beca
 
 #### Automated
 
-- [x] 1.1 Pass package type checking
-- [x] 1.2 Pass deterministic package tests for six-score PR review requests
-- [x] 1.3 Prove input data isolation and optional-body behavior in tests
+- [x] 1.1 Pass package type checking — 4175abf
+- [x] 1.2 Pass deterministic package tests for six-score PR review requests — 4175abf
+- [x] 1.3 Prove input data isolation and optional-body behavior in tests — 4175abf
 
 #### Manual
 
-- [x] 1.4 Confirm documented local CLI review output
+- [x] 1.4 Confirm documented local CLI review output — 4175abf
 
 ### Phase 2: Make the composite action execute and expose reviews
 
 #### Automated
 
-- [ ] 2.1 Pass static composite-action validation
-- [ ] 2.2 Run the action against a structured request without a dist artifact
-- [ ] 2.3 Expose a validated six-score result through the action contract
+- [x] 2.1 Pass static composite-action validation
+- [x] 2.2 Run the action against a structured request without a dist artifact
+- [x] 2.3 Expose a validated six-score result through the action contract
 
 #### Manual
 
-- [ ] 2.4 Confirm action success for advisory pass/fail and clear failure for execution errors
+- [x] 2.4 Confirm action success for advisory pass/fail and clear failure for execution errors
 
 ### Phase 3: Deliver secure advisory PR review automation
 

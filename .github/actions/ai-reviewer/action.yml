@@ -1,0 +1,59 @@
+name: AI Reviewer
+description: Run the trusted local pull-request code reviewer
+
+branding:
+  icon: terminal
+  color: purple
+
+inputs:
+  request-file:
+    description: Absolute path to a JSON review request with title, optional body, and diff
+    required: true
+  api-key:
+    description: OpenAI API key used only by the reviewer process
+    required: true
+
+outputs:
+  result-file:
+    description: Absolute path to the validated review JSON written by this action
+    value: ${{ steps.review.outputs.result-file }}
+  verdict:
+    description: Advisory pass/fail verdict from the validated review result
+    value: ${{ steps.review.outputs.verdict }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install, validate, and run reviewer
+      id: review
+      shell: bash
+      env:
+        REQUEST_FILE: ${{ inputs.request-file }}
+        OPENAI_API_KEY: ${{ inputs.api-key }}
+      run: |
+        set -euo pipefail
+
+        reviewer_dir="$GITHUB_WORKSPACE/packages/code-reviewer"
+        result_file="$RUNNER_TEMP/ai-review-result.json"
+
+        test -f "$REQUEST_FILE"
+        npm ci --prefix "$reviewer_dir"
+        npm run check --prefix "$reviewer_dir"
+        npm run start --prefix "$reviewer_dir" -- --request "$REQUEST_FILE" > "$result_file"
+
+        verdict="$(
+          cd "$reviewer_dir"
+          ./node_modules/.bin/tsx -e '
+            import { readFile } from "node:fs/promises";
+            import { reviewSchema } from "./src/schemas/review.ts";
+
+            void (async () => {
+              const resultFile = process.argv.at(-1);
+              const result = reviewSchema.parse(JSON.parse(await readFile(resultFile, "utf8")));
+              process.stdout.write(result.verdict);
+            })();
+          ' "$result_file"
+        )"
+
+        printf 'result-file=%s\n' "$result_file" >> "$GITHUB_OUTPUT"
+        printf 'verdict=%s\n' "$verdict" >> "$GITHUB_OUTPUT"

@@ -50,6 +50,12 @@ npm test
 
 The CLI entry point is `src/cli.ts`. `title` and `diff` are required; `body` is optional and must be omitted when empty. The agent runs with a read-only sandbox and requests approval only when required by Codex policy.
 
+## GitHub Actions composite action
+
+`.github/actions/ai-reviewer` runs this package from the trusted base-branch checkout. It accepts a `request-file` input pointing to the JSON format above and an `api-key` input, which it maps only to `OPENAI_API_KEY` for the reviewer process. The action uses `npm ci`, checks TypeScript, and writes the CLI's validated JSON stdout to a temporary result file.
+
+It exposes two outputs: `result-file` (the raw validated six-score JSON) and `verdict` (`pass` or `fail`). A `fail` verdict is an advisory review result and does not cause the action to fail. Invalid request JSON, schema-invalid reviewer output, or model execution errors cause the action to fail with diagnostics on stderr.
+
 ## Library API
 
 Import from `src/index.ts` when embedding the reviewer. Imports are side-effect free: they do not load dotenv, read stdin, write to the console, or start Codex until `review` is called.
