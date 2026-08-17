@@ -43,6 +43,17 @@ The review runtime must come from the PR base SHA, not the untrusted head SHA. O
 
 Treat all title, body, and diff text as untrusted data. Serialize request metadata as JSON rather than shell interpolation, omit an empty body, and delimit each input section in the reviewer prompt while retaining the existing instruction-isolation rule.
 
+Use the canonical score anchors from `.agents/prompts/m5l3-requirements.md` consistently in the reviewer prompt, generated JSON schema, and package documentation. Each score is an integer from 1 through 10; the anchors below define the ends of the scale, not a substitute for reviewer judgment between them.
+
+| Criterion | Grade 1 | Grade 10 |
+| --- | --- | --- |
+| Implementation correctness | Logic is broken, misses obvious edge/error cases, or silently regresses existing behavior. | Works across happy paths, edge cases, and failure modes without regressions. |
+| Idiomaticity | Fights the stack and repository patterns; reads as foreign. | Matches well-written surrounding code and uses the right idioms naturally. |
+| Complexity | Is over-engineered or tangled, with accidental complexity that obscures intent. | Is the minimal, clear design that completely solves the problem. |
+| Test/risk coverage | Risky logic is untested, or tests are absent, trivial, or unhelpful. | Tests the paths most likely to break deliberately and in proportion to risk. |
+| Documentation | Leaves needed intent opaque, forcing readers to reverse-engineer it. | Explains the why behind non-obvious decisions without restating the obvious. |
+| Security/safety | Introduces an exploitable flaw, leaks secrets, or unsafely trusts untrusted input. | Validates input, handles secrets correctly, and opens no new attack surface. |
+
 ## Phase 1: Extend the reviewer contract and regression coverage
 
 ### Overview
@@ -131,7 +142,47 @@ Turn the local composite action into the trusted runtime adapter: install the re
 
 ---
 
-## Phase 3: Deliver secure advisory PR review automation
+## Phase 3: Calibrate the six-score rubric
+
+### Overview
+
+Give the reviewer and PR authors an unambiguous shared meaning for the bottom and top of every score before automated feedback is delivered.
+
+### Changes Required:
+
+#### 1. Criterion-specific score anchors
+
+**Files**: `packages/code-reviewer/src/prompts/code-review.ts`, `packages/code-reviewer/src/schemas/review.ts`, `packages/code-reviewer/README.md`
+
+**Intent**: Replace the generic "serious gaps" / "exemplary" instruction with the six canonical criterion-specific 1 and 10 anchors above.
+
+**Contract**: The reviewer prompt explicitly gives the meaning of grade 1 and grade 10 for all six criteria. The generated response JSON schema carries the same criterion-specific guidance, and the package README documents the rubric for maintainers. The anchors remain descriptive; `pass`/`fail` is still a separate advisory model verdict.
+
+#### 2. Deterministic rubric regression tests
+
+**Files**: `packages/code-reviewer/src/prompts/code-review.test.ts`, `packages/code-reviewer/src/schemas/review.test.ts`
+
+**Intent**: Prevent future edits from silently reducing the agent's scoring guidance to criterion names or a generic scale.
+
+**Contract**: Tests assert that the constructed model prompt and generated response JSON schema include a grade-1 and grade-10 anchor for every criterion. They run without Codex credentials or network access.
+
+### Success Criteria:
+
+#### Automated Verification:
+
+- `npm run check --prefix packages/code-reviewer` passes.
+- `npm test --prefix packages/code-reviewer` passes without Codex credentials or network access.
+- Tests prove that all six criterion-specific grade-1 and grade-10 anchors reach the reviewer prompt and response schema.
+
+#### Manual Verification:
+
+- Inspect a generated fixture prompt and confirm each criterion has an understandable grade 1 and grade 10 definition, while PR title/body/diff remain untrusted data.
+
+**Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation from the human that the rubric is understandable before proceeding.
+
+---
+
+## Phase 4: Deliver secure advisory PR review automation
 
 ### Overview
 
@@ -181,7 +232,7 @@ Wire the trusted composite action into a secure, idempotent PR workflow that rev
 
 ---
 
-## Phase 4: Verify delivery and document operational setup
+## Phase 5: Verify delivery and document operational setup
 
 ### Overview
 
@@ -217,6 +268,7 @@ Run the project and package gates, validate the workflow configuration, and docu
 ### Unit Tests:
 
 - Schema score bounds, required documentation score, and JSON-schema generation.
+- Criterion-specific grade-1 and grade-10 anchors in the reviewer prompt and response schema.
 - Prompt sections for title, optional body, and diff, including instruction-like untrusted content.
 - Reviewer validation through the injected runner seam, including missing/invalid six-score responses.
 - CLI structured-request success and validation failures without real Codex credentials.
@@ -272,36 +324,47 @@ The first workflow PR cannot exercise the new workflow from the base branch beca
 
 #### Automated
 
-- [x] 2.1 Pass static composite-action validation
-- [x] 2.2 Run the action against a structured request without a dist artifact
-- [x] 2.3 Expose a validated six-score result through the action contract
+- [x] 2.1 Pass static composite-action validation — 17fa7a3
+- [x] 2.2 Run the action against a structured request without a dist artifact — 17fa7a3
+- [x] 2.3 Expose a validated six-score result through the action contract — 17fa7a3
 
 #### Manual
 
-- [x] 2.4 Confirm action success for advisory pass/fail and clear failure for execution errors
+- [x] 2.4 Confirm action success for advisory pass/fail and clear failure for execution errors — 17fa7a3
 
-### Phase 3: Deliver secure advisory PR review automation
+### Phase 3: Calibrate the six-score rubric
 
 #### Automated
 
-- [ ] 3.1 Validate workflow triggers, guards, concurrency, permissions, and action interface
-- [ ] 3.2 Cover event qualification and fork skipping with workflow fixtures or tests
-- [ ] 3.3 Cover idempotent comment and label lifecycle with workflow fixtures or tests
+- [x] 3.1 Pass package type checking with criterion-specific score anchors
+- [x] 3.2 Pass deterministic prompt and schema tests for all grade-1 and grade-10 anchors
 
 #### Manual
 
-- [ ] 3.4 Confirm same-repository PR review publication and label exclusivity
-- [ ] 3.5 Confirm retry refreshes one comment and removes the retry label
-- [ ] 3.6 Confirm fork PR skips without access to the review credential
+- [x] 3.3 Confirm the rubric is understandable in a generated reviewer prompt
 
-### Phase 4: Verify delivery and document operational setup
+### Phase 4: Deliver secure advisory PR review automation
 
 #### Automated
 
-- [ ] 4.1 Pass root and reviewer verification commands
-- [ ] 4.2 Pass final static workflow/action validation
+- [ ] 4.1 Validate workflow triggers, guards, concurrency, permissions, and action interface
+- [ ] 4.2 Cover event qualification and fork skipping with workflow fixtures or tests
+- [ ] 4.3 Cover idempotent comment and label lifecycle with workflow fixtures or tests
 
 #### Manual
 
-- [ ] 4.3 Confirm repository setup documentation and advisory behavior
-- [ ] 4.4 Confirm no branch-protection or deployment scope change
+- [ ] 4.4 Confirm same-repository PR review publication and label exclusivity
+- [ ] 4.5 Confirm retry refreshes one comment and removes the retry label
+- [ ] 4.6 Confirm fork PR skips without access to the review credential
+
+### Phase 5: Verify delivery and document operational setup
+
+#### Automated
+
+- [ ] 5.1 Pass root and reviewer verification commands
+- [ ] 5.2 Pass final static workflow/action validation
+
+#### Manual
+
+- [ ] 5.3 Confirm repository setup documentation and advisory behavior
+- [ ] 5.4 Confirm no branch-protection or deployment scope change

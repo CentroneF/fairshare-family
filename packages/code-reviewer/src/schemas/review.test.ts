@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { reviewJsonSchema, reviewRequestSchema, reviewSchema } from "./review.js";
+import { reviewJsonSchema, reviewRequestSchema, reviewSchema, scoreRubric } from "./review.js";
 
 const validReview = {
   implementationCorrectness: 1,
@@ -36,5 +36,14 @@ describe("review schemas", () => {
       properties: { documentation: { minimum: 1, maximum: 10 } },
       required: expect.arrayContaining(["documentation"]),
     });
+  });
+
+  it("includes criterion-specific grade-one and grade-ten anchors in the JSON schema", () => {
+    const properties = reviewJsonSchema.properties as Record<string, { description?: string }>;
+
+    for (const [criterion, { grade1, grade10 }] of Object.entries(scoreRubric)) {
+      expect(properties[criterion]?.description).toContain(`Grade 1: ${grade1}`);
+      expect(properties[criterion]?.description).toContain(`Grade 10: ${grade10}`);
+    }
   });
 });

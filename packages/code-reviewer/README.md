@@ -72,3 +72,16 @@ const result = await reviewer.review({
 ```
 
 Each result includes 1–10 scores for implementation correctness, idiomaticity, complexity, test/risk coverage, documentation, and security/safety, plus a `pass`/`fail` verdict and Markdown summary. For deterministic integrations, pass a compatible `runner` to `createCodeReviewer`. The package also exports `review`, `reviewSchema`, `reviewRequestSchema`, `reviewJsonSchema`, `buildCodeReviewPrompt`, and `CodeReviewError`.
+
+## Scoring rubric
+
+The score anchors describe the ends of each 1–10 scale; the advisory `pass`/`fail` verdict is a separate model judgment.
+
+| Criterion | Grade 1 | Grade 10 |
+| --- | --- | --- |
+| Implementation correctness | Logic is broken, misses obvious edge/error cases, or silently regresses existing behavior. | Works across happy paths, edge cases, and failure modes without regressions. |
+| Idiomaticity | Fights the stack and repository patterns; reads as foreign. | Matches well-written surrounding code and uses the right idioms naturally. |
+| Complexity | Is over-engineered or tangled, with accidental complexity that obscures intent. | Is the minimal, clear design that completely solves the problem. |
+| Test/risk coverage | Risky logic is untested, or tests are absent, trivial, or unhelpful. | Tests the paths most likely to break deliberately and in proportion to risk. |
+| Documentation | Leaves needed intent opaque, forcing readers to reverse-engineer it. | Explains the why behind non-obvious decisions without restating the obvious. |
+| Security/safety | Introduces an exploitable flaw, leaks secrets, or unsafely trusts untrusted input. | Validates input, handles secrets correctly, and opens no new attack surface. |

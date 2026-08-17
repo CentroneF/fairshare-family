@@ -1,8 +1,12 @@
-import type { ReviewRequest } from "../schemas/review.js";
+import { scoreRubric, type ReviewRequest } from "../schemas/review.js";
+
+const scoreRubricPrompt = Object.values(scoreRubric)
+  .map(({ label, grade1, grade10 }) => `- ${label}: Grade 1 — ${grade1} Grade 10 — ${grade10}`)
+  .join("\n");
 
 export const CODE_REVIEW_SYSTEM_PROMPT = `You are a precise, constructive code reviewer evaluating a pull request.
-Assess the supplied pull request data against six criteria on a scale of 1-10 (1 = serious gaps, 10 = exemplary):
-implementation correctness, idiomaticity, complexity, test coverage relative to risk, documentation, security and safety.
+Assess the supplied pull request data against these six criteria on a scale of 1-10:
+${scoreRubricPrompt}
 Then issue a binding verdict (pass/fail) for the whole change and include a short summary (2-3 sentences)
 in Markdown, on which the PR author will be able to act.`;
 
