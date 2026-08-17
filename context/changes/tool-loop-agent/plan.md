@@ -289,10 +289,10 @@ This is an internal package refactor with no persisted data migration. Existing 
 
 #### Automated
 
-- [x] 4.1 Run `npm install` and `npm run check` from the package directory.
-- [x] 4.2 Run `npm pack --dry-run` and inspect its contents.
+- [x] 4.1 Run `npm install` and `npm run check` from the package directory. — 83990a5
+- [x] 4.2 Run `npm pack --dry-run` and inspect its contents. — 83990a5
 
 #### Manual
 
-- [x] 4.3 Follow the README CLI workflow with a small diff.
-- [x] 4.4 Import the documented public API and confirm no side effects occur until review invocation.
+- [x] 4.3 Follow the README CLI workflow with a small diff. — 83990a5
+- [x] 4.4 Import the documented public API and confirm no side effects occur until review invocation. — 83990a5
