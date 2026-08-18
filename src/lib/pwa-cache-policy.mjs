@@ -15,11 +15,3 @@ export function isStaticPrecachePath(pathname) {
     !path.startsWith("_routes")
   );
 }
-
-export function isNetworkOnlyRequest({ method, pathname, isSupabaseRequest = false }) {
-  return method !== "GET" || pathname.startsWith("/api/") || pathname.startsWith("/auth/") || isSupabaseRequest;
-}
-
-export function usesOfflineFallback({ method, mode }) {
-  return method === "GET" && mode === "navigate";
-}

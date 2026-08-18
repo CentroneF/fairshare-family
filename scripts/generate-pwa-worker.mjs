@@ -60,6 +60,8 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  if (!PRECACHE_URLS.includes(url.pathname)) return;
+
   event.respondWith(
     caches
       .open(CACHE_NAME)
