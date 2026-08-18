@@ -218,27 +218,27 @@ No database migration is required. Rollback consists of deploying the prior buil
 
 #### Automated
 
-- [x] 1.1 Add the PWA build dependency and generated-worker manifest configuration.
-- [x] 1.2 Create and connect the FairShare PWA icon set.
-- [x] 1.3 Add shared PWA metadata, registration, and browser-gated install control.
-- [x] 1.4 Run lint and a production build that emits the manifest, worker, and icons.
+- [x] 1.1 Add the PWA build dependency and generated-worker manifest configuration. — cb5e1d2
+- [x] 1.2 Create and connect the FairShare PWA icon set. — cb5e1d2
+- [x] 1.3 Add shared PWA metadata, registration, and browser-gated install control. — cb5e1d2
+- [x] 1.4 Run lint and a production build that emits the manifest, worker, and icons. — cb5e1d2
 
 #### Manual
 
-- [x] 1.5 Verify Android installation, standalone launch, icon, and install-control visibility.
+- [x] 1.5 Verify Android installation, standalone launch, icon, and install-control visibility. — cb5e1d2
 
 ### Phase 2: Safe offline fallback and automatic updates
 
 #### Automated
 
-- [ ] 2.1 Add the static, neutral offline document and restricted navigation fallback.
-- [ ] 2.2 Configure network-only personalized traffic and automatic worker updates.
-- [ ] 2.3 Run focused cache-policy checks and a production build.
+- [x] 2.1 Add the static, neutral offline document and restricted navigation fallback.
+- [x] 2.2 Configure network-only personalized traffic and automatic worker updates.
+- [x] 2.3 Run focused cache-policy checks and a production build.
 
 #### Manual
 
-- [ ] 2.4 Verify offline navigation never displays cached financial or authentication data.
-- [ ] 2.5 Verify an updated worker activates automatically without a refresh prompt.
+- [x] 2.4 Verify offline navigation never displays cached financial or authentication data.
+- [x] 2.5 Verify an updated worker activates automatically without a refresh prompt.
 
 ### Phase 3: Deterministic PWA verification
 
