@@ -68,7 +68,7 @@ Create these repository labels before enabling the workflow:
 | `ai-cr:passed` | green (`0E8A16`) | Advisory `pass` verdict. |
 | `ai-cr:failed` | red (`B60205`) | Advisory `fail` verdict. |
 
-Reviews are advisory: an AI `fail` publishes feedback and does not make the workflow fail or alter GitHub branch protection. Only same-repository PRs run the reviewer; fork-originated PRs are skipped so the API secret is never exposed. A retry refreshes the existing marked comment instead of creating another one and replaces the result label as needed.
+Reviews are advisory: an AI `fail` publishes feedback and does not make the workflow fail or alter GitHub branch protection. Only same-repository PRs run the reviewer; fork-originated PRs are skipped so the API secret is never exposed. Every completed qualifying review, including a successful retry, adds a new comment that preserves the review history. The `ai-cr:passed` or `ai-cr:failed` label reflects only the latest result.
 
 Before opening a PR, run the root gate and the reviewer package gates:
 

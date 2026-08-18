@@ -20,7 +20,7 @@ describe("AI review workflow contract", () => {
     expect(workflow).toContain("cancel-in-progress: true");
   });
 
-  it("uses the trusted base checkout and publishes idempotent advisory feedback", async () => {
+  it("uses the trusted base checkout and publishes append-only advisory feedback", async () => {
     const workflow = await readWorkflow();
 
     expect(workflow).toContain("ref: ${{ github.event.pull_request.base.sha }}");
@@ -35,9 +35,10 @@ describe("AI review workflow contract", () => {
     expect(reviewerAction).toContain("const request = { title: metadata.title, diff: diff.data };");
     expect(reviewerAction).toContain("if (metadata.body?.trim()) request.body = metadata.body;");
     const action = await readFile(resolve(process.cwd(), "../../.github/actions/publish-ai-review/action.yml"), "utf8");
-    expect(action).toContain("<!-- ai-code-review -->");
-    expect(action).toContain("issues.updateComment");
     expect(action).toContain("issues.createComment");
+    expect(action).not.toContain("<!-- ai-code-review -->");
+    expect(action).not.toContain("issues.listComments");
+    expect(action).not.toContain("issues.updateComment");
     expect(action).toContain("issues.addLabels");
     expect(action).toContain("issues.removeLabel");
     expect(action).toContain('process.env.VERDICT === "pass"');

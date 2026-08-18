@@ -149,21 +149,21 @@ No migration is required. Existing marked comments remain untouched as historica
 
 #### Automated
 
-- [ ] 1.1 Pass reviewer-package tests after append-only publication changes
-- [ ] 1.2 Prove the publisher creates comments without marker, lookup, or update APIs
+- [x] 1.1 Pass reviewer-package tests after append-only publication changes
+- [x] 1.2 Prove the publisher creates comments without marker, lookup, or update APIs
 
 #### Manual
 
-- [ ] 1.3 Confirm repeated and retry-triggered reviews create distinct unchanged historical comments
-- [ ] 1.4 Confirm a publication failure retains the retry label and prevents later label mutations
+- [x] 1.3 Confirm repeated and retry-triggered reviews create distinct unchanged historical comments
+- [x] 1.4 Confirm a publication failure retains the retry label and prevents later label mutations
 
 ### Phase 2: Lock the Contract and Update Maintainer Guidance
 
 #### Automated
 
-- [ ] 2.1 Pass reviewer-package tests with append-only workflow-contract assertions
-- [ ] 2.2 Pass reviewer-package TypeScript checking
+- [x] 2.1 Pass reviewer-package tests with append-only workflow-contract assertions
+- [x] 2.2 Pass reviewer-package TypeScript checking
 
 #### Manual
 
-- [ ] 2.3 Confirm action and README guidance describe append-only comments and latest-result labels
+- [x] 2.3 Confirm action and README guidance describe append-only comments and latest-result labels
