@@ -1,5 +1,5 @@
 name: Publish AI review
-description: Publish an advisory AI review as one marked pull-request comment and managed labels
+description: Publish an advisory AI review as a pull-request comment and managed labels
 
 inputs:
   github-token:
@@ -31,7 +31,6 @@ runs:
       with:
         github-token: ${{ inputs.github-token }}
         script: |
-          const marker = "<!-- ai-code-review -->";
           const pullRequestNumber = Number(process.env.PULL_REQUEST_NUMBER);
           const review = JSON.parse(process.env.REVIEW_RESULT);
           const scores = [
@@ -42,14 +41,8 @@ runs:
             ["Documentation", review.documentation],
             ["Security/safety", review.securitySafety],
           ];
-          const body = `${marker}\n## AI code review: ${review.verdict}\n\n${scores.map(([name, score]) => `- **${name}:** ${score}/10`).join("\n")}\n\n${review.summary}`;
-          const { data: comments } = await github.rest.issues.listComments({ owner: context.repo.owner, repo: context.repo.repo, issue_number: pullRequestNumber });
-          const previous = comments.find((comment) => comment.body?.includes(marker));
-          if (previous) {
-            await github.rest.issues.updateComment({ owner: context.repo.owner, repo: context.repo.repo, comment_id: previous.id, body });
-          } else {
-            await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number: pullRequestNumber, body });
-          }
+          const body = `## AI code review: ${review.verdict}\n\n${scores.map(([name, score]) => `- **${name}:** ${score}/10`).join("\n")}\n\n${review.summary}`;
+          await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number: pullRequestNumber, body });
           const resultLabel = process.env.VERDICT === "pass" ? "ai-cr:passed" : "ai-cr:failed";
           const oppositeLabel = process.env.VERDICT === "pass" ? "ai-cr:failed" : "ai-cr:passed";
           await github.rest.issues.addLabels({ owner: context.repo.owner, repo: context.repo.repo, issue_number: pullRequestNumber, labels: [resultLabel] });
