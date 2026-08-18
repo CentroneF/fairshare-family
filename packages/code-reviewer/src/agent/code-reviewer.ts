@@ -17,7 +17,7 @@ export interface CodeReviewer {
 }
 
 function getRunner(runner?: CodeReviewRunner): CodeReviewRunner {
-  return runner ?? new Codex();
+  return runner ?? new Codex({ apiKey: process.env.OPENAI_API_KEY?.trim() ?? undefined });
 }
 
 export function createCodeReviewer(options: CodeReviewerOptions = {}): CodeReviewer {
