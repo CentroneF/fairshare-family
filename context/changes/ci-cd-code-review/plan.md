@@ -361,10 +361,10 @@ The first workflow PR cannot exercise the new workflow from the base branch beca
 
 #### Automated
 
-- [x] 5.1 Pass root and reviewer verification commands
-- [x] 5.2 Pass final static workflow/action validation
+- [x] 5.1 Pass root and reviewer verification commands — 8551e65
+- [x] 5.2 Pass final static workflow/action validation — 8551e65
 
 #### Manual
 
-- [x] 5.3 Confirm repository setup documentation and advisory behavior
-- [x] 5.4 Confirm no branch-protection or deployment scope change
+- [x] 5.3 Confirm repository setup documentation and advisory behavior — 8551e65
+- [x] 5.4 Confirm no branch-protection or deployment scope change — 8551e65
