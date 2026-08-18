@@ -36,8 +36,13 @@ describe("CLI", () => {
       summary: "Looks good.",
     };
 
-    const reviewer = vi.fn(async () => result);
-    await main(["--request", path], reviewer, { write: (chunk) => stdout.push(chunk) }, { write: (chunk) => stderr.push(chunk) });
+    const reviewer = vi.fn(() => Promise.resolve(result));
+    await main(
+      ["--request", path],
+      reviewer,
+      { write: (chunk) => stdout.push(chunk) },
+      { write: (chunk) => stderr.push(chunk) },
+    );
 
     expect(JSON.parse(stdout.join(""))).toEqual(result);
     expect(stderr.join("")).toContain("reading review request");
@@ -46,16 +51,18 @@ describe("CLI", () => {
 
   it("forwards a non-empty pull request body", async () => {
     const path = await requestPath({ title: "Review", body: "Context", diff: "diff --git a b" });
-    const reviewer = vi.fn(async () => ({
-      implementationCorrectness: 7,
-      idiomaticity: 7,
-      complexity: 7,
-      testRiskCoverage: 7,
-      documentation: 7,
-      securitySafety: 7,
-      verdict: "pass" as const,
-      summary: "Looks good.",
-    }));
+    const reviewer = vi.fn(() =>
+      Promise.resolve({
+        implementationCorrectness: 7,
+        idiomaticity: 7,
+        complexity: 7,
+        testRiskCoverage: 7,
+        documentation: 7,
+        securitySafety: 7,
+        verdict: "pass" as const,
+        summary: "Looks good.",
+      }),
+    );
 
     await main(["--request", path], reviewer, { write: () => undefined }, { write: () => undefined });
 

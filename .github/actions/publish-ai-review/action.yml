@@ -1,0 +1,63 @@
+name: Publish AI review
+description: Publish an advisory AI review as one marked pull-request comment and managed labels
+
+inputs:
+  github-token:
+    description: GitHub token used to create labels, comments, and issue labels
+    required: true
+  pull-request-number:
+    description: Pull request number to update
+    required: true
+  result:
+    description: Validated reviewer result JSON
+    required: true
+  verdict:
+    description: Validated advisory reviewer verdict
+    required: true
+  retry-requested:
+    description: Whether this run was triggered by the ai-cr:review label
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Publish advisory feedback
+      uses: actions/github-script@v7
+      env:
+        PULL_REQUEST_NUMBER: ${{ inputs.pull-request-number }}
+        REVIEW_RESULT: ${{ inputs.result }}
+        VERDICT: ${{ inputs.verdict }}
+        RETRY_REQUESTED: ${{ inputs.retry-requested }}
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const marker = "<!-- ai-code-review -->";
+          const pullRequestNumber = Number(process.env.PULL_REQUEST_NUMBER);
+          const review = JSON.parse(process.env.REVIEW_RESULT);
+          const scores = [
+            ["Implementation correctness", review.implementationCorrectness],
+            ["Idiomaticity", review.idiomaticity],
+            ["Complexity", review.complexity],
+            ["Test/risk coverage", review.testRiskCoverage],
+            ["Documentation", review.documentation],
+            ["Security/safety", review.securitySafety],
+          ];
+          const body = `${marker}\n## AI code review: ${review.verdict}\n\n${scores.map(([name, score]) => `- **${name}:** ${score}/10`).join("\n")}\n\n${review.summary}`;
+          const { data: comments } = await github.rest.issues.listComments({ owner: context.repo.owner, repo: context.repo.repo, issue_number: pullRequestNumber });
+          const previous = comments.find((comment) => comment.body?.includes(marker));
+          if (previous) {
+            await github.rest.issues.updateComment({ owner: context.repo.owner, repo: context.repo.repo, comment_id: previous.id, body });
+          } else {
+            await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number: pullRequestNumber, body });
+          }
+          const resultLabel = process.env.VERDICT === "pass" ? "ai-cr:passed" : "ai-cr:failed";
+          const oppositeLabel = process.env.VERDICT === "pass" ? "ai-cr:failed" : "ai-cr:passed";
+          await github.rest.issues.addLabels({ owner: context.repo.owner, repo: context.repo.repo, issue_number: pullRequestNumber, labels: [resultLabel] });
+          try {
+            await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: pullRequestNumber, name: oppositeLabel });
+          } catch (error) {
+            if (error.status !== 404) throw error;
+          }
+          if (process.env.RETRY_REQUESTED === "true") {
+            await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: pullRequestNumber, name: "ai-cr:review" });
+          }

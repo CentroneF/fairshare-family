@@ -22,7 +22,8 @@ function getRunner(runner?: CodeReviewRunner): CodeReviewRunner {
 
 export function createCodeReviewer(options: CodeReviewerOptions = {}): CodeReviewer {
   const runner = getRunner(options.runner);
-  const model = options.model ?? process.env.CODEX_MODEL;
+  const configuredModel = process.env.CODEX_MODEL?.trim();
+  const model = options.model ?? (configuredModel === "" ? undefined : configuredModel);
 
   return {
     async review(request: ReviewRequest): Promise<Review> {

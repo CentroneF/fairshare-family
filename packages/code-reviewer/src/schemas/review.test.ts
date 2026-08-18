@@ -34,16 +34,28 @@ describe("review schemas", () => {
   it("marks documentation as required in the generated JSON schema", () => {
     expect(reviewJsonSchema).toMatchObject({
       properties: { documentation: { minimum: 1, maximum: 10 } },
-      required: expect.arrayContaining(["documentation"]),
+      required: [
+        "implementationCorrectness",
+        "idiomaticity",
+        "complexity",
+        "testRiskCoverage",
+        "documentation",
+        "securitySafety",
+        "verdict",
+        "summary",
+      ],
     });
   });
 
   it("includes criterion-specific grade-one and grade-ten anchors in the JSON schema", () => {
-    const properties = reviewJsonSchema.properties as Record<string, { description?: string }>;
-
     for (const [criterion, { grade1, grade10 }] of Object.entries(scoreRubric)) {
-      expect(properties[criterion]?.description).toContain(`Grade 1: ${grade1}`);
-      expect(properties[criterion]?.description).toContain(`Grade 10: ${grade10}`);
+      expect(reviewJsonSchema).toMatchObject({
+        properties: {
+          [criterion]: {
+            description: `Grade 1: ${grade1} Grade 10: ${grade10}`,
+          },
+        },
+      });
     }
   });
 });

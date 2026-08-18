@@ -336,26 +336,26 @@ The first workflow PR cannot exercise the new workflow from the base branch beca
 
 #### Automated
 
-- [x] 3.1 Pass package type checking with criterion-specific score anchors
-- [x] 3.2 Pass deterministic prompt and schema tests for all grade-1 and grade-10 anchors
+- [x] 3.1 Pass package type checking with criterion-specific score anchors — 71e1b56
+- [x] 3.2 Pass deterministic prompt and schema tests for all grade-1 and grade-10 anchors — 71e1b56
 
 #### Manual
 
-- [x] 3.3 Confirm the rubric is understandable in a generated reviewer prompt
+- [x] 3.3 Confirm the rubric is understandable in a generated reviewer prompt — 71e1b56
 
 ### Phase 4: Deliver secure advisory PR review automation
 
 #### Automated
 
-- [ ] 4.1 Validate workflow triggers, guards, concurrency, permissions, and action interface
-- [ ] 4.2 Cover event qualification and fork skipping with workflow fixtures or tests
-- [ ] 4.3 Cover idempotent comment and label lifecycle with workflow fixtures or tests
+- [x] 4.1 Validate workflow triggers, guards, concurrency, permissions, and action interface
+- [x] 4.2 Cover event qualification and fork skipping with workflow fixtures or tests
+- [x] 4.3 Cover idempotent comment and label lifecycle with workflow fixtures or tests
 
 #### Manual
 
-- [ ] 4.4 Confirm same-repository PR review publication and label exclusivity
-- [ ] 4.5 Confirm retry refreshes one comment and removes the retry label
-- [ ] 4.6 Confirm fork PR skips without access to the review credential
+- [x] 4.4 Confirm same-repository PR review publication and label exclusivity
+- [x] 4.5 Confirm retry refreshes one comment and removes the retry label
+- [x] 4.6 Confirm fork PR skips without access to the review credential
 
 ### Phase 5: Verify delivery and document operational setup
 

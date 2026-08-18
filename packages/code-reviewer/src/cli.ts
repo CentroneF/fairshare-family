@@ -37,6 +37,7 @@ const entrypoint = process.argv[1];
 if (entrypoint && import.meta.url === pathToFileURL(resolve(entrypoint)).href) {
   main().catch((error: unknown) => {
     const message = error instanceof Error ? error.message : String(error);
+    // eslint-disable-next-line no-console -- the CLI contract sends failures to stderr.
     console.error(`[code-reviewer] review failed: ${message}`);
     process.exitCode = 1;
   });

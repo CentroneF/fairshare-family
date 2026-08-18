@@ -27,7 +27,11 @@ describe("createCodeReviewer", () => {
   it("rejects model output that omits the documentation score", async () => {
     const { documentation: _documentation, ...incompleteReview } = validReview;
     const reviewer = createCodeReviewer({
-      runner: { startThread: vi.fn(() => ({ run: vi.fn().mockResolvedValue({ finalResponse: JSON.stringify(incompleteReview) }) })) },
+      runner: {
+        startThread: vi.fn(() => ({
+          run: vi.fn().mockResolvedValue({ finalResponse: JSON.stringify(incompleteReview) }),
+        })),
+      },
     });
 
     await expect(reviewer.review(request)).rejects.toMatchObject({

@@ -6,17 +6,24 @@ branding:
   color: purple
 
 inputs:
-  request-file:
-    description: Absolute path to a JSON review request with title, optional body, and diff
+  github-token:
+    description: GitHub token used only to retrieve pull-request metadata and diff
+    required: true
+  pull-request-number:
+    description: Pull request number to review
     required: true
   api-key:
     description: OpenAI API key used only by the reviewer process
     required: true
+  model:
+    description: Optional Codex model override
+    required: false
+    default: gpt-5.6-sol
 
 outputs:
-  result-file:
-    description: Absolute path to the validated review JSON written by this action
-    value: ${{ steps.review.outputs.result-file }}
+  result:
+    description: Validated six-score review JSON
+    value: ${{ steps.review.outputs.result }}
   verdict:
     description: Advisory pass/fail verdict from the validated review result
     value: ${{ steps.review.outputs.verdict }}
@@ -24,12 +31,48 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Install, validate, and run reviewer
+    - name: Prepare review request
+      id: request
+      uses: actions/github-script@v7
+      env:
+        PULL_REQUEST_NUMBER: ${{ inputs.pull-request-number }}
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const fs = require("fs");
+          const pullNumber = Number(process.env.PULL_REQUEST_NUMBER);
+          if (!Number.isSafeInteger(pullNumber) || pullNumber < 1) throw new Error("Invalid pull request number");
+          const { data: metadata } = await github.rest.pulls.get({ owner: context.repo.owner, repo: context.repo.repo, pull_number: pullNumber });
+          const diff = await github.request("GET /repos/{owner}/{repo}/pulls/{pull_number}", {
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            pull_number: pullNumber,
+            mediaType: { format: "diff" },
+          });
+          const request = { title: metadata.title, diff: diff.data };
+          if (metadata.body?.trim()) request.body = metadata.body;
+          const requestFile = `${process.env.RUNNER_TEMP}/ai-review-request.json`;
+          fs.writeFileSync(requestFile, JSON.stringify(request));
+          core.setOutput("request-file", requestFile);
+    - name: Install reviewer dependencies
+      shell: bash
+      run: |
+        set -euo pipefail
+        npm ci --prefix "$GITHUB_WORKSPACE/packages/code-reviewer"
+
+    - name: Type-check reviewer
+      shell: bash
+      run: |
+        set -euo pipefail
+        npm run check --prefix "$GITHUB_WORKSPACE/packages/code-reviewer"
+
+    - name: Run reviewer
       id: review
       shell: bash
       env:
-        REQUEST_FILE: ${{ inputs.request-file }}
+        REQUEST_FILE: ${{ steps.request.outputs.request-file }}
         OPENAI_API_KEY: ${{ inputs.api-key }}
+        CODEX_MODEL: ${{ inputs.model }}
       run: |
         set -euo pipefail
 
@@ -37,8 +80,6 @@ runs:
         result_file="$RUNNER_TEMP/ai-review-result.json"
 
         test -f "$REQUEST_FILE"
-        npm ci --prefix "$reviewer_dir"
-        npm run check --prefix "$reviewer_dir"
         npm run start --prefix "$reviewer_dir" -- --request "$REQUEST_FILE" > "$result_file"
 
         verdict="$(
@@ -55,5 +96,6 @@ runs:
           ' "$result_file"
         )"
 
-        printf 'result-file=%s\n' "$result_file" >> "$GITHUB_OUTPUT"
+        result="$(RESULT_FILE="$result_file" node -e 'const fs = require("fs"); process.stdout.write(JSON.stringify(JSON.parse(fs.readFileSync(process.env.RESULT_FILE, "utf8"))))')"
+        printf 'result=%s\n' "$result" >> "$GITHUB_OUTPUT"
         printf 'verdict=%s\n' "$verdict" >> "$GITHUB_OUTPUT"
