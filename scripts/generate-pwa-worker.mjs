@@ -15,7 +15,10 @@ const { count, size, warnings, manifestEntries } = await getManifest({
   globIgnores: ["**/*.map", "**/*.html"],
   additionalManifestEntries: [{ url: offlineDocument, revision: offlineRevision }],
   manifestTransforms: [
-    async (entries) => ({ manifest: entries.filter(({ url }) => isStaticPrecachePath(url)), warnings: [] }),
+    async (entries) => ({
+      manifest: entries.filter(({ url }) => url === offlineDocument || isStaticPrecachePath(url)),
+      warnings: [],
+    }),
   ],
 });
 

@@ -49,6 +49,14 @@ const precacheUrls = JSON.parse(precacheMatch[1]);
 if (!precacheUrls.includes(`/${offlineDocument}`)) {
   throw new Error("PWA worker does not precache the neutral offline document.");
 }
+const fallbackMatch = serviceWorker.match(/const OFFLINE_DOCUMENT = ("[^"]+");/);
+if (
+  !fallbackMatch ||
+  JSON.parse(fallbackMatch[1]) !== `/${offlineDocument}` ||
+  !serviceWorker.includes("cache.match(OFFLINE_DOCUMENT)")
+) {
+  throw new Error("PWA worker does not use the precached neutral offline document as its navigation fallback.");
+}
 for (const url of precacheUrls) {
   const path = url.replace(/^\//, "");
   if (path !== offlineDocument && !isStaticPrecachePath(path)) {
