@@ -1,0 +1,41 @@
+<button
+  type="button"
+  hidden
+  data-install-app-button
+  class="rounded-sm text-purple-300 transition-colors hover:text-purple-100 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-200"
+>
+  Install app
+</button>
+
+<script>
+  interface DeferredInstallPromptEvent extends Event {
+    prompt: () => Promise<void>;
+  }
+
+  const button = document.querySelector<HTMLButtonElement>("[data-install-app-button]");
+  let installPrompt: DeferredInstallPromptEvent | null = null;
+
+  const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+
+  if (button && !isStandalone) {
+    window.addEventListener("beforeinstallprompt", (event) => {
+      event.preventDefault();
+      installPrompt = event as DeferredInstallPromptEvent;
+      button.hidden = false;
+    });
+
+    window.addEventListener("appinstalled", () => {
+      installPrompt = null;
+      button.hidden = true;
+    });
+
+    button.addEventListener("click", () => {
+      if (!installPrompt) return;
+
+      void installPrompt.prompt().finally(() => {
+        installPrompt = null;
+        button.hidden = true;
+      });
+    });
+  }
+</script>

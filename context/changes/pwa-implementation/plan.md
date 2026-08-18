@@ -218,14 +218,14 @@ No database migration is required. Rollback consists of deploying the prior buil
 
 #### Automated
 
-- [ ] 1.1 Add the PWA build dependency and generated-worker manifest configuration.
-- [ ] 1.2 Create and connect the FairShare PWA icon set.
-- [ ] 1.3 Add shared PWA metadata, registration, and browser-gated install control.
-- [ ] 1.4 Run lint and a production build that emits the manifest, worker, and icons.
+- [x] 1.1 Add the PWA build dependency and generated-worker manifest configuration.
+- [x] 1.2 Create and connect the FairShare PWA icon set.
+- [x] 1.3 Add shared PWA metadata, registration, and browser-gated install control.
+- [x] 1.4 Run lint and a production build that emits the manifest, worker, and icons.
 
 #### Manual
 
-- [ ] 1.5 Verify Android installation, standalone launch, icon, and install-control visibility.
+- [x] 1.5 Verify Android installation, standalone launch, icon, and install-control visibility.
 
 ### Phase 2: Safe offline fallback and automatic updates
 
