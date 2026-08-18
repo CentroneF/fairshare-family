@@ -1,6 +1,6 @@
 begin;
 
-select plan(120);
+select plan(136);
 
 insert into auth.users (id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values
@@ -644,6 +644,71 @@ select is_empty(
 select is_empty(
   $$select 1 from public.monthly_settlements where family_id = '54000000-0000-0000-0000-000000000001'$$,
   'a non-member cannot read another family settlement'
+);
+
+select set_config('request.jwt.claim.sub', '51000000-0000-0000-0000-000000000001', true);
+select lives_ok(
+  $$select public.create_recurring_expense('54300000-0000-0000-0000-000000000001', 'Music lessons', 45.50, current_date, current_date + 30)$$,
+  'a paying parent creates a child-linked recurring expense'
+);
+select is(
+  (select description || ':' || amount_pln::text || ':' || is_active::text from public.recurring_expenses where description = 'Music lessons'),
+  'Music lessons:45.50:true', 'the recurring template stores its normalized schedule data'
+);
+select lives_ok(
+  $$select public.create_recurring_expense(null, 'Family subscription', 12.00, current_date, null)$$,
+  'a paying parent can create an until-cancelled recurring expense'
+);
+select throws_ok(
+  $$select public.create_recurring_expense(null, 'Invalid range', 12.00, current_date, current_date - 1)$$,
+  'P0001', 'Recurring expense end date must be on or after the start date', 'recurring expenses reject an invalid date range'
+);
+select throws_ok(
+  $$select public.create_recurring_expense(null, 'Too precise schedule', 1.001, current_date, null)$$,
+  'P0001', 'Amount must be a positive PLN value with at most two decimal places', 'recurring expenses reject over-precise PLN amounts'
+);
+select throws_ok(
+  $$select public.create_recurring_expense('00000000-0000-0000-0000-000000000001', 'Wrong child schedule', 12.00, current_date, null)$$,
+  'P0001', 'Selected child is not available to this family', 'recurring expenses reject cross-family children'
+);
+select throws_ok(
+  $$insert into public.recurring_expenses (family_id, payer_id, description, amount_pln, start_date) values ('54000000-0000-0000-0000-000000000001', '54100000-0000-0000-0000-000000000001', 'Tampered schedule', 1.00, current_date)$$,
+  '42501', 'permission denied for table recurring_expenses', 'direct authenticated recurring-expense writes are denied'
+);
+select set_config('request.jwt.claim.sub', '52000000-0000-0000-0000-000000000001', true);
+select throws_ok(
+  $$select public.update_recurring_expense((select id from public.recurring_expenses where description = 'Music lessons'), null, 'Tampered music lessons', 50.00, (date_trunc('month', current_date) + interval '1 month')::date, null)$$,
+  'P0001', 'Only the payer can manage this recurring expense', 'the other parent cannot edit a payer recurring expense'
+);
+select throws_ok(
+  $$select public.set_recurring_expense_active((select id from public.recurring_expenses where description = 'Music lessons'), false)$$,
+  'P0001', 'Only the payer can manage this recurring expense', 'the other parent cannot pause a payer recurring expense'
+);
+select throws_ok(
+  $$select public.archive_recurring_expense((select id from public.recurring_expenses where description = 'Music lessons'))$$,
+  'P0001', 'Only the payer can manage this recurring expense', 'the other parent cannot stop a payer recurring expense'
+);
+select set_config('request.jwt.claim.sub', '51000000-0000-0000-0000-000000000001', true);
+select lives_ok(
+  $$select public.set_recurring_expense_active((select id from public.recurring_expenses where description = 'Music lessons'), false)$$,
+  'the payer can pause a recurring expense'
+);
+select is((select is_active::text from public.recurring_expenses where description = 'Music lessons'), 'false', 'pause preserves the template and marks it inactive');
+select lives_ok(
+  $$select public.update_recurring_expense((select id from public.recurring_expenses where description = 'Music lessons'), null, 'Updated music lessons', 46.00, current_date, null)$$,
+  'the payer can edit a current-month recurring template'
+);
+select lives_ok(
+  $$select public.set_recurring_expense_active((select id from public.recurring_expenses where description = 'Updated music lessons'), true)$$,
+  'the payer can resume a recurring expense'
+);
+select lives_ok(
+  $$select public.archive_recurring_expense((select id from public.recurring_expenses where description = 'Updated music lessons'))$$,
+  'the payer can stop a recurring expense'
+);
+select throws_ok(
+  $$select public.set_recurring_expense_active((select id from public.recurring_expenses where description = 'Updated music lessons'), true)$$,
+  'P0001', 'Stopped recurring expenses cannot be resumed', 'stopped recurring expenses remain archived'
 );
 
 select * from finish();

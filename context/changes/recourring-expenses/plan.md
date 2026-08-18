@@ -203,13 +203,13 @@ All schema changes are additive. Existing expenses remain one-off and unchanged.
 
 #### Automated
 
-- [ ] 1.1 Add the recurring-template schema, parent-owned commands, and database authorization tests.
-- [ ] 1.2 Add authenticated template APIs, helper mapping, and dashboard management UI.
-- [ ] 1.3 Run focused recurrence checks, `npx supabase test db`, and `npm run verify`.
+- [x] 1.1 Add the recurring-template schema, parent-owned commands, and database authorization tests.
+- [x] 1.2 Add authenticated template APIs, helper mapping, and dashboard management UI.
+- [x] 1.3 Run focused recurrence checks, `npx supabase test db`, and `npm run verify`.
 
 #### Manual
 
-- [ ] 1.4 Verify template ownership and future-only dashboard management in a browser.
+- [x] 1.4 Verify template ownership and future-only dashboard management in a browser.
 
 ### Phase 2: Idempotent recurring occurrence generation
 

@@ -4,9 +4,10 @@ interface Props {
   familyName: string;
   children: readonly { id: string; name: string }[];
   reportsHref: string;
+  recurringExpensesHref: string;
 }
 
-const { userEmail, familyName, children, reportsHref } = Astro.props;
+const { userEmail, familyName, children, reportsHref, recurringExpensesHref } = Astro.props;
 ---
 
 <aside class="hidden rounded-2xl border border-white/10 bg-white/10 p-6 backdrop-blur-xl md:block">
@@ -40,9 +41,15 @@ const { userEmail, familyName, children, reportsHref } = Astro.props;
       </div>
     </div>
 
-    <a href={reportsHref} class="inline-flex rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/10"
-      >Report history</a
-    >
+    <div class="space-y-3">
+      <a href={reportsHref} class="inline-flex rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/10"
+        >Report history</a
+      >
+      <a
+        href={recurringExpensesHref}
+        class="inline-flex rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/10">Recurring expenses</a
+      >
+    </div>
   </nav>
 </aside>
 
@@ -102,6 +109,10 @@ const { userEmail, familyName, children, reportsHref } = Astro.props;
         <div class="space-y-3 border-t border-white/10 pt-6">
           <a href={reportsHref} class="block rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/10"
             >Report history</a
+          >
+          <a
+            href={recurringExpensesHref}
+            class="block rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/10">Recurring expenses</a
           >
           <form method="POST" action="/api/auth/signout">
             <button type="submit" class="w-full rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/10"
