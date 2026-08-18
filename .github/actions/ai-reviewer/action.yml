@@ -80,7 +80,7 @@ runs:
         result_file="$RUNNER_TEMP/ai-review-result.json"
 
         test -f "$REQUEST_FILE"
-        npm run start --prefix "$reviewer_dir" -- --request "$REQUEST_FILE" > "$result_file"
+        "$reviewer_dir/node_modules/.bin/tsx" "$reviewer_dir/src/cli.ts" --request "$REQUEST_FILE" > "$result_file"
 
         verdict="$(
           cd "$reviewer_dir"
