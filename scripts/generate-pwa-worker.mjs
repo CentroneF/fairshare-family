@@ -2,18 +2,21 @@ import { getManifest } from "workbox-build";
 import { createHash } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { isStaticPrecachePath, offlineDocument } from "../src/lib/pwa-cache-policy.mjs";
 
 const clientOutput = "dist/client";
-const offlineDocument = "offline/index.html";
 const offlineRevision = createHash("sha256")
   .update(await readFile(resolve(clientOutput, offlineDocument)))
   .digest("hex");
 
 const { count, size, warnings, manifestEntries } = await getManifest({
   globDirectory: clientOutput,
-  globPatterns: ["**/*.{css,js,mjs,png,svg,ico,woff,woff2}"],
-  globIgnores: ["**/*.map", "**/*.html", "_worker.js", "_routes.json", "sw.js", "workbox-*.js"],
+  globPatterns: ["**/*"],
+  globIgnores: ["**/*.map", "**/*.html"],
   additionalManifestEntries: [{ url: offlineDocument, revision: offlineRevision }],
+  manifestTransforms: [
+    async (entries) => ({ manifest: entries.filter(({ url }) => isStaticPrecachePath(url)), warnings: [] }),
+  ],
 });
 
 const cacheName = `fairshare-static-${createHash("sha256").update(JSON.stringify(manifestEntries)).digest("hex")}`;

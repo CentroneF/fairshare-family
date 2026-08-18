@@ -231,23 +231,23 @@ No database migration is required. Rollback consists of deploying the prior buil
 
 #### Automated
 
-- [x] 2.1 Add the static, neutral offline document and restricted navigation fallback.
-- [x] 2.2 Configure network-only personalized traffic and automatic worker updates.
-- [x] 2.3 Run focused cache-policy checks and a production build.
+- [x] 2.1 Add the static, neutral offline document and restricted navigation fallback. — d7be12b
+- [x] 2.2 Configure network-only personalized traffic and automatic worker updates. — d7be12b
+- [x] 2.3 Run focused cache-policy checks and a production build. — d7be12b
 
 #### Manual
 
-- [x] 2.4 Verify offline navigation never displays cached financial or authentication data.
-- [x] 2.5 Verify an updated worker activates automatically without a refresh prompt.
+- [x] 2.4 Verify offline navigation never displays cached financial or authentication data. — d7be12b
+- [x] 2.5 Verify an updated worker activates automatically without a refresh prompt. — d7be12b
 
 ### Phase 3: Deterministic PWA verification
 
 #### Automated
 
-- [ ] 3.1 Add the manifest, icon, worker, metadata, and cache-policy build-output verifier.
-- [ ] 3.2 Add focused unit tests for the application-owned cache policy.
-- [ ] 3.3 Run `npm run verify` with the PWA verification gate.
+- [x] 3.1 Add the manifest, icon, worker, metadata, and cache-policy build-output verifier.
+- [x] 3.2 Add focused unit tests for the application-owned cache policy.
+- [x] 3.3 Run `npm run verify` with the PWA verification gate.
 
 #### Manual
 
-- [ ] 3.4 Complete the Android installation, offline-safety, and automatic-update acceptance checklist.
+- [x] 3.4 Complete the Android installation, offline-safety, and automatic-update acceptance checklist.

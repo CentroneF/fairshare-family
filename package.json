@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build && node scripts/generate-pwa-worker.mjs",
+    "build": "astro build && node scripts/generate-pwa-worker.mjs && node scripts/verify-pwa-build.mjs",
     "preview": "astro preview",
     "test": "vitest run",
     "verify": "npm run test && npm run lint && npm run build",
