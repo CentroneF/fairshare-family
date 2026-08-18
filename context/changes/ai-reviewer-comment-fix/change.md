@@ -1,7 +1,7 @@
 ---
 change_id: ai-reviewer-comment-fix
 title: Ai reviewer comment fix
-status: implementing
+status: implemented
 created: 2026-08-18
 updated: 2026-08-18
 archived_at: null
