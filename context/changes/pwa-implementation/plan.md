@@ -244,10 +244,10 @@ No database migration is required. Rollback consists of deploying the prior buil
 
 #### Automated
 
-- [x] 3.1 Add the manifest, icon, worker, metadata, and cache-policy build-output verifier.
-- [x] 3.2 Add focused unit tests for the application-owned cache policy.
-- [x] 3.3 Run `npm run verify` with the PWA verification gate.
+- [x] 3.1 Add the manifest, icon, worker, metadata, and cache-policy build-output verifier. — 8a17667
+- [x] 3.2 Add focused unit tests for the application-owned cache policy. — 8a17667
+- [x] 3.3 Run `npm run verify` with the PWA verification gate. — 8a17667
 
 #### Manual
 
-- [x] 3.4 Complete the Android installation, offline-safety, and automatic-update acceptance checklist.
+- [x] 3.4 Complete the Android installation, offline-safety, and automatic-update acceptance checklist. — 8a17667
