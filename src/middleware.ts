@@ -22,6 +22,10 @@ export const onRequest = defineMiddleware(async (context, next) => {
     context.locals.user = null;
   }
 
+  if (context.locals.user && (context.url.pathname === "/" || context.url.pathname.startsWith("/auth/"))) {
+    return preventBrowserCaching(context.redirect("/dashboard"));
+  }
+
   if (PROTECTED_ROUTES.some((route) => context.url.pathname.startsWith(route))) {
     if (!context.locals.user) {
       return preventBrowserCaching(context.redirect("/auth/signin"));

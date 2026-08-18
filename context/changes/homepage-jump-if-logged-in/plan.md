@@ -117,10 +117,10 @@ No database or deployment migration is required. Rollback is a single middleware
 
 #### Automated
 
-- [ ] 1.1 Add the authenticated exact-root and `/auth/**` redirect policy in middleware.
-- [ ] 1.2 Add independent authenticated browser coverage for homepage and auth-route redirects.
-- [ ] 1.3 Run the focused browser test and `npm run verify`.
+- [x] 1.1 Add the authenticated exact-root and `/auth/**` redirect policy in middleware.
+- [x] 1.2 Add independent authenticated browser coverage for homepage and auth-route redirects.
+- [x] 1.3 Run the focused browser test and `npm run verify`.
 
 #### Manual
 
-- [ ] 1.4 Verify signed-in entry-route redirects and signed-out public/auth access in a browser.
+- [x] 1.4 Verify signed-in entry-route redirects and signed-out public/auth access in a browser.
