@@ -347,24 +347,24 @@ The first workflow PR cannot exercise the new workflow from the base branch beca
 
 #### Automated
 
-- [x] 4.1 Validate workflow triggers, guards, concurrency, permissions, and action interface
-- [x] 4.2 Cover event qualification and fork skipping with workflow fixtures or tests
-- [x] 4.3 Cover idempotent comment and label lifecycle with workflow fixtures or tests
+- [x] 4.1 Validate workflow triggers, guards, concurrency, permissions, and action interface — 13a0b1b
+- [x] 4.2 Cover event qualification and fork skipping with workflow fixtures or tests — 13a0b1b
+- [x] 4.3 Cover idempotent comment and label lifecycle with workflow fixtures or tests — 13a0b1b
 
 #### Manual
 
-- [x] 4.4 Confirm same-repository PR review publication and label exclusivity
-- [x] 4.5 Confirm retry refreshes one comment and removes the retry label
-- [x] 4.6 Confirm fork PR skips without access to the review credential
+- [x] 4.4 Confirm same-repository PR review publication and label exclusivity — 13a0b1b
+- [x] 4.5 Confirm retry refreshes one comment and removes the retry label — 13a0b1b
+- [x] 4.6 Confirm fork PR skips without access to the review credential — 13a0b1b
 
 ### Phase 5: Verify delivery and document operational setup
 
 #### Automated
 
-- [ ] 5.1 Pass root and reviewer verification commands
-- [ ] 5.2 Pass final static workflow/action validation
+- [x] 5.1 Pass root and reviewer verification commands
+- [x] 5.2 Pass final static workflow/action validation
 
 #### Manual
 
-- [ ] 5.3 Confirm repository setup documentation and advisory behavior
-- [ ] 5.4 Confirm no branch-protection or deployment scope change
+- [x] 5.3 Confirm repository setup documentation and advisory behavior
+- [x] 5.4 Confirm no branch-protection or deployment scope change

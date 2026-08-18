@@ -54,7 +54,29 @@ The CLI entry point is `src/cli.ts`. `title` and `diff` are required; `body` is 
 
 `.github/actions/ai-reviewer` runs this package from the trusted base-branch checkout. It accepts a GitHub token and pull-request number, retrieves the PR title, non-empty body, and base-to-head diff through the GitHub API, and keeps its temporary JSON request internal to the action. Its `api-key` input maps only to `OPENAI_API_KEY`; the optional `model` input maps to `CODEX_MODEL` and defaults to `gpt-5.6-sol`. It exposes validated review JSON plus its advisory verdict. The action uses `npm ci` and checks TypeScript before invoking the CLI.
 
-It exposes two outputs: `result-file` (the raw validated six-score JSON) and `verdict` (`pass` or `fail`). A `fail` verdict is an advisory review result and does not cause the action to fail. Invalid request JSON, schema-invalid reviewer output, or model execution errors cause the action to fail with diagnostics on stderr.
+It exposes two outputs: `result` (the raw validated six-score JSON) and `verdict` (`pass` or `fail`). A `fail` verdict is an advisory review result and does not cause the action to fail. Invalid request JSON, schema-invalid reviewer output, or model execution errors cause the action to fail with diagnostics on stderr.
+
+## GitHub Actions setup
+
+The workflow at `.github/workflows/ai-code-review.yml` runs for opened, reopened, synchronized, and qualifying `ai-cr:review`-labelled pull requests to `main`. Add `OPENAI_API_KEY` as a repository Actions secret before merging it. `CODEX_MODEL` is optional; omit it to use the action default.
+
+Create these repository labels before enabling the workflow:
+
+| Label | Color | Purpose |
+| --- | --- | --- |
+| `ai-cr:review` | blue (`1D76DB`) | Request a retry. The workflow removes it after a successful publication. |
+| `ai-cr:passed` | green (`0E8A16`) | Advisory `pass` verdict. |
+| `ai-cr:failed` | red (`B60205`) | Advisory `fail` verdict. |
+
+Reviews are advisory: an AI `fail` publishes feedback and does not make the workflow fail or alter GitHub branch protection. Only same-repository PRs run the reviewer; fork-originated PRs are skipped so the API secret is never exposed. A retry refreshes the existing marked comment instead of creating another one and replaces the result label as needed.
+
+Before opening a PR, run the root gate and the reviewer package gates:
+
+```bash
+npm run verify
+npm run check --prefix packages/code-reviewer
+npm test --prefix packages/code-reviewer
+```
 
 ## Library API
 
