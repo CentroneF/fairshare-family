@@ -1,7 +1,7 @@
 ---
 change_id: homepage-jump-if-logged-in
 title: Homepage jump if logged in
-status: implementing
+status: implemented
 created: 2026-08-18
 updated: 2026-08-18
 archived_at: null
