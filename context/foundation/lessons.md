@@ -22,3 +22,24 @@
 - **Problem**: The changes are committed to main.
 - **Rule**: When using `/10x-new`, a new branch should be checked out named like the change ID.
 - **Applies to**: new
+
+## Create a branch for every new change
+
+- **Context**: Every time a new change is initialized
+- **Problem**: No new branch is created.
+- **Rule**: When running `/10x-new`, create a new branch over `origin/main` with the name of the change ID.
+- **Applies to**: 10x-new
+
+## Commit the plan before implementation
+
+- **Context**: When 10x-plan finishes
+- **Problem**: The skill suggests implementing phase 1 instead of committing the plan.
+- **Rule**: After `/10x-plan` is completed, ask the user to commit before suggesting `/10x-implement <change-id> phase 1`.
+- **Applies to**: plan, plan-review
+
+## Confirm commit messages before committing
+
+- **Context**: Every time a new commit message is generated
+- **Problem**: The agent doesn't ask for confirmation.
+- **Rule**: Ask for confirmation of the commit message before committing.
+- **Applies to**: all
