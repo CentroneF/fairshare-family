@@ -4,7 +4,7 @@ import { join } from "node:path";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { main, readReviewRequest } from "./cli.js";
+import { formatCliError, main, readReviewRequest } from "./cli.js";
 
 const directories: string[] = [];
 
@@ -73,5 +73,11 @@ describe("CLI", () => {
     const path = await requestPath({ diff: "diff --git a b" });
 
     await expect(readReviewRequest(["--request", path])).rejects.toThrow();
+  });
+
+  it("includes the underlying execution error in CLI diagnostics", () => {
+    expect(formatCliError(new Error("Code review execution failed", { cause: new Error("Invalid API key") }))).toBe(
+      "Code review execution failed: Invalid API key",
+    );
   });
 });
