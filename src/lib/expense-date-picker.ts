@@ -32,6 +32,14 @@ export function getExpenseDatePickerDefault(month: string, maxDate: string, defa
   return isExpenseDateSelectable(defaultDate, month, maxDate) ? defaultDate : `${month}-01`;
 }
 
+export function getExpenseDatePickerDefaultFromQuery(
+  month: string,
+  maxDate: string,
+  queryDate: string | undefined,
+): string {
+  return queryDate ?? getExpenseDatePickerDefault(month, maxDate, `${month}-01`);
+}
+
 export function buildExpenseDatePickerMonth(month: string, maxDate: string): ExpenseDatePickerMonth {
   const start = monthStart(month);
   const year = start.getUTCFullYear();
