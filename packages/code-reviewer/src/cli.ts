@@ -19,6 +19,12 @@ export interface CliOutput {
   write(chunk: string): unknown;
 }
 
+export function formatCliError(error: unknown): string {
+  if (!(error instanceof Error)) return String(error);
+  const cause = error.cause;
+  return cause instanceof Error && cause.message ? `${error.message}: ${cause.message}` : error.message;
+}
+
 export async function main(
   args = process.argv.slice(2),
   reviewer: (request: ReviewRequest) => Promise<Review> = review,
@@ -36,7 +42,7 @@ export async function main(
 const entrypoint = process.argv[1];
 if (entrypoint && import.meta.url === pathToFileURL(resolve(entrypoint)).href) {
   main().catch((error: unknown) => {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = formatCliError(error);
     // eslint-disable-next-line no-console -- the CLI contract sends failures to stderr.
     console.error(`[code-reviewer] review failed: ${message}`);
     process.exitCode = 1;
