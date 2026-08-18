@@ -1,7 +1,7 @@
 ---
 change_id: pwa-implementation
 title: Pwa implementation
-status: implemented
+status: impl_reviewed
 created: 2026-08-18
 updated: 2026-08-18
 archived_at: null
