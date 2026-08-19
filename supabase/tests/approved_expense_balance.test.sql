@@ -1,6 +1,6 @@
 begin;
 
-select plan(156);
+select plan(157);
 
 insert into auth.users (id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values
@@ -742,9 +742,37 @@ select lives_ok(
   'a parent creates an eligible template for materialization'
 );
 set local role postgres;
+insert into public.recurring_expenses (family_id, payer_id, description, amount_pln, start_date, end_date)
+values (
+  '54000000-0000-0000-0000-000000000001',
+  '54100000-0000-0000-0000-000000000001',
+  'Extended generated subscription',
+  8.00,
+  (date_trunc('month', current_date) - interval '1 month')::date,
+  (date_trunc('month', current_date) - interval '1 day')::date
+);
+insert into public.recurring_expense_revisions (
+  recurring_expense_id, effective_from, child_id, description, amount_pln, start_date, end_date
+)
+select
+  id,
+  date_trunc('month', current_date)::date,
+  null,
+  'Extended generated subscription',
+  8.00,
+  date_trunc('month', current_date)::date,
+  null
+from public.recurring_expenses
+where description = 'Extended generated subscription';
 select lives_ok(
   $$select public.materialize_current_month_recurring_expenses()$$,
   'the database materializes eligible current-month recurring expenses'
+);
+select is(
+  (select outcome::text from public.recurring_expense_occurrences
+    where recurring_expense_id = (select id from public.recurring_expenses where description = 'Extended generated subscription')
+      and occurrence_month = date_trunc('month', current_date)::date),
+  'created', 'an effective revision can extend a template beyond its original end month'
 );
 select is(
   (select count(*)::text from public.recurring_expense_occurrences
