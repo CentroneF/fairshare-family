@@ -401,10 +401,10 @@ column and RPC in place; removal would require a separate forward migration.
 
 #### Automated
 
-- [x] 4.1 Add resilient refresh fallback navigation
-- [x] 4.2 Simplify desktop navigation identity layout
-- [x] 4.3 Run unit, lint, and production-build verification
+- [x] 4.1 Add resilient refresh fallback navigation — f30a4b0
+- [x] 4.2 Simplify desktop navigation identity layout — f30a4b0
+- [x] 4.3 Run unit, lint, and production-build verification — f30a4b0
 
 #### Manual
 
-- [x] 4.4 Verify refresh fallback and navigation identity behavior
+- [x] 4.4 Verify refresh fallback and navigation identity behavior — f30a4b0
