@@ -102,7 +102,9 @@ const refreshFallbackRedirectTo = `${refreshTarget}${refreshTarget.includes("?")
 
 <script define:vars={{ refreshTarget }}>
   async function refreshExpenseWorkspace(month: string) {
-    const response = await fetch(refreshTarget);
+    const refreshUrl = new URL(refreshTarget, window.location.origin);
+    refreshUrl.searchParams.set("month", month);
+    const response = await fetch(`${refreshUrl.pathname}${refreshUrl.search}`);
     if (!response.ok) throw new Error("Unable to refresh expenses");
 
     const parsedDocument = new DOMParser().parseFromString(await response.text(), "text/html");

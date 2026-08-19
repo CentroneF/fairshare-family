@@ -23,6 +23,7 @@ export interface ExpenseDisplay {
   childName: string | null;
   declineReason: string | null;
   previousDeclineReason: string | null;
+  isRecurring: boolean;
 }
 
 export interface ExpenseWorkspaceState {
@@ -538,7 +539,7 @@ export async function listMonthExpenses(
   const result = await client
     .from("expenses")
     .select(
-      "id, child_id, description, expense_date, amount_pln, status, payer_id, decline_reason, previous_decline_reason, children(name)",
+      "id, child_id, description, expense_date, amount_pln, status, payer_id, decline_reason, previous_decline_reason, children(name), recurring_expense_occurrences(id)",
     )
     .eq("family_id", familyId)
     .gte("expense_date", start)
@@ -547,10 +548,15 @@ export async function listMonthExpenses(
   if (result.error) throw new ExpenseBalanceError(mapExpenseError(result.error));
   const rows = result.data as unknown;
   if (!Array.isArray(rows)) return [];
+  return mapExpenseDisplayRows(rows);
+}
+
+export function mapExpenseDisplayRows(rows: readonly unknown[]): ExpenseDisplay[] {
   return rows.flatMap((row) => {
     if (typeof row !== "object" || row === null) return [];
     const value = row as Record<string, unknown>;
     const child: unknown = Array.isArray(value.children) ? value.children[0] : value.children;
+    const occurrences = value.recurring_expense_occurrences;
     const amountPln = parseExpenseDisplayAmount(value.amount_pln);
     if (
       typeof value.id !== "string" ||
@@ -574,6 +580,9 @@ export async function listMonthExpenses(
         childId: typeof value.child_id === "string" ? value.child_id : null,
         declineReason: typeof value.decline_reason === "string" ? value.decline_reason : null,
         previousDeclineReason: typeof value.previous_decline_reason === "string" ? value.previous_decline_reason : null,
+        isRecurring: Array.isArray(occurrences)
+          ? occurrences.some((occurrence) => occurrence && typeof occurrence === "object")
+          : Boolean(occurrences && typeof occurrences === "object"),
         childName:
           child && typeof child === "object" && typeof (child as { name?: unknown }).name === "string"
             ? (child as { name: string }).name

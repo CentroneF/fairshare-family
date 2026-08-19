@@ -34,6 +34,7 @@ const currentMonth = new Date().toISOString().slice(0, 7);
             familyName={onboarding.family.name}
             children={onboarding.family.children}
             reportsHref="/reports"
+            recurringExpensesHref="/recurring-expenses"
           />
           <div class="min-w-0 rounded-2xl border border-white/10 bg-white/10 p-6 backdrop-blur-xl sm:p-8">
             {successMessage && <p class="mb-6 text-sm text-emerald-300">{successMessage}</p>}

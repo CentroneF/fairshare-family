@@ -1,0 +1,39 @@
+---
+import RecurringExpenses from "@/components/expenses/RecurringExpenses.astro";
+import Layout from "@/layouts/Layout.astro";
+import { resolveOnboardingState } from "@/lib/family-onboarding";
+import { listRecurringExpenses } from "@/lib/recurring-expenses";
+
+const { supabase, user } = Astro.locals;
+if (!supabase || !user) return Astro.redirect("/auth/signin");
+
+const onboarding = await resolveOnboardingState(supabase, user.id);
+if (onboarding.kind !== "two-parent-family") return Astro.redirect("/dashboard");
+
+const expenses = await listRecurringExpenses(supabase, onboarding.family.id);
+const membership = await supabase
+  .from("family_members")
+  .select("id")
+  .eq("family_id", onboarding.family.id)
+  .eq("user_id", user.id)
+  .eq("role", "parent")
+  .eq("is_active", true)
+  .maybeSingle();
+const currentMembershipId = membership.data && typeof membership.data.id === "string" ? membership.data.id : null;
+---
+
+<Layout title="Recurring expenses">
+  <main class="bg-cosmic min-h-screen p-4 text-white sm:p-8">
+    <section
+      class="mx-auto w-full max-w-3xl rounded-2xl border border-white/10 bg-white/10 p-6 backdrop-blur-xl sm:p-8"
+    >
+      <a href="/dashboard" class="inline-flex text-sm text-purple-100 hover:text-white">← Back to dashboard</a>
+      <RecurringExpenses
+        expenses={expenses}
+        children={onboarding.family.children}
+        currentMembershipId={currentMembershipId}
+        today={new Date().toISOString().slice(0, 10)}
+      />
+    </section>
+  </main>
+</Layout>

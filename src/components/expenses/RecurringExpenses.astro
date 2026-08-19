@@ -1,0 +1,349 @@
+---
+import type { RecurringExpenseDisplay } from "@/lib/recurring-expenses";
+
+interface Props {
+  expenses: readonly RecurringExpenseDisplay[];
+  children: readonly { id: string; name: string }[];
+  currentMembershipId: string | null;
+  today: string;
+}
+
+const { expenses, children, currentMembershipId, today } = Astro.props;
+const ownExpenses = expenses.filter((expense) => expense.payerId === currentMembershipId);
+const otherExpenses = expenses.filter((expense) => expense.payerId !== currentMembershipId);
+const currentMonth = today.slice(0, 7);
+---
+
+<section id="recurring-expenses-container" class="mt-10 border-t border-white/10 pt-8">
+  <div class="flex items-start justify-between gap-4">
+    <div>
+      <p class="text-sm tracking-wide text-purple-200 uppercase">Recurring expenses</p>
+      <h2 class="mt-1 text-2xl font-bold">Monthly schedules</h2>
+      <p class="mt-1 text-sm text-blue-100/70">
+        A pending expense will be created on the first of each eligible month.
+      </p>
+    </div>
+    {
+      currentMembershipId && (
+        <button
+          type="button"
+          data-open-add-recurring-expense
+          class="shrink-0 rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium hover:bg-purple-500"
+        >
+          Add recurring expense
+        </button>
+      )
+    }
+  </div>
+  {
+    currentMembershipId && (
+      <dialog
+        id="add-recurring-expense-dialog"
+        data-add-recurring-expense-dialog
+        aria-labelledby="add-recurring-expense-title"
+        class="m-auto w-[min(100%-2rem,40rem)] rounded-2xl border border-white/15 bg-slate-950 p-6 text-white shadow-2xl backdrop:bg-slate-950/70"
+      >
+        <div class="mb-5 flex items-start justify-between gap-4">
+          <div>
+            <h3 id="add-recurring-expense-title" class="text-xl font-semibold">
+              Add recurring expense
+            </h3>
+            <p class="mt-1 text-sm text-blue-100/70">Schedule a future monthly expense.</p>
+          </div>
+          <button
+            type="button"
+            data-close-recurring-dialog
+            class="rounded-lg border border-white/20 px-3 py-2 text-sm hover:bg-white/10"
+          >
+            Cancel
+          </button>
+        </div>
+        <form
+          action="/api/recurring-expenses/create"
+          method="POST"
+          class="grid gap-3 sm:grid-cols-2"
+          data-recurring-form
+        >
+          <label for="new-recurring-description" class="sm:col-span-2">
+            <span class="mb-1 block text-sm text-blue-100/80">Description</span>
+            <input
+              id="new-recurring-description"
+              name="description"
+              required
+              class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2"
+              placeholder="e.g. Music lessons"
+            />
+          </label>
+          <label for="new-recurring-child">
+            <span class="mb-1 block text-sm text-blue-100/80">Child</span>
+            <select
+              id="new-recurring-child"
+              name="childId"
+              class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2"
+            >
+              <option value="">No specific child</option>
+              {children.map((child) => (
+                <option value={child.id}>{child.name}</option>
+              ))}
+            </select>
+          </label>
+          <label for="new-recurring-amount">
+            <span class="mb-1 block text-sm text-blue-100/80">Amount (PLN)</span>
+            <input
+              id="new-recurring-amount"
+              name="amount"
+              inputmode="decimal"
+              required
+              class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2"
+              placeholder="12,50"
+            />
+          </label>
+          <label for="new-recurring-start-date">
+            <span class="mb-1 block text-sm text-blue-100/80">Start month</span>
+            <input
+              id="new-recurring-start-date"
+              name="startDate"
+              type="month"
+              required
+              min={currentMonth}
+              value={currentMonth}
+              class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2"
+            />
+          </label>
+          <label for="new-recurring-end-date">
+            <span class="mb-1 block text-sm text-blue-100/80">End month</span>
+            <input
+              id="new-recurring-end-date"
+              name="endDate"
+              type="month"
+              min={currentMonth}
+              class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2"
+            />
+            <span class="mt-1 block text-xs text-blue-100/60">Leave empty until manually cancelled.</span>
+          </label>
+          <div class="sm:col-span-2">
+            <button
+              type="submit"
+              class="rounded-lg bg-purple-600 px-4 py-2 font-medium hover:bg-purple-500 disabled:cursor-wait disabled:opacity-70"
+            >
+              Add recurring expense
+            </button>
+          </div>
+        </form>
+      </dialog>
+    )
+  }
+  <div class="mt-6 space-y-3">
+    {
+      expenses.length === 0 && (
+        <p class="rounded-xl border border-white/15 bg-white/5 p-5 text-sm text-blue-100/70">
+          No recurring expenses planned.
+        </p>
+      )
+    }
+    {
+      ownExpenses.map((expense) => (
+        <article class="rounded-xl border border-white/15 bg-white/5 p-4" data-recurring-expense-id={expense.id}>
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p class="font-medium">{expense.description}</p>
+              <p class="mt-1 text-sm text-blue-100/70">
+                {expense.amountPln} PLN · {expense.childName ?? "No specific child"} · {expense.startDate.slice(0, 7)}{" "}
+                to {expense.endDate?.slice(0, 7) ?? "until manually cancelled"}
+              </p>
+              <p class="mt-1 text-sm text-purple-200">
+                {expense.isArchived ? "Stopped" : expense.isActive ? "Active" : "Paused"}
+              </p>
+              {expense.pendingChangeEffectiveFrom && (
+                <p class="mt-1 text-sm text-purple-200">
+                  Changes scheduled from {expense.pendingChangeEffectiveFrom.slice(0, 7)}
+                </p>
+              )}
+            </div>
+            {!expense.isArchived && (
+              <div class="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  data-open-recurring-edit={expense.id}
+                  class="rounded-lg border border-white/20 px-3 py-1 text-sm hover:bg-white/10"
+                >
+                  Edit
+                </button>
+                <form action="/api/recurring-expenses/status" method="POST" data-recurring-action>
+                  <input type="hidden" name="recurringExpenseId" value={expense.id} />
+                  <input type="hidden" name="isActive" value={String(!expense.isActive)} />
+                  <button class="rounded-lg border border-white/20 px-3 py-1 text-sm hover:bg-white/10">
+                    {expense.isActive ? "Pause" : "Resume"}
+                  </button>
+                </form>
+                <form action="/api/recurring-expenses/stop" method="POST" data-recurring-action>
+                  <input type="hidden" name="recurringExpenseId" value={expense.id} />
+                  <button class="rounded-lg border border-red-300/30 px-3 py-1 text-sm text-red-100 hover:bg-red-500/10">
+                    Stop
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
+          <dialog
+            data-recurring-edit-dialog={expense.id}
+            class="m-auto w-[min(100%-2rem,40rem)] rounded-2xl border border-white/15 bg-slate-950 p-6 text-white backdrop:bg-slate-950/70"
+          >
+            <form
+              action="/api/recurring-expenses/update"
+              method="POST"
+              class="grid gap-3 sm:grid-cols-2"
+              data-recurring-form
+            >
+              <>
+                <input type="hidden" name="recurringExpenseId" value={expense.id} />
+                <label class="sm:col-span-2">
+                  <span class="mb-1 block text-sm">Description</span>
+                  <input
+                    name="description"
+                    required
+                    value={expense.description}
+                    class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2"
+                  />
+                </label>
+                <label>
+                  <span class="mb-1 block text-sm">Child</span>
+                  <select name="childId" class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2">
+                    <option value="">No specific child</option>
+                    {children.map((child) => (
+                      <option value={child.id} selected={expense.childId === child.id}>
+                        {child.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span class="mb-1 block text-sm">Amount (PLN)</span>
+                  <input
+                    name="amount"
+                    required
+                    inputmode="decimal"
+                    value={expense.amountPln}
+                    class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2"
+                  />
+                </label>
+                <label>
+                  <span class="mb-1 block text-sm">Start month</span>
+                  <input
+                    name="startDate"
+                    type="month"
+                    required
+                    value={expense.startDate.slice(0, 7)}
+                    class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2"
+                  />
+                </label>
+                <label>
+                  <span class="mb-1 block text-sm">End month</span>
+                  <input
+                    name="endDate"
+                    type="month"
+                    value={expense.endDate?.slice(0, 7) ?? ""}
+                    class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2"
+                  />
+                </label>
+                <div class="flex gap-2 sm:col-span-2">
+                  <button class="rounded-lg bg-purple-600 px-4 py-2">Save changes</button>
+                  <button type="button" data-close-recurring-edit class="rounded-lg border border-white/20 px-4 py-2">
+                    Cancel
+                  </button>
+                </div>
+              </>
+            </form>
+          </dialog>
+        </article>
+      ))
+    }
+    {
+      otherExpenses.map((expense) => (
+        <article class="rounded-xl border border-white/15 bg-white/5 p-4">
+          <>
+            <p class="font-medium">{expense.description}</p>
+            <p class="mt-1 text-sm text-blue-100/70">
+              {expense.amountPln} PLN · {expense.childName ?? "No specific child"} · {expense.startDate.slice(0, 7)} to{" "}
+              {expense.endDate?.slice(0, 7) ?? "until manually cancelled"}
+            </p>
+            <p class="mt-1 text-sm text-blue-100/60">
+              Managed by the paying parent · {expense.isArchived ? "Stopped" : expense.isActive ? "Active" : "Paused"}
+            </p>
+            {expense.pendingChangeEffectiveFrom && (
+              <p class="mt-1 text-sm text-purple-200">
+                Changes scheduled from {expense.pendingChangeEffectiveFrom.slice(0, 7)}
+              </p>
+            )}
+          </>
+        </article>
+      ))
+    }
+  </div>
+</section>
+
+<script>
+  function showRecurringError(form: HTMLFormElement, message: string) {
+    const existing = form.querySelector<HTMLElement>("[role='alert']");
+    if (existing) {
+      existing.textContent = message;
+      return;
+    }
+    const error = document.createElement("p");
+    error.setAttribute("role", "alert");
+    error.className = "sm:col-span-2 text-sm text-red-200";
+    error.textContent = message;
+    form.append(error);
+  }
+  async function refreshRecurringExpenses() {
+    const response = await fetch(window.location.href);
+    if (!response.ok) throw new Error("Unable to refresh recurring expenses");
+    const parsedDocument = new DOMParser().parseFromString(await response.text(), "text/html");
+    const replacement = parsedDocument.querySelector<HTMLElement>("#recurring-expenses-container");
+    if (!replacement) throw new Error("Unable to refresh recurring expenses");
+    document.querySelector("#recurring-expenses-container")?.replaceWith(replacement);
+  }
+  document.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    const addTrigger = target.closest<HTMLButtonElement>("[data-open-add-recurring-expense]");
+    if (addTrigger) {
+      const dialog = document.querySelector<HTMLDialogElement>("[data-add-recurring-expense-dialog]");
+      dialog?.addEventListener("close", () => addTrigger.focus(), { once: true });
+      dialog?.showModal();
+    }
+    const id = target.closest<HTMLButtonElement>("[data-open-recurring-edit]")?.dataset.openRecurringEdit;
+    if (id) document.querySelector<HTMLDialogElement>(`[data-recurring-edit-dialog='${id}']`)?.showModal();
+    if (target.closest("[data-close-recurring-edit]") || target.closest("[data-close-recurring-dialog]")) {
+      target.closest("dialog")?.close();
+    }
+  });
+  document.addEventListener("submit", async (event) => {
+    const form = event.target;
+    if (
+      !(form instanceof HTMLFormElement) ||
+      (!form.matches("[data-recurring-form]") && !form.matches("[data-recurring-action]"))
+    )
+      return;
+    event.preventDefault();
+    const button = form.querySelector<HTMLButtonElement>("button[type='submit'], button:not([type])");
+    button?.setAttribute("disabled", "true");
+    form.querySelector("[role='alert']")?.remove();
+    try {
+      const response = await fetch(form.action, {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        body: new FormData(form),
+      });
+      const result = (await response.json()) as { error?: string };
+      if (!response.ok || result.error) throw new Error(result.error ?? "We could not save that recurring expense.");
+      form.closest("dialog")?.close();
+      form.reset();
+      await refreshRecurringExpenses();
+    } catch (error) {
+      showRecurringError(form, error instanceof Error ? error.message : "We could not save that recurring expense.");
+    } finally {
+      button?.removeAttribute("disabled");
+    }
+  });
+</script>

@@ -1,6 +1,6 @@
 begin;
 
-select plan(120);
+select plan(157);
 
 insert into auth.users (id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values
@@ -644,6 +644,217 @@ select is_empty(
 select is_empty(
   $$select 1 from public.monthly_settlements where family_id = '54000000-0000-0000-0000-000000000001'$$,
   'a non-member cannot read another family settlement'
+);
+
+select set_config('request.jwt.claim.sub', '51000000-0000-0000-0000-000000000001', true);
+select lives_ok(
+  $$select public.create_recurring_expense('54300000-0000-0000-0000-000000000001', 'Music lessons', 45.50, current_date, current_date + 30)$$,
+  'a paying parent creates a child-linked recurring expense'
+);
+select is(
+  (select description || ':' || amount_pln::text || ':' || is_active::text from public.recurring_expenses where description = 'Music lessons'),
+  'Music lessons:45.50:true', 'the recurring template stores its normalized schedule data'
+);
+select lives_ok(
+  $$select public.create_recurring_expense(null, 'Family subscription', 12.00, current_date, null)$$,
+  'a paying parent can create an until-cancelled recurring expense'
+);
+select throws_ok(
+  $$select public.create_recurring_expense(null, 'Invalid range', 12.00, current_date, current_date - 1)$$,
+  'P0001', 'Recurring expense end date must be on or after the start date', 'recurring expenses reject an invalid date range'
+);
+select throws_ok(
+  $$select public.create_recurring_expense(null, 'Too precise schedule', 1.001, current_date, null)$$,
+  'P0001', 'Amount must be a positive PLN value with at most two decimal places', 'recurring expenses reject over-precise PLN amounts'
+);
+select throws_ok(
+  $$select public.create_recurring_expense('00000000-0000-0000-0000-000000000001', 'Wrong child schedule', 12.00, current_date, null)$$,
+  'P0001', 'Selected child is not available to this family', 'recurring expenses reject cross-family children'
+);
+select throws_ok(
+  $$insert into public.recurring_expenses (family_id, payer_id, description, amount_pln, start_date) values ('54000000-0000-0000-0000-000000000001', '54100000-0000-0000-0000-000000000001', 'Tampered schedule', 1.00, current_date)$$,
+  '42501', 'permission denied for table recurring_expenses', 'direct authenticated recurring-expense writes are denied'
+);
+select set_config('request.jwt.claim.sub', '52000000-0000-0000-0000-000000000001', true);
+select throws_ok(
+  $$select public.update_recurring_expense((select id from public.recurring_expenses where description = 'Music lessons'), null, 'Tampered music lessons', 50.00, (date_trunc('month', current_date) + interval '1 month')::date, null)$$,
+  'P0001', 'Only the payer can manage this recurring expense', 'the other parent cannot edit a payer recurring expense'
+);
+select throws_ok(
+  $$select public.set_recurring_expense_active((select id from public.recurring_expenses where description = 'Music lessons'), false)$$,
+  'P0001', 'Only the payer can manage this recurring expense', 'the other parent cannot pause a payer recurring expense'
+);
+select throws_ok(
+  $$select public.archive_recurring_expense((select id from public.recurring_expenses where description = 'Music lessons'))$$,
+  'P0001', 'Only the payer can manage this recurring expense', 'the other parent cannot stop a payer recurring expense'
+);
+select set_config('request.jwt.claim.sub', '51000000-0000-0000-0000-000000000001', true);
+select lives_ok(
+  $$select public.set_recurring_expense_active((select id from public.recurring_expenses where description = 'Music lessons'), false)$$,
+  'the payer can pause a recurring expense'
+);
+select is((select is_active::text from public.recurring_expenses where description = 'Music lessons'), 'false', 'pause preserves the template and marks it inactive');
+select lives_ok(
+  $$select public.update_recurring_expense((select id from public.recurring_expenses where description = 'Music lessons'), null, 'Updated music lessons', 46.00, current_date, null)$$,
+  'the payer schedules a recurring template edit for the following month'
+);
+select is(
+  (select description || ':' || amount_pln::text from public.recurring_expenses where description = 'Music lessons'),
+  'Music lessons:45.50', 'editing preserves the current template version'
+);
+select is(
+  (select description || ':' || amount_pln::text || ':' || effective_from::text
+    from public.recurring_expense_revisions
+    where recurring_expense_id = (select id from public.recurring_expenses where description = 'Music lessons')),
+  'Updated music lessons:46.00:' || (date_trunc('month', current_date) + interval '1 month')::date::text,
+  'editing creates the replacement version for the following month'
+);
+select is(
+  (select start_date::text from public.recurring_expense_revisions
+    where recurring_expense_id = (select id from public.recurring_expenses where description = 'Music lessons')),
+  (date_trunc('month', current_date) + interval '1 month')::date::text,
+  'a revision cannot become eligible during the current month'
+);
+select lives_ok(
+  $$select public.set_recurring_expense_active((select id from public.recurring_expenses where description = 'Music lessons'), true)$$,
+  'the payer can resume a recurring expense'
+);
+select lives_ok(
+  $$select public.archive_recurring_expense((select id from public.recurring_expenses where description = 'Music lessons'))$$,
+  'the payer can stop a recurring expense'
+);
+select throws_ok(
+  $$select public.set_recurring_expense_active((select id from public.recurring_expenses where description = 'Music lessons'), true)$$,
+  'P0001', 'Stopped recurring expenses cannot be resumed', 'stopped recurring expenses remain archived'
+);
+select throws_ok(
+  $$select public.update_recurring_expense((select id from public.recurring_expenses where description = 'Music lessons'), null, 'Stopped mutation', 99.00, current_date, null)$$,
+  'P0001', 'Stopped recurring expenses cannot be edited', 'a stopped recurring expense cannot be edited'
+);
+select is(
+  (select count(*)::text from public.recurring_expense_revisions
+    where recurring_expense_id = (select id from public.recurring_expenses where description = 'Music lessons')),
+  '1', 'a rejected stopped-template update leaves its scheduled revision unchanged'
+);
+
+select lives_ok(
+  $$select public.create_recurring_expense(null, 'Generated subscription', 19.99, current_date, null)$$,
+  'a parent creates an eligible template for materialization'
+);
+set local role postgres;
+insert into public.recurring_expenses (family_id, payer_id, description, amount_pln, start_date, end_date)
+values (
+  '54000000-0000-0000-0000-000000000001',
+  '54100000-0000-0000-0000-000000000001',
+  'Extended generated subscription',
+  8.00,
+  (date_trunc('month', current_date) - interval '1 month')::date,
+  (date_trunc('month', current_date) - interval '1 day')::date
+);
+insert into public.recurring_expense_revisions (
+  recurring_expense_id, effective_from, child_id, description, amount_pln, start_date, end_date
+)
+select
+  id,
+  date_trunc('month', current_date)::date,
+  null,
+  'Extended generated subscription',
+  8.00,
+  date_trunc('month', current_date)::date,
+  null
+from public.recurring_expenses
+where description = 'Extended generated subscription';
+select lives_ok(
+  $$select public.materialize_current_month_recurring_expenses()$$,
+  'the database materializes eligible current-month recurring expenses'
+);
+select is(
+  (select outcome::text from public.recurring_expense_occurrences
+    where recurring_expense_id = (select id from public.recurring_expenses where description = 'Extended generated subscription')
+      and occurrence_month = date_trunc('month', current_date)::date),
+  'created', 'an effective revision can extend a template beyond its original end month'
+);
+select is(
+  (select count(*)::text from public.recurring_expense_occurrences
+    where recurring_expense_id = (select id from public.recurring_expenses where description = 'Generated subscription')
+      and occurrence_month = date_trunc('month', current_date)::date),
+  '1', 'an eligible template receives exactly one current-month occurrence'
+);
+select is(
+  (select outcome::text from public.recurring_expense_occurrences
+    where recurring_expense_id = (select id from public.recurring_expenses where description = 'Generated subscription')
+      and occurrence_month = date_trunc('month', current_date)::date),
+  'created', 'the eligible occurrence records its created outcome'
+);
+select is(
+  (select status::text from public.expenses where id = (
+    select expense_id from public.recurring_expense_occurrences
+    where recurring_expense_id = (select id from public.recurring_expenses where description = 'Generated subscription')
+      and occurrence_month = date_trunc('month', current_date)::date
+  )),
+  'pending', 'a materialized expense enters the normal pending lifecycle'
+);
+select lives_ok(
+  $$select public.materialize_current_month_recurring_expenses()$$,
+  'rerunning materialization is safe'
+);
+select is(
+  (select count(*)::text from public.recurring_expense_occurrences
+    where recurring_expense_id = (select id from public.recurring_expenses where description = 'Generated subscription')
+      and occurrence_month = date_trunc('month', current_date)::date),
+  '1', 'rerunning materialization does not duplicate an occurrence'
+);
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '51000000-0000-0000-0000-000000000001', true);
+select throws_ok(
+  $$select public.approve_expense((select expense_id from public.recurring_expense_occurrences where recurring_expense_id = (select id from public.recurring_expenses where description = 'Generated subscription')))$$,
+  'P0001', 'Only the other parent can approve an expense', 'the generated expense payer cannot approve it'
+);
+select set_config('request.jwt.claim.sub', '52000000-0000-0000-0000-000000000001', true);
+select lives_ok(
+  $$select public.approve_expense((select expense_id from public.recurring_expense_occurrences where recurring_expense_id = (select id from public.recurring_expenses where description = 'Generated subscription')))$$,
+  'the other parent can approve a generated expense'
+);
+select is(
+  (select reviewed_by from public.expenses where id = (
+    select expense_id from public.recurring_expense_occurrences
+    where recurring_expense_id = (select id from public.recurring_expenses where description = 'Generated subscription')
+  )),
+  '54200000-0000-0000-0000-000000000001'::uuid, 'generated approval records the other parent'
+);
+set local role postgres;
+insert into public.monthly_settlements (family_id, report_month, first_confirmed_by, first_confirmed_at)
+values ('55000000-0000-0000-0000-000000000001', date_trunc('month', current_date)::date, '55100000-0000-0000-0000-000000000001', now());
+insert into public.recurring_expenses (family_id, payer_id, description, amount_pln, start_date)
+values ('55000000-0000-0000-0000-000000000001', '55100000-0000-0000-0000-000000000001', 'Locked generated subscription', 7.00, current_date);
+select lives_ok(
+  $$select public.materialize_current_month_recurring_expenses()$$,
+  'materialization handles locked-family templates without creating expenses'
+);
+select is(
+  (select outcome::text from public.recurring_expense_occurrences
+    where recurring_expense_id = (select id from public.recurring_expenses where description = 'Locked generated subscription')),
+  'skipped_locked', 'a confirmation-locked month records an auditable skip'
+);
+select ok(
+  (select expense_id is null from public.recurring_expense_occurrences
+    where recurring_expense_id = (select id from public.recurring_expenses where description = 'Locked generated subscription')),
+  'a skipped locked occurrence has no expense'
+);
+select is(
+  (select count(*)::text from public.expenses where family_id = '55000000-0000-0000-0000-000000000001' and description = 'Locked generated subscription'),
+  '0', 'a locked family receives no generated expense'
+);
+select ok(
+  exists (
+    select 1
+    from cron.job
+    where jobname = 'materialize-current-month-recurring-expenses'
+      and schedule = '0 0 1 * *'
+      and command = 'select public.materialize_current_month_recurring_expenses()'
+      and active
+  ),
+  'the monthly recurring-expense materialization scheduler is registered'
 );
 
 select * from finish();
