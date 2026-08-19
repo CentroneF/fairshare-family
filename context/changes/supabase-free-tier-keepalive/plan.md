@@ -238,21 +238,21 @@ separate forward migration after the Cron Trigger is disabled.
 
 #### Automated
 
-- [x] 1.1 Add the no-data anonymous keep-alive RPC migration
-- [x] 1.2 Verify the RPC and existing RLS boundaries with pgTAP
+- [x] 1.1 Add the no-data anonymous keep-alive RPC migration — 0178aa5
+- [x] 1.2 Verify the RPC and existing RLS boundaries with pgTAP — 0178aa5
 
 #### Manual
 
-- [x] 1.3 Confirm the local anon RPC result exposes no application data
+- [x] 1.3 Confirm the local anon RPC result exposes no application data — 0178aa5
 
 ### Phase 2: Schedule the Worker-owned keep-alive
 
 #### Automated
 
-- [ ] 2.1 Add and test the server-side Supabase keep-alive caller
-- [ ] 2.2 Add the Astro-preserving Cloudflare Worker scheduled handler
-- [ ] 2.3 Configure the daily Worker Cron Trigger and document operations
-- [ ] 2.4 Run application and database verification suites
+- [x] 2.1 Add and test the server-side Supabase keep-alive caller
+- [x] 2.2 Add the Astro-preserving Cloudflare Worker scheduled handler
+- [x] 2.3 Configure the daily Worker Cron Trigger and document operations
+- [x] 2.4 Run application and database verification suites
 
 #### Manual
 

@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "fairshare-family",
-  "main": "@astrojs/cloudflare/entrypoints/server",
+  "main": "src/worker.ts",
   "compatibility_date": "2026-05-08",
   "compatibility_flags": ["nodejs_compat"],
   "preview_urls": false,
@@ -12,5 +12,8 @@
   },
   "observability": {
     "enabled": true,
+  },
+  "triggers": {
+    "crons": ["0 9 * * *"],
   },
 }
