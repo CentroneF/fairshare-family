@@ -1,7 +1,7 @@
 ---
 change_id: ux-changes
 title: Ux changes
-status: implemented
+status: impl_reviewed
 created: 2026-08-19
 updated: 2026-08-19
 archived_at: null

@@ -18,7 +18,7 @@ uses flex stretching that enlarges Decline when an approval error is appended.
 ## Desired End State
 
 Every parent has a required, fixed 5–15-character display name. The menu
-shows it below the email, and active and declined expense cards show the
+shows it alongside the email, and active and declined expense cards show the
 creator's current display name. Existing accounts are prompted for a name
 before they can use the expense workspace. On the dashboard, the current month
 explains why settlement is unavailable without rendering a Confirm settlement
@@ -115,7 +115,7 @@ entering the expense workspace.
 by later family creation/join actions. Onboarding state exposes the current
 member name (or its absence). An unnamed authenticated member sees only the
 profile-completion form until successful background save; named members see the
-name beneath their email in desktop and mobile navigation.
+name and email together in a flex row in desktop and mobile navigation.
 
 #### 4. Creator names in workspace data and expense cards
 
@@ -128,6 +128,19 @@ without affecting payer-based permissions or balance calculations.
 **Contract**: Extend the expense query, parser, and `ExpenseDisplay` with the
 payer membership display name. Render that name in both card variants; retain
 `payerId` for permission checks and financial logic.
+
+#### Implementation addendum: required integration and hardening
+
+**Files**: `src/pages/api/family/create.ts`,
+`src/pages/api/family/join/confirm.ts`,
+`supabase/migrations/20260819152000_lock_family_member_display_names.sql`,
+`supabase/migrations/20260819153000_distinguish_display_name_completion_errors.sql`,
+`supabase/tests/family_onboarding.test.sql`
+
+**Reason**: Pass the signup display name through the existing creation and join
+boundaries, enforce one-time display-name completion in a forward-only
+migration, distinguish completion errors, and update existing RPC-call tests
+for the new required argument.
 
 ### Success Criteria
 
@@ -286,9 +299,9 @@ copy is not shown for recoverable fallback navigation.
 **Intent**: Remove the redundant sign-in label and present the signed-in
 parent's identity in the requested order.
 
-**Contract**: Desktop navigation shows the display name, then the email on its
-own line, then the full-width Sign out control. The mobile drawer remains
-unchanged.
+**Contract**: Desktop navigation shows the display name and email in a flex
+row, then the full-width Sign out control. The mobile drawer uses the same
+flex-row identity presentation and full-width navigation controls.
 
 ### Success Criteria
 
