@@ -249,10 +249,10 @@ separate forward migration after the Cron Trigger is disabled.
 
 #### Automated
 
-- [x] 2.1 Add and test the server-side Supabase keep-alive caller
-- [x] 2.2 Add the Astro-preserving Cloudflare Worker scheduled handler
-- [x] 2.3 Configure the daily Worker Cron Trigger and document operations
-- [x] 2.4 Run application and database verification suites
+- [x] 2.1 Add and test the server-side Supabase keep-alive caller — e937ded
+- [x] 2.2 Add the Astro-preserving Cloudflare Worker scheduled handler — e937ded
+- [x] 2.3 Configure the daily Worker Cron Trigger and document operations — e937ded
+- [x] 2.4 Run application and database verification suites — e937ded
 
 #### Manual
 
