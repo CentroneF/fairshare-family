@@ -1,7 +1,7 @@
 ---
 change_id: expense-refresh-button
 title: Expense refresh button
-status: implementing
+status: implemented
 created: 2026-08-19
 updated: 2026-08-19
 archived_at: null

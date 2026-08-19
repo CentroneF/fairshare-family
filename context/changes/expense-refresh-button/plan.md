@@ -89,9 +89,9 @@ Make the Refresh button execute the workspace refresh flow reliably and audit th
 
 #### Automated
 
-- [x] 1.1 Consolidate the expense-list handlers and add focused refresh regression coverage.
-- [x] 1.2 Run focused checks and `npm run verify`.
+- [x] 1.1 Consolidate the expense-list handlers and add focused refresh regression coverage. — f5052ea
+- [x] 1.2 Run focused checks and `npm run verify`. — f5052ea
 
 #### Manual
 
-- [x] 1.3 Verify background refresh, failure feedback, and the adjacent expense actions in the browser.
+- [x] 1.3 Verify background refresh, failure feedback, and the adjacent expense actions in the browser. — f5052ea
