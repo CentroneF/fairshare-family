@@ -3,6 +3,7 @@ import {
   deriveOnboardingState,
   mapOnboardingError,
   normalizeChildName,
+  normalizeDisplayName,
   normalizeFamilyName,
   preserveJoinCode,
 } from "./family-onboarding";
@@ -13,6 +14,12 @@ describe("family onboarding helpers", () => {
     expect(normalizeChildName("  Ada  ")).toBe("Ada");
     expect(() => normalizeFamilyName(" ")).toThrow("Enter a family name.");
     expect(() => normalizeChildName(" ")).toThrow("Enter a child name.");
+  });
+
+  it("normalizes display names within the required range", () => {
+    expect(normalizeDisplayName("  Ada Nowak  ")).toBe("Ada Nowak");
+    expect(() => normalizeDisplayName("Ada")).toThrow("display name between 5 and 15");
+    expect(() => normalizeDisplayName("x".repeat(16))).toThrow("display name between 5 and 15");
   });
 
   it("preserves the exact case of valid join codes", () => {
@@ -36,7 +43,7 @@ describe("family onboarding helpers", () => {
 
     expect(
       deriveOnboardingState({
-        membership: { familyId: "family-a", familyName: "Kowalski", createdBy: "user-a" },
+        membership: { familyId: "family-a", familyName: "Kowalski", createdBy: "user-a", displayName: "Ada Nowak" },
         userId: "user-a",
         memberCount: 1,
         children: [{ id: "child-a", name: "Ada" }],
@@ -46,21 +53,26 @@ describe("family onboarding helpers", () => {
       kind: "creator-awaiting-parent",
       family: { id: "family-a", name: "Kowalski", children: [{ id: "child-a", name: "Ada" }] },
       joinCode: "AbCd1234",
+      displayName: "Ada Nowak",
     });
 
     expect(
       deriveOnboardingState({
-        membership: { familyId: "family-a", familyName: "Kowalski", createdBy: "user-a" },
+        membership: { familyId: "family-a", familyName: "Kowalski", createdBy: "user-a", displayName: null },
         userId: "user-b",
         memberCount: 2,
         children: [],
         joinCode: null,
       }),
-    ).toEqual({ kind: "two-parent-family", family: { id: "family-a", name: "Kowalski", children: [] } });
+    ).toEqual({
+      kind: "two-parent-family",
+      family: { id: "family-a", name: "Kowalski", children: [] },
+      displayName: null,
+    });
 
     expect(() =>
       deriveOnboardingState({
-        membership: { familyId: "family-a", familyName: "Kowalski", createdBy: "user-a" },
+        membership: { familyId: "family-a", familyName: "Kowalski", createdBy: "user-a", displayName: null },
         userId: "user-a",
         memberCount: 1,
         children: [],

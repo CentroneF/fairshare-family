@@ -4,6 +4,7 @@ import DashboardNavigation from "@/components/DashboardNavigation.astro";
 import FamilySetupPanel from "@/components/family/FamilySetupPanel.astro";
 import JoinFamilyForm from "@/components/family/JoinFamilyForm";
 import ExpenseWorkspace from "@/components/expenses/ExpenseWorkspace.astro";
+import ParentProfileForm from "@/components/family/ParentProfileForm";
 import Layout from "@/layouts/Layout.astro";
 import { resolveOnboardingState } from "@/lib/family-onboarding";
 
@@ -27,10 +28,20 @@ const currentMonth = new Date().toISOString().slice(0, 7);
 <Layout title="Family dashboard">
   <main class="bg-cosmic min-h-screen p-4 text-white sm:p-8">
     {
-      onboarding.kind === "two-parent-family" ? (
+      onboarding.kind !== "no-family" && !onboarding.displayName ? (
+        <div class="mx-auto w-full max-w-md rounded-2xl border border-white/10 bg-white/10 p-6 backdrop-blur-xl sm:p-8">
+          <p class="text-sm tracking-wide text-purple-200 uppercase">One more step</p>
+          <h1 class="mt-1 text-3xl font-bold">Choose your display name</h1>
+          <p class="mt-2 text-blue-100/70">Your co-parent will see this name on the expenses you create.</p>
+          <div class="mt-6">
+            <ParentProfileForm required client:load />
+          </div>
+        </div>
+      ) : onboarding.kind === "two-parent-family" ? (
         <div class="mx-auto grid w-full max-w-6xl gap-6 md:grid-cols-[minmax(16rem,20rem)_minmax(0,1fr)] md:items-start">
           <DashboardNavigation
             userEmail={user.email ?? ""}
+            displayName={onboarding.displayName}
             familyName={onboarding.family.name}
             children={onboarding.family.children}
             reportsHref="/reports"

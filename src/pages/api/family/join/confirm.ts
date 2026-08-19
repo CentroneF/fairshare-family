@@ -9,7 +9,11 @@ export const POST: APIRoute = async (context) => {
 
   const form = await context.request.formData();
   try {
-    await confirmFamilyJoin(supabase, formValue(form.get("code")));
+    await confirmFamilyJoin(
+      supabase,
+      formValue(form.get("code")),
+      String(context.locals.user.user_metadata.display_name ?? ""),
+    );
     return context.redirect("/dashboard?success=family-joined");
   } catch (error) {
     return context.redirect(`/dashboard?error=${encodeURIComponent(mapOnboardingError(error))}`);

@@ -15,6 +15,7 @@ import {
   normalizeExpenseDate,
   normalizeExpenseId,
   normalizeSelectedMonth,
+  shouldRenderUnavailableSettlementPanel,
   validateExpenseDateInMonth,
 } from "./expense-balance";
 
@@ -86,6 +87,7 @@ describe("expense balance inputs", () => {
           amount_pln: "19.99",
           status: "pending",
           payer_id: "parent-a",
+          payer: { display_name: "Ada Nowak" },
           decline_reason: null,
           previous_decline_reason: null,
           children: null,
@@ -99,6 +101,7 @@ describe("expense balance inputs", () => {
           amount_pln: "20.00",
           status: "approved",
           payer_id: "parent-b",
+          payer: { display_name: "Beata Nowak" },
           decline_reason: null,
           previous_decline_reason: null,
           children: null,
@@ -106,8 +109,8 @@ describe("expense balance inputs", () => {
         },
       ]),
     ).toMatchObject([
-      { id: "expense-a", isRecurring: true, status: "pending", amountPln: "19.99" },
-      { id: "expense-b", isRecurring: false, status: "approved", amountPln: "20.00" },
+      { id: "expense-a", isRecurring: true, status: "pending", amountPln: "19.99", payerDisplayName: "Ada Nowak" },
+      { id: "expense-b", isRecurring: false, status: "approved", amountPln: "20.00", payerDisplayName: "Beata Nowak" },
     ]);
   });
 
@@ -242,6 +245,16 @@ describe("expense balance inputs", () => {
     ).toBe("declined");
   });
 
+  it("hides the unavailable settlement presentation only for the current month", () => {
+    expect(
+      shouldRenderUnavailableSettlementPanel({ kind: "unavailable", isLocked: false, reason: "current-month" }),
+    ).toBe(false);
+    expect(shouldRenderUnavailableSettlementPanel({ kind: "unavailable", isLocked: false, reason: "pending" })).toBe(
+      true,
+    );
+    expect(shouldRenderUnavailableSettlementPanel({ kind: "eligible", isLocked: false })).toBe(false);
+  });
+
   it("maps settlement failures to safe, settlement-specific feedback", () => {
     expect(mapSettlementError({ message: "You have already confirmed this settlement" })).toBe(
       "You have already confirmed this settlement.",
@@ -343,6 +356,7 @@ describe("expense balance inputs", () => {
         amountPln: "20.00",
         status: "approved" as const,
         payerId: "parent-a",
+        payerDisplayName: "Ada Nowak",
         childId: null,
         childName: null,
         declineReason: null,
