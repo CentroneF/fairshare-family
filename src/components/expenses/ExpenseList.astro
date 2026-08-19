@@ -46,7 +46,7 @@ const canDeleteExpense = (expense: ExpenseDisplay) =>
 <section id="expense-list-container" class="mt-6">
   <div class="flex items-center justify-between gap-3">
     <h2 class="text-lg font-semibold">Expenses</h2>
-    <form data-refresh-expenses method="GET" action={refreshTarget}>
+    <form data-refresh-expenses method="GET" action={refreshTarget} class="flex flex-col items-end">
       <input type="hidden" name="month" value={month} />
       <button type="submit" class="rounded-lg border border-white/20 px-3 py-1 text-sm hover:bg-white/10"
         >Refresh</button
@@ -60,6 +60,7 @@ const canDeleteExpense = (expense: ExpenseDisplay) =>
           <div class="flex items-start justify-between gap-4">
             <div>
               <p class="font-medium">{expense.description}</p>
+              {expense.isRecurring && <p class="mt-1 text-sm text-violet-200">Recurring expense</p>}
               <p class="mt-1 text-sm text-blue-100/70">
                 {expense.expenseDate} · {expense.childName ?? "No specific child"}
               </p>
@@ -120,6 +121,7 @@ const canDeleteExpense = (expense: ExpenseDisplay) =>
               <div class="flex items-start justify-between gap-4">
                 <div>
                   <p class="font-medium">{expense.description}</p>
+                  {expense.isRecurring && <p class="mt-1 text-sm text-violet-200">Recurring expense</p>}
                   <p class="mt-1 text-sm text-blue-100/70">
                     {expense.expenseDate} · {expense.childName ?? "No specific child"}
                   </p>
@@ -145,20 +147,28 @@ const canDeleteExpense = (expense: ExpenseDisplay) =>
 </section>
 
 <script>
+  import { refreshExpenseWorkspace, refreshExpenseWorkspaceOrNavigate } from "@/lib/expense-workspace-refresh";
+
   interface ApprovalResult {
     error?: string;
     expenseId?: string;
     month?: string;
   }
 
-  function refreshExpenseWorkspace(month: string) {
-    const refresh = (window as typeof window & { refreshExpenseWorkspace?: (value: string) => Promise<void> })
-      .refreshExpenseWorkspace;
-    if (!refresh) return Promise.reject(new Error("Unable to refresh expenses"));
-    return refresh(month);
+  function showApprovalError(form: HTMLFormElement, message: string) {
+    const existing = form.querySelector<HTMLElement>("[role='alert']");
+    if (existing) {
+      existing.textContent = message;
+      return;
+    }
+    const error = document.createElement("p");
+    error.className = "mt-2 text-right text-sm text-red-200";
+    error.setAttribute("role", "alert");
+    error.textContent = message;
+    form.append(error);
   }
 
-  function showApprovalError(form: HTMLFormElement, message: string) {
+  function showRefreshError(form: HTMLFormElement, message: string) {
     const existing = form.querySelector<HTMLElement>("[role='alert']");
     if (existing) {
       existing.textContent = message;
@@ -171,54 +181,61 @@ const canDeleteExpense = (expense: ExpenseDisplay) =>
     form.append(error);
   }
 
-  document.addEventListener("submit", async (event) => {
-    const form = event.target;
-    if (!(form instanceof HTMLFormElement) || !form.matches("[data-approve-expense]")) return;
-    event.preventDefault();
-    const button = form.querySelector<HTMLButtonElement>("button[type='submit']");
-    const data = new FormData(form);
-    button?.setAttribute("disabled", "true");
-    if (button) button.textContent = "Approving…";
-    form.querySelector("[role='alert']")?.remove();
+  const expenseListWindow = window as typeof window & { expenseListSubmitHandlerReady?: boolean };
 
-    try {
-      const response = await fetch(form.action, {
-        method: "POST",
-        headers: { Accept: "application/json" },
-        body: data,
-      });
-      const result = (await response.json()) as ApprovalResult;
-      if (!response.ok || result.error || !result.expenseId || !result.month) {
-        showApprovalError(form, result.error ?? "We could not approve that expense. Please try again.");
+  if (!expenseListWindow.expenseListSubmitHandlerReady) {
+    expenseListWindow.expenseListSubmitHandlerReady = true;
+    document.addEventListener("submit", async (event) => {
+      const form = event.target;
+      if (!(form instanceof HTMLFormElement)) return;
+
+      if (form.matches("[data-approve-expense]")) {
+        event.preventDefault();
+        const button = form.querySelector<HTMLButtonElement>("button[type='submit']");
+        const data = new FormData(form);
+        button?.setAttribute("disabled", "true");
+        if (button) button.textContent = "Approving…";
+        form.querySelector("[role='alert']")?.remove();
+
+        try {
+          const response = await fetch(form.action, {
+            method: "POST",
+            headers: { Accept: "application/json" },
+            body: data,
+          });
+          const result = (await response.json()) as ApprovalResult;
+          if (!response.ok || result.error || !result.expenseId || !result.month) {
+            showApprovalError(form, result.error ?? "We could not approve that expense. Please try again.");
+            return;
+          }
+          await refreshExpenseWorkspaceOrNavigate(window, result.month);
+        } catch {
+          showApprovalError(form, "We could not approve that expense. Please try again.");
+        } finally {
+          button?.removeAttribute("disabled");
+          if (button) button.textContent = "Approve";
+        }
         return;
       }
-      await refreshExpenseWorkspace(result.month);
-    } catch {
-      showApprovalError(form, "We could not approve that expense. Please try again.");
-    } finally {
-      button?.removeAttribute("disabled");
-      if (button) button.textContent = "Approve";
-    }
-  });
-</script>
 
-<script>
-  document.addEventListener("submit", async (event) => {
-    const form = event.target;
-    if (!(form instanceof HTMLFormElement) || !form.matches("[data-refresh-expenses]")) return;
-    event.preventDefault();
-    const button = form.querySelector<HTMLButtonElement>("button");
-    if (button) {
-      button.disabled = true;
-      button.textContent = "Refreshing…";
-    }
-    try {
-      await refreshExpenseWorkspace(String(new FormData(form).get("month") ?? ""));
-    } finally {
+      if (!form.matches("[data-refresh-expenses]")) return;
+      event.preventDefault();
+      const button = form.querySelector<HTMLButtonElement>("button[type='submit']");
+      form.querySelector("[role='alert']")?.remove();
       if (button) {
-        button.disabled = false;
-        button.textContent = "Refresh";
+        button.disabled = true;
+        button.textContent = "Refreshing…";
       }
-    }
-  });
+      try {
+        await refreshExpenseWorkspace(window, String(new FormData(form).get("month") ?? ""));
+      } catch {
+        showRefreshError(form, "We could not refresh expenses. Please try again.");
+      } finally {
+        if (button) {
+          button.disabled = false;
+          button.textContent = "Refresh";
+        }
+      }
+    });
+  }
 </script>

@@ -30,11 +30,7 @@ const { expenseId, month } = Astro.props;
   </form>
 </dialog>
 <script>
-  const refresh = (month: string) => {
-    const handler = (window as typeof window & { refreshExpenseWorkspace?: (value: string) => Promise<void> })
-      .refreshExpenseWorkspace;
-    return handler ? handler(month) : Promise.reject(new Error("Unable to refresh expenses"));
-  };
+  import { refreshExpenseWorkspaceOrNavigate } from "@/lib/expense-workspace-refresh";
   const showError = (form: HTMLFormElement, message: string) => {
     const error = document.createElement("p");
     error.className = "text-sm text-red-200";
@@ -73,7 +69,7 @@ const { expenseId, month } = Astro.props;
         return;
       }
       form.closest<HTMLDialogElement>("dialog")?.close();
-      await refresh(result.month);
+      await refreshExpenseWorkspaceOrNavigate(window, result.month);
     } catch {
       showError(form, "We could not delete that expense.");
     } finally {

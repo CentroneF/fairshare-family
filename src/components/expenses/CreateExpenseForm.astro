@@ -96,6 +96,8 @@ const {
 }
 
 <script>
+  import { refreshExpenseWorkspace } from "@/lib/expense-workspace-refresh";
+
   function showError(form: HTMLFormElement, message: string) {
     const existing = form?.querySelector<HTMLElement>("[role='alert']");
     if (existing) {
@@ -116,13 +118,6 @@ const {
     if (!/^\d+(?:\.\d{1,2})?$/.test(amount)) return false;
 
     return Number(amount) > 0;
-  }
-
-  function refreshExpenseWorkspace(month: string) {
-    const refresh = (window as typeof window & { refreshExpenseWorkspace?: (value: string) => Promise<void> })
-      .refreshExpenseWorkspace;
-    if (!refresh) return Promise.reject(new Error("Unable to refresh expenses"));
-    return refresh(month);
   }
 
   const createExpenseWindow = window as typeof window & { createExpenseSubmitHandlerReady?: boolean };
@@ -165,7 +160,7 @@ const {
           return;
         }
         try {
-          await refreshExpenseWorkspace(result.month);
+          await refreshExpenseWorkspace(window, result.month);
         } catch {
           window.location.assign(form.dataset.refreshFallbackRedirectTo ?? "/dashboard?success=expense-created");
           return;

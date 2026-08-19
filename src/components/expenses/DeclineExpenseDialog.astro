@@ -39,12 +39,7 @@ const { expenseId, month, previousReason = null } = Astro.props;
 </dialog>
 
 <script>
-  function refreshExpenseWorkspace(month: string) {
-    const refresh = (window as typeof window & { refreshExpenseWorkspace?: (value: string) => Promise<void> })
-      .refreshExpenseWorkspace;
-    if (!refresh) return Promise.reject(new Error("Unable to refresh expenses"));
-    return refresh(month);
-  }
+  import { refreshExpenseWorkspaceOrNavigate } from "@/lib/expense-workspace-refresh";
 
   document.addEventListener("click", (event) => {
     const target = event.target;
@@ -85,7 +80,7 @@ const { expenseId, month, previousReason = null } = Astro.props;
       }
       const dialog = form.closest<HTMLDialogElement>("dialog");
       dialog?.close();
-      await refreshExpenseWorkspace(result.month);
+      await refreshExpenseWorkspaceOrNavigate(window, result.month);
     } catch {
       const error = document.createElement("p");
       error.className = "text-sm text-red-200";
