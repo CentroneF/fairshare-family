@@ -19,6 +19,7 @@ export interface ExpenseDisplay {
   amountPln: string;
   status: "pending" | "approved" | "declined";
   payerId: string;
+  payerDisplayName: string | null;
   childId: string | null;
   childName: string | null;
   declineReason: string | null;
@@ -539,7 +540,7 @@ export async function listMonthExpenses(
   const result = await client
     .from("expenses")
     .select(
-      "id, child_id, description, expense_date, amount_pln, status, payer_id, decline_reason, previous_decline_reason, children(name), recurring_expense_occurrences(id)",
+      "id, child_id, description, expense_date, amount_pln, status, payer_id, decline_reason, previous_decline_reason, children(name), payer:family_members!expenses_payer_id_family_id_fkey(display_name), recurring_expense_occurrences(id)",
     )
     .eq("family_id", familyId)
     .gte("expense_date", start)
@@ -556,6 +557,7 @@ export function mapExpenseDisplayRows(rows: readonly unknown[]): ExpenseDisplay[
     if (typeof row !== "object" || row === null) return [];
     const value = row as Record<string, unknown>;
     const child: unknown = Array.isArray(value.children) ? value.children[0] : value.children;
+    const payer: unknown = Array.isArray(value.payer) ? value.payer[0] : value.payer;
     const occurrences = value.recurring_expense_occurrences;
     const amountPln = parseExpenseDisplayAmount(value.amount_pln);
     if (
@@ -577,6 +579,10 @@ export function mapExpenseDisplayRows(rows: readonly unknown[]): ExpenseDisplay[
         amountPln,
         status: value.status,
         payerId: value.payer_id,
+        payerDisplayName:
+          payer && typeof payer === "object" && typeof (payer as { display_name?: unknown }).display_name === "string"
+            ? (payer as { display_name: string }).display_name
+            : null,
         childId: typeof value.child_id === "string" ? value.child_id : null,
         declineReason: typeof value.decline_reason === "string" ? value.decline_reason : null,
         previousDeclineReason: typeof value.previous_decline_reason === "string" ? value.previous_decline_reason : null,

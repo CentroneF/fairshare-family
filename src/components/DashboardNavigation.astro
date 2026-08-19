@@ -1,19 +1,21 @@
 ---
 interface Props {
   userEmail: string;
+  displayName: string;
   familyName: string;
   children: readonly { id: string; name: string }[];
   reportsHref: string;
   recurringExpensesHref: string;
 }
 
-const { userEmail, familyName, children, reportsHref, recurringExpensesHref } = Astro.props;
+const { userEmail, displayName, familyName, children, reportsHref, recurringExpensesHref } = Astro.props;
 ---
 
 <aside class="hidden rounded-2xl border border-white/10 bg-white/10 p-6 backdrop-blur-xl md:block">
   <nav aria-label="Dashboard navigation" class="space-y-8">
     <div>
       <p class="text-sm text-blue-100/60">Signed in as {userEmail}</p>
+      <p class="mt-1 text-sm text-blue-100/80">{displayName}</p>
       <form method="POST" action="/api/auth/signout" class="mt-4">
         <button type="submit" class="rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/10"
           >Sign out</button
@@ -76,6 +78,7 @@ const { userEmail, familyName, children, reportsHref, recurringExpensesHref } = 
           <div>
             <h2 id="mobile-dashboard-navigation-title" class="text-xl font-semibold">Menu</h2>
             <p class="mt-1 text-sm text-blue-100/60">Signed in as {userEmail}</p>
+            <p class="mt-1 text-sm text-blue-100/80">{displayName}</p>
           </div>
           <button
             type="button"

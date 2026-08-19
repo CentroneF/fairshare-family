@@ -64,6 +64,9 @@ const canDeleteExpense = (expense: ExpenseDisplay) =>
               <p class="mt-1 text-sm text-blue-100/70">
                 {expense.expenseDate} · {expense.childName ?? "No specific child"}
               </p>
+              {expense.payerDisplayName && (
+                <p class="mt-1 text-sm text-blue-100/70">Added by {expense.payerDisplayName}</p>
+              )}
             </div>
             <div class="text-right">
               <p class="font-semibold">{expense.amountPln} PLN</p>
@@ -125,6 +128,9 @@ const canDeleteExpense = (expense: ExpenseDisplay) =>
                   <p class="mt-1 text-sm text-blue-100/70">
                     {expense.expenseDate} · {expense.childName ?? "No specific child"}
                   </p>
+                  {expense.payerDisplayName && (
+                    <p class="mt-1 text-sm text-blue-100/70">Added by {expense.payerDisplayName}</p>
+                  )}
                 </div>
                 <div class="text-right">
                   <p class="font-semibold">{expense.amountPln} PLN</p>

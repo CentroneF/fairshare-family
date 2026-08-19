@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Mail, Lock, UserPlus } from "lucide-react";
+import { Mail, Lock, User, UserPlus } from "lucide-react";
 import { FormField } from "@/components/auth/FormField";
 import { PasswordToggle } from "@/components/auth/PasswordToggle";
 import { SubmitButton } from "@/components/auth/SubmitButton";
@@ -13,11 +13,17 @@ interface Props {
 
 export default function SignUpForm({ serverError }: Props) {
   const [email, setEmail] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string; confirmPassword?: string }>({});
+  const [errors, setErrors] = useState<{
+    email?: string;
+    displayName?: string;
+    password?: string;
+    confirmPassword?: string;
+  }>({});
 
   function validate() {
     const next: typeof errors = {};
@@ -26,6 +32,10 @@ export default function SignUpForm({ serverError }: Props) {
       next.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       next.email = "Enter a valid email address";
+    }
+
+    if (displayName.trim().length < 5 || displayName.trim().length > 15) {
+      next.displayName = "Enter a display name between 5 and 15 characters";
     }
 
     if (!password) {
@@ -76,6 +86,20 @@ export default function SignUpForm({ serverError }: Props) {
         placeholder="you@example.com"
         error={errors.email}
         icon={<Mail className="size-4" />}
+      />
+
+      <FormField
+        id="displayName"
+        label="Display name"
+        value={displayName}
+        onChange={(value) => {
+          setDisplayName(value);
+          clearError("displayName");
+        }}
+        placeholder="e.g. Anna Kowalska"
+        error={errors.displayName}
+        hint={<p className="mt-1 text-xs text-blue-100/50">5–15 characters</p>}
+        icon={<User className="size-4" />}
       />
 
       <FormField

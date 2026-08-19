@@ -17,7 +17,7 @@ uses flex stretching that enlarges Decline when an approval error is appended.
 
 ## Desired End State
 
-Every parent has a required, editable 5–15-character display name. The menu
+Every parent has a required, fixed 5–15-character display name. The menu
 shows it below the email, and active and declined expense cards show the
 creator's current display name. Existing accounts are prompted for a name
 before they can use the expense workspace. On the dashboard, the current month
@@ -69,7 +69,7 @@ co-parents.
 
 ### Overview
 
-Deliver required, editable parent names and show the current name consistently
+Deliver required parent names and show the current name consistently
 in the menu and on every expense card.
 
 ### Changes Required
@@ -80,12 +80,13 @@ in the menu and on every expense card.
 `supabase/tests/family_member_display_names.test.sql`
 
 **Intent**: Add a family-scoped display name without weakening the existing RLS
-or direct-write protections.
+or direct-write protections. Existing unnamed members can complete a name once;
+set names are immutable.
 
 **Contract**: `family_members.display_name` accepts trimmed values from 5 to 15
 characters and remains nullable only for pre-existing accounts. Family creation
 and family-join RPCs accept and persist a validated name; an authenticated,
-active parent can update only their own name through a dedicated RPC. Revoke
+active parent with no saved name can complete it through a dedicated RPC. Revoke
 default public execution and grant the new RPC only to `authenticated`.
 
 #### 2. Name validation and profile-completion client contract
@@ -108,15 +109,13 @@ submission, and never performs a full-page form post.
 `src/components/family/ParentProfileForm.tsx`
 
 **Intent**: Collect a name from new users, prevent unnamed existing users from
-entering the expense workspace, and provide an editable profile control in the
-menu.
+entering the expense workspace.
 
 **Contract**: Sign-up supplies the display name to the account metadata needed
 by later family creation/join actions. Onboarding state exposes the current
 member name (or its absence). An unnamed authenticated member sees only the
 profile-completion form until successful background save; named members see the
-name beneath their email in desktop and mobile navigation and can edit it from
-there.
+name beneath their email in desktop and mobile navigation.
 
 #### 4. Creator names in workspace data and expense cards
 
@@ -147,7 +146,8 @@ payer membership display name. Render that name in both card variants; retain
 - An existing unnamed member is prompted to save a name before using expenses;
   after saving, both parents see the current creator name on active and
   declined expense cards.
-- Editing a name updates the menu and all historic card labels after refresh.
+- Once saved, a display name remains fixed while the menu and historic card labels
+  retain it after refresh.
 
 **Implementation Note**: Pause after automated verification for human
 confirmation of the profile and creator-name flow before beginning Phase 2.
@@ -269,8 +269,8 @@ the change.
 ### Database Tests
 
 - New members require valid display names through creation/join RPCs.
-- An active parent can update only their own display name; direct mutation and
-  anonymous execution remain denied.
+- An active unnamed parent can set only their own display name once; direct
+  mutation, subsequent changes, and anonymous execution remain denied.
 - Co-parent names are readable only through the existing family-scoped RLS
   boundary.
 
@@ -279,7 +279,7 @@ the change.
 1. Create a new account with a valid name, create or join a family, and verify
    the menu and expense creator labels.
 2. Sign in with an existing unnamed account, complete the required name form,
-   then edit the name and verify current labels after refresh.
+   then refresh and verify current labels remain unchanged.
 3. Check the mobile approval-error layout and labelled decline reason.
 4. Check the dashboard current-month settlement state and desktop/menu widths.
 
@@ -312,15 +312,15 @@ column and RPC in place; removal would require a separate forward migration.
 
 #### Automated
 
-- [ ] 1.1 Add display-name migration, RPCs, and database authorization tests
-- [ ] 1.2 Add display-name client validation, profile API, and unit tests
-- [ ] 1.3 Capture, complete, and edit parent names in signup and navigation
-- [ ] 1.4 Show creator names in active and declined expense cards
-- [ ] 1.5 Run database, unit, and lint verification
+- [x] 1.1 Add display-name migration, RPCs, and database authorization tests
+- [x] 1.2 Add display-name client validation, profile API, and unit tests
+- [x] 1.3 Capture and complete parent names in signup and navigation
+- [x] 1.4 Show creator names in active and declined expense cards
+- [x] 1.5 Run database, unit, and lint verification
 
 #### Manual
 
-- [ ] 1.6 Verify new and existing-user name completion, editing, and creator labels
+- [x] 1.6 Verify new and existing-user name completion, fixed names, and creator labels
 
 ### Phase 2: Stabilize expense review presentation
 

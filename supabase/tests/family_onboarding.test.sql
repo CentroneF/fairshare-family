@@ -14,13 +14,13 @@ select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000011
 select set_config('request.jwt.claim.role', 'authenticated', true);
 
 select throws_ok(
-  $$select * from public.create_family('   ')$$,
+  $$select * from public.create_family('   ', 'Ada Nowak')$$,
   'P0001',
   'Family name is required',
   'a family name is required'
 );
 
-select set_config('test.family_id', (select family_id::text from public.create_family('  Kowalski  ')), true);
+select set_config('test.family_id', (select family_id::text from public.create_family('  Kowalski  ', 'Ada Nowak')), true);
 select set_config('test.join_code', public.get_family_join_code(), true);
 
 select is(
@@ -99,7 +99,7 @@ select set_config('request.jwt.claim.sub', '20000000-0000-0000-0000-000000000011
 select set_config('request.jwt.claim.role', 'authenticated', true);
 
 select is(
-  public.confirm_family_join(current_setting('test.join_code')),
+  public.confirm_family_join(current_setting('test.join_code'), 'Beata Nowak'),
   current_setting('test.family_id')::uuid,
   'confirming a valid code joins the second parent'
 );
@@ -181,7 +181,7 @@ select throws_ok(
 reset role;
 set local role anon;
 select throws_ok(
-  $$select * from public.create_family('Anonymous Family')$$,
+  $$select * from public.create_family('Anonymous Family', 'Anonymous Name')$$,
   '42501',
   'permission denied for function create_family',
   'anonymous callers cannot create a family'

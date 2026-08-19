@@ -86,6 +86,7 @@ describe("expense balance inputs", () => {
           amount_pln: "19.99",
           status: "pending",
           payer_id: "parent-a",
+          payer: { display_name: "Ada Nowak" },
           decline_reason: null,
           previous_decline_reason: null,
           children: null,
@@ -99,6 +100,7 @@ describe("expense balance inputs", () => {
           amount_pln: "20.00",
           status: "approved",
           payer_id: "parent-b",
+          payer: { display_name: "Beata Nowak" },
           decline_reason: null,
           previous_decline_reason: null,
           children: null,
@@ -106,8 +108,8 @@ describe("expense balance inputs", () => {
         },
       ]),
     ).toMatchObject([
-      { id: "expense-a", isRecurring: true, status: "pending", amountPln: "19.99" },
-      { id: "expense-b", isRecurring: false, status: "approved", amountPln: "20.00" },
+      { id: "expense-a", isRecurring: true, status: "pending", amountPln: "19.99", payerDisplayName: "Ada Nowak" },
+      { id: "expense-b", isRecurring: false, status: "approved", amountPln: "20.00", payerDisplayName: "Beata Nowak" },
     ]);
   });
 
@@ -343,6 +345,7 @@ describe("expense balance inputs", () => {
         amountPln: "20.00",
         status: "approved" as const,
         payerId: "parent-a",
+        payerDisplayName: "Ada Nowak",
         childId: null,
         childName: null,
         declineReason: null,
