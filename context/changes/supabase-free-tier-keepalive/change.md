@@ -1,7 +1,7 @@
 ---
 change_id: supabase-free-tier-keepalive
 title: Keep the Supabase free project active
-status: planned
+status: implementing
 created: 2026-08-19
 updated: 2026-08-19
 archived_at: null

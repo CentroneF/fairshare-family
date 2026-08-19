@@ -238,12 +238,12 @@ separate forward migration after the Cron Trigger is disabled.
 
 #### Automated
 
-- [ ] 1.1 Add the no-data anonymous keep-alive RPC migration
-- [ ] 1.2 Verify the RPC and existing RLS boundaries with pgTAP
+- [x] 1.1 Add the no-data anonymous keep-alive RPC migration
+- [x] 1.2 Verify the RPC and existing RLS boundaries with pgTAP
 
 #### Manual
 
-- [ ] 1.3 Confirm the local anon RPC result exposes no application data
+- [x] 1.3 Confirm the local anon RPC result exposes no application data
 
 ### Phase 2: Schedule the Worker-owned keep-alive
 
