@@ -227,9 +227,9 @@ All schema changes are additive. Existing expenses remain one-off and unchanged.
 
 #### Automated
 
-- [x] 3.1 Register the monthly database scheduler and document the activation/recovery runbook.
-- [x] 3.2 Run `npx supabase test db` and `npm run verify`.
+- [x] 3.1 Register the monthly database scheduler and document the activation/recovery runbook. — 44139a0
+- [x] 3.2 Run `npx supabase test db` and `npm run verify`. — 44139a0
 
 #### Manual
 
-- [x] 3.3 Verify the production scheduler, retry behavior, and job history.
+- [x] 3.3 Verify the production scheduler, retry behavior, and job history. — 44139a0
