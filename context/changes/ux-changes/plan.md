@@ -257,6 +257,57 @@ submission.
 confirmation of the dashboard and desktop-navigation behavior before closing
 the change.
 
+---
+
+## Phase 4: Restore refresh and simplify navigation identity
+
+### Overview
+
+Make the expense refresh control resilient to unavailable background refresh
+handlers and simplify the navigation identity to name, email, and sign-out.
+
+### Changes Required
+
+#### 1. Refresh fallback navigation
+
+**File**: `src/components/expenses/ExpenseList.astro`
+
+**Intent**: Ensure the Refresh button always reloads the displayed expense
+month when the workspace's background refresh callback is unavailable or fails.
+
+**Contract**: The button continues to refresh in place when possible and
+navigates to the same page and month as a safe fallback. Existing refresh error
+copy is not shown for recoverable fallback navigation.
+
+#### 2. Compact navigation identity
+
+**File**: `src/components/DashboardNavigation.astro`
+
+**Intent**: Remove the redundant sign-in label and present the signed-in
+parent's identity in the requested order.
+
+**Contract**: Desktop navigation shows the display name, then the email on its
+own line, then the full-width Sign out control. The mobile drawer remains
+unchanged.
+
+### Success Criteria
+
+#### Automated Verification
+
+- `npm test` passes, including refresh fallback coverage.
+- `npm run lint` and `npm run build` pass.
+
+#### Manual Verification
+
+- Refresh reloads the current expense month; if a background refresh cannot
+  run, the page navigates to the same month instead of showing a refresh error.
+- Desktop navigation shows only name, email, and Sign out in that order; mobile
+  navigation remains usable.
+
+**Implementation Note**: Pause after automated verification for human
+confirmation of refresh fallback and navigation identity before closing the
+change.
+
 ## Testing Strategy
 
 ### Unit Tests
@@ -338,10 +389,22 @@ column and RPC in place; removal would require a separate forward migration.
 
 #### Automated
 
-- [x] 3.1 Hide the current-month settlement CTA only on the dashboard
-- [x] 3.2 Make desktop navigation controls full width
-- [x] 3.3 Run unit, lint, and production-build verification
+- [x] 3.1 Hide the current-month settlement CTA only on the dashboard — 8a162a1
+- [x] 3.2 Make desktop navigation controls full width — 8a162a1
+- [x] 3.3 Run unit, lint, and production-build verification — 8a162a1
 
 #### Manual
 
-- [x] 3.4 Verify current-month settlement, past-month behavior, and responsive navigation
+- [x] 3.4 Verify current-month settlement, past-month behavior, and responsive navigation — 8a162a1
+
+### Phase 4: Restore refresh and simplify navigation identity
+
+#### Automated
+
+- [x] 4.1 Add resilient refresh fallback navigation
+- [x] 4.2 Simplify desktop navigation identity layout
+- [x] 4.3 Run unit, lint, and production-build verification
+
+#### Manual
+
+- [x] 4.4 Verify refresh fallback and navigation identity behavior

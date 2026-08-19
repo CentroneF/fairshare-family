@@ -14,8 +14,10 @@ const { userEmail, displayName, familyName, children, reportsHref, recurringExpe
 <aside class="hidden rounded-2xl border border-white/10 bg-white/10 p-6 backdrop-blur-xl md:block">
   <nav aria-label="Dashboard navigation" class="space-y-8">
     <div>
-      <p class="text-sm text-blue-100/60">Signed in as {userEmail}</p>
-      <p class="mt-1 text-sm text-blue-100/80">{displayName}</p>
+      <div class="flex flex-wrap items-baseline gap-x-2">
+        <p class="text-sm text-blue-100/80">{displayName}</p>
+        <p class="text-sm text-blue-100/60">({userEmail})</p>
+      </div>
       <form method="POST" action="/api/auth/signout" class="mt-4 w-full">
         <button type="submit" class="w-full rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/10"
           >Sign out</button
@@ -44,12 +46,15 @@ const { userEmail, displayName, familyName, children, reportsHref, recurringExpe
     </div>
 
     <div class="space-y-3">
-      <a href={reportsHref} class="flex w-full rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/10"
+      <a
+        href={reportsHref}
+        class="flex w-full justify-center rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/10"
         >Report history</a
       >
       <a
         href={recurringExpensesHref}
-        class="flex w-full rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/10">Recurring expenses</a
+        class="flex w-full justify-center rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/10"
+        >Recurring expenses</a
       >
     </div>
   </nav>
@@ -77,8 +82,10 @@ const { userEmail, displayName, familyName, children, reportsHref, recurringExpe
         <div class="flex items-start justify-between gap-4">
           <div>
             <h2 id="mobile-dashboard-navigation-title" class="text-xl font-semibold">Menu</h2>
-            <p class="mt-1 text-sm text-blue-100/60">Signed in as {userEmail}</p>
-            <p class="mt-1 text-sm text-blue-100/80">{displayName}</p>
+            <div class="mt-1 flex flex-wrap items-baseline gap-x-2">
+              <p class="text-sm text-blue-100/80">{displayName}</p>
+              <p class="text-sm text-blue-100/60">({userEmail})</p>
+            </div>
           </div>
           <button
             type="button"
@@ -110,12 +117,15 @@ const { userEmail, displayName, familyName, children, reportsHref, recurringExpe
         </div>
 
         <div class="space-y-3 border-t border-white/10 pt-6">
-          <a href={reportsHref} class="block rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/10"
+          <a
+            href={reportsHref}
+            class="flex w-full justify-center rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/10"
             >Report history</a
           >
           <a
             href={recurringExpensesHref}
-            class="block rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/10">Recurring expenses</a
+            class="flex w-full justify-center rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/10"
+            >Recurring expenses</a
           >
           <form method="POST" action="/api/auth/signout">
             <button type="submit" class="w-full rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/10"

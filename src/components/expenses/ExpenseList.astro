@@ -157,7 +157,7 @@ const canDeleteExpense = (expense: ExpenseDisplay) =>
 </section>
 
 <script>
-  import { refreshExpenseWorkspace, refreshExpenseWorkspaceOrNavigate } from "@/lib/expense-workspace-refresh";
+  import { refreshExpenseWorkspaceOrNavigate } from "@/lib/expense-workspace-refresh";
 
   interface ApprovalResult {
     error?: string;
@@ -242,7 +242,7 @@ const canDeleteExpense = (expense: ExpenseDisplay) =>
         button.textContent = "Refreshing…";
       }
       try {
-        await refreshExpenseWorkspace(window, String(new FormData(form).get("month") ?? ""));
+        await refreshExpenseWorkspaceOrNavigate(window, String(new FormData(form).get("month") ?? ""));
       } catch {
         showRefreshError(form, "We could not refresh expenses. Please try again.");
       } finally {
