@@ -176,6 +176,23 @@ npx wrangler deploy
 
 Set `SUPABASE_URL` and `SUPABASE_KEY` as secrets in your Cloudflare dashboard or via `npx wrangler secret put`.
 
+### Supabase Free-tier keep-alive
+
+The Worker runs one no-data Supabase RPC every day at **09:00 UTC** to help keep
+the Supabase Free project active. `SUPABASE_URL` and `SUPABASE_KEY` are the
+only required Worker secrets; `SUPABASE_KEY` is the browser-safe anon key, not
+a service-role key. Never place either value in a tracked file.
+
+After a production deployment, open the Worker’s **Settings → Triggers** to
+confirm the `0 9 * * *` Cron Trigger, then inspect **Workers & Pages →
+fairshare-family → Triggers → Cron Events** after it runs. A failed event is
+the operational signal to investigate the configured secrets or Supabase
+availability. The job intentionally does not retry failed calls.
+
+This is best-effort inactivity prevention, not an availability guarantee. If
+Supabase pauses the project, resume it manually in the Supabase dashboard; a
+future Pro-plan upgrade is the path to a no-pause guarantee.
+
 ## CI
 
 GitHub Actions runs `npm run verify` (Vitest, lint, and build) for pull
