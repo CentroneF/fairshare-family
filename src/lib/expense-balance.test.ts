@@ -15,6 +15,7 @@ import {
   normalizeExpenseDate,
   normalizeExpenseId,
   normalizeSelectedMonth,
+  shouldRenderUnavailableSettlementPanel,
   validateExpenseDateInMonth,
 } from "./expense-balance";
 
@@ -242,6 +243,16 @@ describe("expense balance inputs", () => {
         currentMonth: "2026-07",
       }),
     ).toBe("declined");
+  });
+
+  it("hides the unavailable settlement presentation only for the current month", () => {
+    expect(
+      shouldRenderUnavailableSettlementPanel({ kind: "unavailable", isLocked: false, reason: "current-month" }),
+    ).toBe(false);
+    expect(shouldRenderUnavailableSettlementPanel({ kind: "unavailable", isLocked: false, reason: "pending" })).toBe(
+      true,
+    );
+    expect(shouldRenderUnavailableSettlementPanel({ kind: "eligible", isLocked: false })).toBe(false);
   });
 
   it("maps settlement failures to safe, settlement-specific feedback", () => {

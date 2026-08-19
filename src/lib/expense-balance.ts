@@ -414,6 +414,10 @@ export function getSettlementUnavailableReason(input: {
   return null;
 }
 
+export function shouldRenderUnavailableSettlementPanel(settlement: SettlementState): boolean {
+  return settlement.kind === "unavailable" && settlement.reason !== "current-month";
+}
+
 export function deriveSettlementState(input: {
   row: SettlementRow | null;
   expenses: readonly ExpenseDisplay[];

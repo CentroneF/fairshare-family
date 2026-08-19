@@ -326,22 +326,22 @@ column and RPC in place; removal would require a separate forward migration.
 
 #### Automated
 
-- [x] 2.1 Prevent review actions from stretching when approval fails
-- [x] 2.2 Label decline reasons in declined expense cards
-- [x] 2.3 Run unit and lint verification
+- [x] 2.1 Prevent review actions from stretching when approval fails — 50bdcbb
+- [x] 2.2 Label decline reasons in declined expense cards — 50bdcbb
+- [x] 2.3 Run unit and lint verification — 50bdcbb
 
 #### Manual
 
-- [x] 2.4 Verify mobile approval-error layout and decline-reason clarity
+- [x] 2.4 Verify mobile approval-error layout and decline-reason clarity — 50bdcbb
 
 ### Phase 3: Clarify dashboard settlement and navigation actions
 
 #### Automated
 
-- [ ] 3.1 Hide the current-month settlement CTA only on the dashboard
-- [ ] 3.2 Make desktop navigation controls full width
-- [ ] 3.3 Run unit, lint, and production-build verification
+- [x] 3.1 Hide the current-month settlement CTA only on the dashboard
+- [x] 3.2 Make desktop navigation controls full width
+- [x] 3.3 Run unit, lint, and production-build verification
 
 #### Manual
 
-- [ ] 3.4 Verify current-month settlement, past-month behavior, and responsive navigation
+- [x] 3.4 Verify current-month settlement, past-month behavior, and responsive navigation

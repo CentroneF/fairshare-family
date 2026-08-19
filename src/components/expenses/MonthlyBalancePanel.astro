@@ -1,6 +1,6 @@
 ---
 import type { MonthlyBalance } from "@/lib/financial-rules";
-import type { SettlementState } from "@/lib/expense-balance";
+import { shouldRenderUnavailableSettlementPanel, type SettlementState } from "@/lib/expense-balance";
 import SettlementConfirmationDialog from "@/components/expenses/SettlementConfirmationDialog.astro";
 
 interface Props {
@@ -29,6 +29,7 @@ const unavailableSettlementMessage =
         pending: "Approve or decline every expense before settlement.",
         declined: "A declined expense must be edited and re-approved or deleted before settlement.",
       }[settlement.reason];
+const rendersUnavailableSettlementPanel = shouldRenderUnavailableSettlementPanel(settlement);
 ---
 
 <section
@@ -71,7 +72,7 @@ const unavailableSettlementMessage =
     )
   }
   {
-    settlement.kind === "unavailable" ? (
+    rendersUnavailableSettlementPanel ? (
       <div class="mt-5 border-t border-white/10 pt-4">
         <button
           type="button"
