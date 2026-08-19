@@ -73,7 +73,7 @@ const canDeleteExpense = (expense: ExpenseDisplay) =>
               {expense.status === "approved" ? (
                 <p class="mt-1 text-sm text-emerald-200">Approved</p>
               ) : canReviewExpense(expense) ? (
-                <div class="mt-2 flex justify-end gap-2">
+                <div data-review-actions class="mt-2 grid grid-cols-2 items-start justify-end gap-2">
                   <form data-approve-expense method="POST" action="/api/expenses/approve">
                     <input type="hidden" name="expenseId" value={expense.id} />
                     <input type="hidden" name="month" value={month} />
@@ -135,7 +135,11 @@ const canDeleteExpense = (expense: ExpenseDisplay) =>
                 <div class="text-right">
                   <p class="font-semibold">{expense.amountPln} PLN</p>
                   <p class="mt-1 text-sm text-red-200">Declined</p>
-                  {expense.declineReason && <p class="mt-1 text-sm text-red-100/80">{expense.declineReason}</p>}
+                  {expense.declineReason && (
+                    <p class="mt-1 text-sm text-red-100/80">
+                      <span class="font-medium text-red-100">Decline reason:</span> {expense.declineReason}
+                    </p>
+                  )}
                   {canEditExpense(expense) && (
                     <div class="mt-2 flex justify-end gap-2">
                       <EditExpenseDialog expense={expense} children={children} month={month} maxDate={maxDate} />
@@ -161,17 +165,22 @@ const canDeleteExpense = (expense: ExpenseDisplay) =>
     month?: string;
   }
 
+  function getApprovalErrorContainer(form: HTMLFormElement) {
+    return form.closest<HTMLElement>("[data-review-actions]") ?? form;
+  }
+
   function showApprovalError(form: HTMLFormElement, message: string) {
-    const existing = form.querySelector<HTMLElement>("[role='alert']");
+    const container = getApprovalErrorContainer(form);
+    const existing = container.querySelector<HTMLElement>("[role='alert']");
     if (existing) {
       existing.textContent = message;
       return;
     }
     const error = document.createElement("p");
-    error.className = "mt-2 text-right text-sm text-red-200";
+    error.className = "col-span-full text-right text-sm text-red-200";
     error.setAttribute("role", "alert");
     error.textContent = message;
-    form.append(error);
+    container.append(error);
   }
 
   function showRefreshError(form: HTMLFormElement, message: string) {
@@ -201,7 +210,7 @@ const canDeleteExpense = (expense: ExpenseDisplay) =>
         const data = new FormData(form);
         button?.setAttribute("disabled", "true");
         if (button) button.textContent = "Approving…";
-        form.querySelector("[role='alert']")?.remove();
+        getApprovalErrorContainer(form).querySelector("[role='alert']")?.remove();
 
         try {
           const response = await fetch(form.action, {

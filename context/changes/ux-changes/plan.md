@@ -312,27 +312,27 @@ column and RPC in place; removal would require a separate forward migration.
 
 #### Automated
 
-- [x] 1.1 Add display-name migration, RPCs, and database authorization tests
-- [x] 1.2 Add display-name client validation, profile API, and unit tests
-- [x] 1.3 Capture and complete parent names in signup and navigation
-- [x] 1.4 Show creator names in active and declined expense cards
-- [x] 1.5 Run database, unit, and lint verification
+- [x] 1.1 Add display-name migration, RPCs, and database authorization tests — f47670e
+- [x] 1.2 Add display-name client validation, profile API, and unit tests — f47670e
+- [x] 1.3 Capture and complete parent names in signup and navigation — f47670e
+- [x] 1.4 Show creator names in active and declined expense cards — f47670e
+- [x] 1.5 Run database, unit, and lint verification — f47670e
 
 #### Manual
 
-- [x] 1.6 Verify new and existing-user name completion, fixed names, and creator labels
+- [x] 1.6 Verify new and existing-user name completion, fixed names, and creator labels — f47670e
 
 ### Phase 2: Stabilize expense review presentation
 
 #### Automated
 
-- [ ] 2.1 Prevent review actions from stretching when approval fails
-- [ ] 2.2 Label decline reasons in declined expense cards
-- [ ] 2.3 Run unit and lint verification
+- [x] 2.1 Prevent review actions from stretching when approval fails
+- [x] 2.2 Label decline reasons in declined expense cards
+- [x] 2.3 Run unit and lint verification
 
 #### Manual
 
-- [ ] 2.4 Verify mobile approval-error layout and decline-reason clarity
+- [x] 2.4 Verify mobile approval-error layout and decline-reason clarity
 
 ### Phase 3: Clarify dashboard settlement and navigation actions
 
