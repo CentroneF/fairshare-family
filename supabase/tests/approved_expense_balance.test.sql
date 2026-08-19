@@ -1,6 +1,6 @@
 begin;
 
-select plan(155);
+select plan(156);
 
 insert into auth.users (id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values
@@ -816,6 +816,17 @@ select ok(
 select is(
   (select count(*)::text from public.expenses where family_id = '55000000-0000-0000-0000-000000000001' and description = 'Locked generated subscription'),
   '0', 'a locked family receives no generated expense'
+);
+select ok(
+  exists (
+    select 1
+    from cron.job
+    where jobname = 'materialize-current-month-recurring-expenses'
+      and schedule = '0 0 1 * *'
+      and command = 'select public.materialize_current_month_recurring_expenses()'
+      and active
+  ),
+  'the monthly recurring-expense materialization scheduler is registered'
 );
 
 select * from finish();
