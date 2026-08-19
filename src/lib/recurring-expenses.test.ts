@@ -46,4 +46,16 @@ describe("recurring expense inputs", () => {
       "Only the paying parent can manage this recurring expense.",
     );
   });
+
+  it("keeps a revision's start month valid when it is scheduled for the next month", () => {
+    expect(
+      normalizeRecurringExpenseInput({
+        childId: null,
+        description: "Music",
+        amount: "45",
+        startDate: "2026-09",
+        endDate: null,
+      }).startDate,
+    ).toBe("2026-09-01");
+  });
 });

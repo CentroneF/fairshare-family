@@ -61,11 +61,11 @@ Let a parent safely configure and manage their future first-of-month schedules f
 
 #### 2. Authenticated template API and dashboard management UI
 
-**Files**: new recurrence helper/module under `src/lib/`; new API routes under `src/pages/api/recurring-expenses/`; new Astro components under `src/components/expenses/`; `src/components/expenses/ExpenseWorkspace.astro`
+**Files**: new recurrence helper/module under `src/lib/`; new API routes under `src/pages/api/recurring-expenses/`; new Astro components under `src/components/expenses/`; `src/pages/recurring-expenses.astro`; dashboard navigation wiring
 
 **Intent**: Give parents a direct in-app way to configure, review, and manage only their own future schedules.
 
-**Contract**: Use request-scoped Supabase access and the established JSON/form error and workspace-refresh patterns. The dashboard adds a “Recurring expenses” section with a form for description, child/N/A, amount, start date, and either a specific end date or “until manually cancelled.” It identifies the payer’s templates, date range, and paused/stopped state without exposing management controls to the other parent. Existing one-off expense form and API behavior remain unchanged.
+**Contract**: Use request-scoped Supabase access and the established JSON/form error and workspace-refresh patterns. The dashboard links to a dedicated “Recurring expenses” management page with a form for description, child/N/A, amount, start date, and either a specific end date or “until manually cancelled.” It identifies the payer’s templates, date range, and paused/stopped state without exposing management controls to the other parent. Existing one-off expense form and API behavior remain unchanged.
 
 ### Success Criteria:
 
@@ -203,13 +203,13 @@ All schema changes are additive. Existing expenses remain one-off and unchanged.
 
 #### Automated
 
-- [x] 1.1 Add the recurring-template schema, parent-owned commands, and database authorization tests.
-- [x] 1.2 Add authenticated template APIs, helper mapping, and dashboard management UI.
-- [x] 1.3 Run focused recurrence checks, `npx supabase test db`, and `npm run verify`.
+- [x] 1.1 Add the recurring-template schema, parent-owned commands, and database authorization tests. — 3624396
+- [x] 1.2 Add authenticated template APIs, helper mapping, and dashboard management UI. — 3624396
+- [x] 1.3 Run focused recurrence checks, `npx supabase test db`, and `npm run verify`. — 3624396
 
 #### Manual
 
-- [x] 1.4 Verify template ownership and future-only dashboard management in a browser.
+- [x] 1.4 Verify template ownership and future-only dashboard management in a browser. — 3624396
 
 ### Phase 2: Idempotent recurring occurrence generation
 

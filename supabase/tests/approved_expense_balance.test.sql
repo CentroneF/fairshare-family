@@ -1,6 +1,6 @@
 begin;
 
-select plan(136);
+select plan(141);
 
 insert into auth.users (id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values
@@ -696,19 +696,45 @@ select lives_ok(
 select is((select is_active::text from public.recurring_expenses where description = 'Music lessons'), 'false', 'pause preserves the template and marks it inactive');
 select lives_ok(
   $$select public.update_recurring_expense((select id from public.recurring_expenses where description = 'Music lessons'), null, 'Updated music lessons', 46.00, current_date, null)$$,
-  'the payer can edit a current-month recurring template'
+  'the payer schedules a recurring template edit for the following month'
+);
+select is(
+  (select description || ':' || amount_pln::text from public.recurring_expenses where description = 'Music lessons'),
+  'Music lessons:45.50', 'editing preserves the current template version'
+);
+select is(
+  (select description || ':' || amount_pln::text || ':' || effective_from::text
+    from public.recurring_expense_revisions
+    where recurring_expense_id = (select id from public.recurring_expenses where description = 'Music lessons')),
+  'Updated music lessons:46.00:' || (date_trunc('month', current_date) + interval '1 month')::date::text,
+  'editing creates the replacement version for the following month'
+);
+select is(
+  (select start_date::text from public.recurring_expense_revisions
+    where recurring_expense_id = (select id from public.recurring_expenses where description = 'Music lessons')),
+  (date_trunc('month', current_date) + interval '1 month')::date::text,
+  'a revision cannot become eligible during the current month'
 );
 select lives_ok(
-  $$select public.set_recurring_expense_active((select id from public.recurring_expenses where description = 'Updated music lessons'), true)$$,
+  $$select public.set_recurring_expense_active((select id from public.recurring_expenses where description = 'Music lessons'), true)$$,
   'the payer can resume a recurring expense'
 );
 select lives_ok(
-  $$select public.archive_recurring_expense((select id from public.recurring_expenses where description = 'Updated music lessons'))$$,
+  $$select public.archive_recurring_expense((select id from public.recurring_expenses where description = 'Music lessons'))$$,
   'the payer can stop a recurring expense'
 );
 select throws_ok(
-  $$select public.set_recurring_expense_active((select id from public.recurring_expenses where description = 'Updated music lessons'), true)$$,
+  $$select public.set_recurring_expense_active((select id from public.recurring_expenses where description = 'Music lessons'), true)$$,
   'P0001', 'Stopped recurring expenses cannot be resumed', 'stopped recurring expenses remain archived'
+);
+select throws_ok(
+  $$select public.update_recurring_expense((select id from public.recurring_expenses where description = 'Music lessons'), null, 'Stopped mutation', 99.00, current_date, null)$$,
+  'P0001', 'Stopped recurring expenses cannot be edited', 'a stopped recurring expense cannot be edited'
+);
+select is(
+  (select count(*)::text from public.recurring_expense_revisions
+    where recurring_expense_id = (select id from public.recurring_expenses where description = 'Music lessons')),
+  '1', 'a rejected stopped-template update leaves its scheduled revision unchanged'
 );
 
 select * from finish();

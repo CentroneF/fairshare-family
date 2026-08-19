@@ -154,6 +154,11 @@ const currentMonth = today.slice(0, 7);
               <p class="mt-1 text-sm text-purple-200">
                 {expense.isArchived ? "Stopped" : expense.isActive ? "Active" : "Paused"}
               </p>
+              {expense.pendingChangeEffectiveFrom && (
+                <p class="mt-1 text-sm text-purple-200">
+                  Changes scheduled from {expense.pendingChangeEffectiveFrom.slice(0, 7)}
+                </p>
+              )}
             </div>
             {!expense.isArchived && (
               <div class="flex flex-wrap gap-2">
@@ -265,6 +270,11 @@ const currentMonth = today.slice(0, 7);
             <p class="mt-1 text-sm text-blue-100/60">
               Managed by the paying parent · {expense.isArchived ? "Stopped" : expense.isActive ? "Active" : "Paused"}
             </p>
+            {expense.pendingChangeEffectiveFrom && (
+              <p class="mt-1 text-sm text-purple-200">
+                Changes scheduled from {expense.pendingChangeEffectiveFrom.slice(0, 7)}
+              </p>
+            )}
           </>
         </article>
       ))

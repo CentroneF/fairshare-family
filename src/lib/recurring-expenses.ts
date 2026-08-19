@@ -14,6 +14,7 @@ export interface RecurringExpenseDisplay {
   endDate: string | null;
   isActive: boolean;
   isArchived: boolean;
+  pendingChangeEffectiveFrom: string | null;
 }
 
 function normalizeRecurringMonth(value: string, label: "start" | "end"): string {
@@ -117,15 +118,29 @@ export async function listRecurringExpenses(
   const { data, error } = (await client
     .from("recurring_expenses")
     .select(
-      "id, payer_id, child_id, description, amount_pln, start_date, end_date, is_active, archived_at, children(name)",
+      "id, payer_id, child_id, description, amount_pln, start_date, end_date, is_active, archived_at, children(name), recurring_expense_revisions(effective_from)",
     )
     .eq("family_id", familyId)
     .order("created_at", { ascending: false })) as { data: unknown; error: unknown };
   if (error || !Array.isArray(data)) throw new ExpenseBalanceError("We could not load recurring expenses.");
+  const currentMonth = new Date().toISOString().slice(0, 7) + "-01";
   return data.flatMap((row: unknown) => {
     const value = row as Record<string, unknown>;
     const { children: childrenValue }: { children?: unknown } = value;
     const child: unknown = Array.isArray(childrenValue) ? childrenValue[0] : childrenValue;
+    const revisions = Array.isArray(value.recurring_expense_revisions)
+      ? value.recurring_expense_revisions
+          .flatMap((revision) => {
+            const effectiveFrom =
+              revision &&
+              typeof revision === "object" &&
+              typeof (revision as { effective_from?: unknown }).effective_from === "string"
+                ? (revision as { effective_from: string }).effective_from
+                : null;
+            return effectiveFrom && effectiveFrom > currentMonth ? [effectiveFrom] : [];
+          })
+          .sort()
+      : [];
     if (
       typeof value.id !== "string" ||
       typeof value.payer_id !== "string" ||
@@ -153,6 +168,7 @@ export async function listRecurringExpenses(
           endDate: typeof value.end_date === "string" ? value.end_date : null,
           isActive: value.is_active,
           isArchived: value.archived_at !== null,
+          pendingChangeEffectiveFrom: revisions[0] ?? null,
         },
       ];
     } catch {
