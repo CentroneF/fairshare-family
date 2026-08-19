@@ -215,13 +215,13 @@ All schema changes are additive. Existing expenses remain one-off and unchanged.
 
 #### Automated
 
-- [ ] 2.1 Add the occurrence ledger and idempotent current-month materialization routine with database tests.
-- [ ] 2.2 Display recurring provenance in the existing expense list with focused mapping tests.
-- [ ] 2.3 Run focused recurrence checks, `npx supabase test db`, and `npm run verify`.
+- [x] 2.1 Add the occurrence ledger and idempotent current-month materialization routine with database tests.
+- [x] 2.2 Display recurring provenance in the existing expense list with focused mapping tests.
+- [x] 2.3 Run focused recurrence checks, `npx supabase test db`, and `npm run verify`.
 
 #### Manual
 
-- [ ] 2.4 Verify generated pending expense approval, retry safety, and locked-month skips.
+- [x] 2.4 Verify generated pending expense approval, retry safety, and locked-month skips.
 
 ### Phase 3: Monthly scheduler activation and operations handoff
 

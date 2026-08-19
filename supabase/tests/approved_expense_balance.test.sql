@@ -1,6 +1,6 @@
 begin;
 
-select plan(141);
+select plan(155);
 
 insert into auth.users (id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values
@@ -735,6 +735,87 @@ select is(
   (select count(*)::text from public.recurring_expense_revisions
     where recurring_expense_id = (select id from public.recurring_expenses where description = 'Music lessons')),
   '1', 'a rejected stopped-template update leaves its scheduled revision unchanged'
+);
+
+select lives_ok(
+  $$select public.create_recurring_expense(null, 'Generated subscription', 19.99, current_date, null)$$,
+  'a parent creates an eligible template for materialization'
+);
+set local role postgres;
+select lives_ok(
+  $$select public.materialize_current_month_recurring_expenses()$$,
+  'the database materializes eligible current-month recurring expenses'
+);
+select is(
+  (select count(*)::text from public.recurring_expense_occurrences
+    where recurring_expense_id = (select id from public.recurring_expenses where description = 'Generated subscription')
+      and occurrence_month = date_trunc('month', current_date)::date),
+  '1', 'an eligible template receives exactly one current-month occurrence'
+);
+select is(
+  (select outcome::text from public.recurring_expense_occurrences
+    where recurring_expense_id = (select id from public.recurring_expenses where description = 'Generated subscription')
+      and occurrence_month = date_trunc('month', current_date)::date),
+  'created', 'the eligible occurrence records its created outcome'
+);
+select is(
+  (select status::text from public.expenses where id = (
+    select expense_id from public.recurring_expense_occurrences
+    where recurring_expense_id = (select id from public.recurring_expenses where description = 'Generated subscription')
+      and occurrence_month = date_trunc('month', current_date)::date
+  )),
+  'pending', 'a materialized expense enters the normal pending lifecycle'
+);
+select lives_ok(
+  $$select public.materialize_current_month_recurring_expenses()$$,
+  'rerunning materialization is safe'
+);
+select is(
+  (select count(*)::text from public.recurring_expense_occurrences
+    where recurring_expense_id = (select id from public.recurring_expenses where description = 'Generated subscription')
+      and occurrence_month = date_trunc('month', current_date)::date),
+  '1', 'rerunning materialization does not duplicate an occurrence'
+);
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '51000000-0000-0000-0000-000000000001', true);
+select throws_ok(
+  $$select public.approve_expense((select expense_id from public.recurring_expense_occurrences where recurring_expense_id = (select id from public.recurring_expenses where description = 'Generated subscription')))$$,
+  'P0001', 'Only the other parent can approve an expense', 'the generated expense payer cannot approve it'
+);
+select set_config('request.jwt.claim.sub', '52000000-0000-0000-0000-000000000001', true);
+select lives_ok(
+  $$select public.approve_expense((select expense_id from public.recurring_expense_occurrences where recurring_expense_id = (select id from public.recurring_expenses where description = 'Generated subscription')))$$,
+  'the other parent can approve a generated expense'
+);
+select is(
+  (select reviewed_by from public.expenses where id = (
+    select expense_id from public.recurring_expense_occurrences
+    where recurring_expense_id = (select id from public.recurring_expenses where description = 'Generated subscription')
+  )),
+  '54200000-0000-0000-0000-000000000001'::uuid, 'generated approval records the other parent'
+);
+set local role postgres;
+insert into public.monthly_settlements (family_id, report_month, first_confirmed_by, first_confirmed_at)
+values ('55000000-0000-0000-0000-000000000001', date_trunc('month', current_date)::date, '55100000-0000-0000-0000-000000000001', now());
+insert into public.recurring_expenses (family_id, payer_id, description, amount_pln, start_date)
+values ('55000000-0000-0000-0000-000000000001', '55100000-0000-0000-0000-000000000001', 'Locked generated subscription', 7.00, current_date);
+select lives_ok(
+  $$select public.materialize_current_month_recurring_expenses()$$,
+  'materialization handles locked-family templates without creating expenses'
+);
+select is(
+  (select outcome::text from public.recurring_expense_occurrences
+    where recurring_expense_id = (select id from public.recurring_expenses where description = 'Locked generated subscription')),
+  'skipped_locked', 'a confirmation-locked month records an auditable skip'
+);
+select ok(
+  (select expense_id is null from public.recurring_expense_occurrences
+    where recurring_expense_id = (select id from public.recurring_expenses where description = 'Locked generated subscription')),
+  'a skipped locked occurrence has no expense'
+);
+select is(
+  (select count(*)::text from public.expenses where family_id = '55000000-0000-0000-0000-000000000001' and description = 'Locked generated subscription'),
+  '0', 'a locked family receives no generated expense'
 );
 
 select * from finish();

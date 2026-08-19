@@ -8,6 +8,7 @@ import {
   isAccessibleHistoricalReportMonth,
   mapMonthlyReportHistoryRows,
   mapExpenseError,
+  mapExpenseDisplayRows,
   mapSettlementError,
   normalizeExpenseAmount,
   normalizeDeclineReason,
@@ -72,6 +73,42 @@ describe("expense balance inputs", () => {
     expect(mapExpenseError({ message: "Expenses in a settled month cannot be updated" })).toBe(
       "Expenses in a confirmation-locked or settled month cannot be changed.",
     );
+  });
+
+  it("maps recurrence provenance without changing normal expense fields", () => {
+    expect(
+      mapExpenseDisplayRows([
+        {
+          id: "expense-a",
+          child_id: null,
+          description: "Subscription",
+          expense_date: "2026-07-01",
+          amount_pln: "19.99",
+          status: "pending",
+          payer_id: "parent-a",
+          decline_reason: null,
+          previous_decline_reason: null,
+          children: null,
+          recurring_expense_occurrences: [{ id: "occurrence-a" }],
+        },
+        {
+          id: "expense-b",
+          child_id: null,
+          description: "One-off",
+          expense_date: "2026-07-02",
+          amount_pln: "20.00",
+          status: "approved",
+          payer_id: "parent-b",
+          decline_reason: null,
+          previous_decline_reason: null,
+          children: null,
+          recurring_expense_occurrences: [],
+        },
+      ]),
+    ).toMatchObject([
+      { id: "expense-a", isRecurring: true, status: "pending", amountPln: "19.99" },
+      { id: "expense-b", isRecurring: false, status: "approved", amountPln: "20.00" },
+    ]);
   });
 
   it("requires a concise decline reason", () => {
@@ -310,6 +347,7 @@ describe("expense balance inputs", () => {
         childName: null,
         declineReason: null,
         previousDeclineReason: null,
+        isRecurring: false,
       },
     ];
     const balance = {
