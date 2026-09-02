@@ -1,16 +1,24 @@
 ---
 import type { MonthlyBalance } from "@/lib/financial-rules";
-import { shouldRenderUnavailableSettlementPanel, type SettlementState } from "@/lib/expense-balance";
+import {
+  getCurrentMonthContributionRows,
+  shouldRenderUnavailableSettlementPanel,
+  type SettlementState,
+} from "@/lib/expense-balance";
+import type { ActiveParent } from "@/lib/financial-service";
 import SettlementConfirmationDialog from "@/components/expenses/SettlementConfirmationDialog.astro";
 
 interface Props {
   balance: MonthlyBalance;
+  activeParents: readonly ActiveParent[];
   currentMembershipId: string;
+  currentMonth: string;
   month: string;
   settlement: SettlementState;
 }
 
-const { balance, currentMembershipId, month, settlement } = Astro.props;
+const { activeParents, balance, currentMembershipId, currentMonth, month, settlement } = Astro.props;
+const contributionRows = getCurrentMonthContributionRows({ activeParents, balance, month, currentMonth });
 const hasPendingExpenses = balance.toReviewAmount.greaterThan(0);
 const settlementMessage =
   balance.settlement.kind === "balanced"
@@ -60,6 +68,23 @@ const rendersUnavailableSettlementPanel = shouldRenderUnavailableSettlementPanel
       <p data-balance-to-review class="font-semibold">{balance.toReviewAmount.toFixed(2)} PLN</p>
     </div>
   </div>
+  {
+    contributionRows.length > 0 && (
+      <div data-current-month-contributions class="mt-4 border-t border-white/10 pt-4">
+        <p class="text-sm text-blue-100/70">Approved contributions</p>
+        <dl class="mt-2 space-y-1 text-sm">
+          {contributionRows.map((contribution) => (
+            <div class="flex justify-between gap-4">
+              <dt>{contribution.displayName}</dt>
+              <dd data-contribution-parent-id={contribution.parentId} class="font-semibold">
+                {contribution.amountPln} PLN
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    )
+  }
   {
     hasPendingExpenses ? (
       <p data-balance-guidance class="mt-4 text-sm text-amber-100/80">

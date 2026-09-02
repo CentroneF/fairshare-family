@@ -4,6 +4,7 @@ import {
   createSupabaseFinancialRepository,
   loadMonthlyBalance,
   sumApprovedExpenseAmounts,
+  type ActiveParent,
   type FinancialExpenseRow,
 } from "./financial-service";
 import { isSettlementEligible, parsePlnAmount, type MonthlyBalance } from "./financial-rules";
@@ -29,6 +30,7 @@ export interface ExpenseDisplay {
 
 export interface ExpenseWorkspaceState {
   expenses: readonly ExpenseDisplay[];
+  activeParents: readonly ActiveParent[];
   currentMembershipId: string | null;
   balance: MonthlyBalance | null;
   settlement: SettlementState;
@@ -50,6 +52,12 @@ export type SettlementState =
     };
 
 export type SettlementUnavailableReason = "current-month" | "one-parent" | "no-expenses" | "pending" | "declined";
+
+export interface CurrentMonthContributionRow {
+  parentId: string;
+  displayName: string;
+  amountPln: string;
+}
 
 export interface MonthlyReportHistoryEntry {
   month: string;
@@ -418,6 +426,20 @@ export function shouldRenderUnavailableSettlementPanel(settlement: SettlementSta
   return settlement.kind === "unavailable" && settlement.reason !== "current-month";
 }
 
+export function getCurrentMonthContributionRows(input: {
+  activeParents: readonly ActiveParent[];
+  balance: MonthlyBalance | null;
+  month: string;
+  currentMonth: string;
+}): CurrentMonthContributionRow[] {
+  if (input.month !== input.currentMonth || input.balance === null || input.activeParents.length !== 2) return [];
+  return input.activeParents.map((parent) => ({
+    parentId: parent.id,
+    displayName: parent.displayName ?? "Parent",
+    amountPln: (input.balance.contributions.get(parent.id) ?? new Decimal(0)).toFixed(2),
+  }));
+}
+
 export function deriveSettlementState(input: {
   row: SettlementRow | null;
   expenses: readonly ExpenseDisplay[];
@@ -503,29 +525,31 @@ export async function loadExpenseWorkspaceState(
   input: { familyId: string; userId: string; month: string },
 ): Promise<ExpenseWorkspaceState> {
   const repository = createSupabaseFinancialRepository(client);
-  const [expenses, parentIds, currentMembershipId, settlementRow] = await Promise.all([
+  const [expenses, activeParents, currentMembershipId, settlementRow] = await Promise.all([
     listMonthExpenses(client, input.familyId, input.month),
-    repository.listActiveParentIds(input.familyId, input.userId),
+    repository.listActiveParents(input.familyId, input.userId),
     loadCurrentMembershipId(client, input.familyId, input.userId),
     loadSettlementRow(client, input.familyId, input.month),
   ]);
   const balance =
-    parentIds.length === 2
+    activeParents.length === 2
       ? await loadMonthlyBalance({
           repository,
           familyId: input.familyId,
           userId: input.userId,
           month: input.month,
+          activeParents,
         })
       : null;
   return {
     expenses,
+    activeParents,
     currentMembershipId,
     balance,
     settlement: deriveSettlementState({
       row: settlementRow,
       expenses,
-      parentIds,
+      parentIds: activeParents.map((parent) => parent.id),
       currentMembershipId,
       balance,
       month: input.month,

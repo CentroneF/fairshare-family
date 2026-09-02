@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { canReviewExpense, deriveMonthlyBalance, isSettlementEligible, parsePlnAmount } from "./financial-rules";
-import { mapFinancialExpense } from "./financial-service";
+import { mapActiveParents, mapFinancialExpense } from "./financial-service";
 
 const parents = ["parent-a", "parent-b"] as const;
 
@@ -28,6 +28,8 @@ describe("financial rules", () => {
     expect(balance.totalAmount.toString()).toBe("12.5");
     expect(balance.approvedAmount.toString()).toBe("10");
     expect(balance.toReviewAmount.toString()).toBe("2.5");
+    expect(balance.contributions.get("parent-a")?.toFixed(2)).toBe("10.00");
+    expect(balance.contributions.get("parent-b")?.toFixed(2)).toBe("0.00");
   });
 
   it.each([
@@ -77,6 +79,19 @@ describe("financial rules", () => {
     expect(mapFinancialExpense({ amount_pln: "10.10", payer_id: "parent-a", status: "approved" }).amountPln).toBe(
       "10.10",
     );
+  });
+
+  it("maps ordered active parents with their display names", () => {
+    expect(
+      mapActiveParents([
+        { id: "parent-a", display_name: "Ada Nowak" },
+        { id: "parent-b", display_name: "Beata Nowak" },
+        { id: 42, display_name: "Ignored" },
+      ]),
+    ).toEqual([
+      { id: "parent-a", displayName: "Ada Nowak" },
+      { id: "parent-b", displayName: "Beata Nowak" },
+    ]);
   });
 
   it("requires the other active parent for review and a past fully-approved month for settlement", () => {
