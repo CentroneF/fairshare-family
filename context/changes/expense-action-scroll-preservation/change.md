@@ -1,7 +1,7 @@
 ---
 change_id: expense-action-scroll-preservation
 title: Preserve scroll after expense actions
-status: planned
+status: implementing
 created: 2026-09-02
 updated: 2026-09-02
 archived_at: null

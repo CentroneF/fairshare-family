@@ -30,8 +30,14 @@ const { expenseId, month } = Astro.props;
   </form>
 </dialog>
 <script>
-  import { refreshExpenseWorkspaceOrNavigate } from "@/lib/expense-workspace-refresh";
+  import { setExpenseRefreshing } from "@/lib/expense-refresh-indicator";
+  import { refreshExpenseWorkspace } from "@/lib/expense-workspace-refresh";
   const showError = (form: HTMLFormElement, message: string) => {
+    const existing = form.querySelector<HTMLElement>("[role='alert']");
+    if (existing) {
+      existing.textContent = message;
+      return;
+    }
     const error = document.createElement("p");
     error.className = "text-sm text-red-200";
     error.setAttribute("role", "alert");
@@ -57,6 +63,10 @@ const { expenseId, month } = Astro.props;
     event.preventDefault();
     const button = form.querySelector<HTMLButtonElement>("button[type='submit']");
     button?.setAttribute("disabled", "true");
+    if (button) button.textContent = "Deleting…";
+    form.querySelector("[role='alert']")?.remove();
+    setExpenseRefreshing(form, true);
+    let deletionSaved = false;
     try {
       const response = await fetch(form.action, {
         method: "POST",
@@ -68,12 +78,20 @@ const { expenseId, month } = Astro.props;
         showError(form, result.error ?? "We could not delete that expense.");
         return;
       }
+      deletionSaved = true;
+      await refreshExpenseWorkspace(window, result.month);
       form.closest<HTMLDialogElement>("dialog")?.close();
-      await refreshExpenseWorkspaceOrNavigate(window, result.month);
     } catch {
-      showError(form, "We could not delete that expense.");
+      showError(
+        form,
+        deletionSaved
+          ? "The expense was deleted, but the view could not refresh. Please reload the page."
+          : "We could not delete that expense.",
+      );
     } finally {
+      setExpenseRefreshing(form, false);
       button?.removeAttribute("disabled");
+      if (button) button.textContent = "Delete";
     }
   });
 </script>
