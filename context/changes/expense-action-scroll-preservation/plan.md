@@ -2,83 +2,84 @@
 
 ## Overview
 
-Keep expense actions in the current document when their server mutation succeeds but the workspace fragment refresh fails. Users retain their scroll position, receive clear recovery feedback, and see a refresh indicator on the expense being updated.
+Keep expense actions in the current document while restoring the workspace refresh runtime that is currently failing before it starts. Users retain their scroll position, see an affected-item refresh indicator, and receive truthful stale-view feedback only for genuine refresh failures.
 
 ## Current State Analysis
 
-Approval, decline, deletion, and manual refresh submit through background JSON requests. They then call `refreshExpenseWorkspaceOrNavigate()`, whose recovery path performs `location.assign(...)` for every refresh error. That document navigation loses scroll position. Creation has a separate in-workspace fallback with the same issue; edit and settlement already call the throwing primitive but do not share a uniform stale-view contract.
+The shared refresh helper previously caught every rejection and navigated with `location.assign(...)`, which lost the scroll position. That fallback concealed a deeper issue: `ExpenseWorkspace.astro` uses `define:vars` for a raw inline script containing TypeScript syntax. Production output therefore contains invalid browser JavaScript, so the script never registers `window.refreshExpenseWorkspace` or its edit and settlement handlers. Every action that calls the helper consequently rejects before issuing the refresh GET.
 
 ## Desired End State
 
-Every in-workspace mutation keeps the current document and scroll position, even when its balance/list fragment refresh fails. The affected expense card shows a brief accessible refresh indicator while its action is pending; on a refresh failure, its action becomes usable again and an accessible message accurately states that the action was saved but the view could not refresh. Intentional mobile creation navigation remains unchanged.
+Expense workspace client code is valid and initialized on dashboard and report pages. Successful in-workspace actions replace balance and list fragments without navigation and preserve the current scroll position. The affected expense card visibly refreshes while its action is pending; only a real fetch, parsing, or fragment replacement failure shows a saved-but-stale alert and restores the control. Intentional mobile creation navigation remains unchanged.
 
 ### Key Discoveries:
 
-- The shared helper navigates on refresh rejection in `src/lib/expense-workspace-refresh.ts:11`.
-- The workspace callback can reject on an unsuccessful GET or invalid returned fragments in `src/components/expenses/ExpenseWorkspace.astro:107`.
-- Settlement already distinguishes a saved confirmation from a failed view refresh in `src/components/expenses/ExpenseWorkspace.astro:209`.
-- The project rule requires form posts to remain in the background: `context/foundation/lessons.md`.
+- `define:vars` emits `ExpenseWorkspace.astro` as unprocessed inline JavaScript, while the script contains TypeScript annotations and assertions at `src/components/expenses/ExpenseWorkspace.astro:104-130`.
+- Built output preserves `async function refreshExpenseWorkspace(month: string)`, which browsers cannot parse: `dist/server/chunks/ExpenseWorkspace_CZGAi1JT.mjs:139-165`.
+- The shared helper rejects if its global callback was never registered: `src/lib/expense-workspace-refresh.ts:5-7`.
+- The PWA and middleware are not the cause: protected workspace GETs are network-only and the service worker has no runtime GET cache rule.
 
 ## What We're NOT Doing
 
-- Changing expense or settlement API routes, database rules, or server-side progressive-enhancement redirects.
-- Retrying a mutation automatically after its response has succeeded.
-- Replacing intentional `return-to-dashboard` navigation for mobile creation.
-- Adding E2E infrastructure, authentication fixtures, or a scroll-restoration mechanism for normal route navigation.
+- Changing expense or settlement APIs, database rules, or server-side progressive-enhancement redirects.
+- Retrying a mutation automatically after its response succeeds.
+- Replacing the intentional mobile `return-to-dashboard` creation flow.
+- Adding authenticated E2E fixtures or a general scroll-restoration mechanism for route navigation.
 
 ## Implementation Approach
 
-Retire the shared navigation-on-refresh-failure policy and let existing background callers handle refresh rejection with context-aware UI feedback. Use a lightweight, accessible refreshing state on the affected expense card during the mutation-plus-refresh lifecycle, while preserving existing action-specific button labels and errors.
+Make the workspace runtime a normal Astro-processed client script, using a rendered DOM data attribute to supply its page-specific refresh target. Keep the shared helper rejecting rather than navigating, then let each action preserve its existing control state and surface stale-view feedback only after a completed mutation cannot refresh valid workspace fragments.
 
 ## Critical Implementation Details
 
-Validate both refreshed fragments before replacing either one so a refresh failure cannot leave a half-updated workspace. Dialog-based actions must remain open until refresh succeeds; otherwise a stale-view error has no visible host.
+The page-specific refresh target cannot be captured by a TypeScript-bearing `define:vars` script. Read it from a stable workspace element at runtime so Astro can compile the entire client script. Validate both incoming and live replacement containers before replacing either one; a failed refresh must not leave a half-updated workspace.
 
-## Phase 1: Preserve in-place expense actions
+## Phase 1: Restore valid in-place workspace refresh
 
 ### Overview
 
-Deliver the no-navigation recovery behavior, affected-item refresh feedback, and focused regression coverage as one browser-verifiable vertical slice.
+Repair the client-runtime registration defect, preserve no-navigation recovery, and deliver visible pending feedback as one browser-verifiable vertical slice.
 
 ### Changes Required:
 
-#### 1. Shared workspace refresh contract
+#### 1. Valid workspace client runtime
 
-**Files**: `src/lib/expense-workspace-refresh.ts`, `src/lib/expense-workspace-refresh.test.ts`, `src/components/expenses/ExpenseWorkspace.astro`
+**Files**: `src/components/expenses/ExpenseWorkspace.astro`, `src/lib/expense-workspace-refresh.ts`, `src/lib/expense-workspace-refresh.test.ts`
 
-**Intent**: Remove the recovery path that turns an in-place refresh error into a document navigation, and make the fragment update safe to fail as one unit.
+**Intent**: Ensure the workspace callback and delegated edit/settlement handlers can execute in every rendered workspace, then retain a rejecting refresh contract with no navigation fallback.
 
-**Contract**: `refreshExpenseWorkspace()` continues to reject when the callback is missing or refresh fails. Remove `refreshExpenseWorkspaceOrNavigate()` and its `Location` dependency. Validate both replacement targets before mutating the live document; callers receive the rejection and decide how to present it. Focused tests prove neither unavailable callbacks nor failed refreshes call `location.assign`.
+**Contract**: Render the refresh target as a workspace data attribute and read it from a processed client script. The callback is registered before actions use it; unavailable and failed callbacks reject without calling `location.assign`. Both incoming and live balance/list targets are validated before DOM replacement.
 
-#### 2. Expense action feedback and refresh indicators
+#### 2. Action feedback and recovery
 
-**Files**: `src/components/expenses/ExpenseList.astro`, `src/components/expenses/DeclineExpenseDialog.astro`, `src/components/expenses/DeleteExpenseDialog.astro`, `src/components/expenses/ExpenseWorkspace.astro`, `src/components/expenses/CreateExpenseForm.astro`
+**Files**: `src/components/expenses/ExpenseList.astro`, `src/components/expenses/DeclineExpenseDialog.astro`, `src/components/expenses/DeleteExpenseDialog.astro`, `src/components/expenses/CreateExpenseForm.astro`, `src/lib/expense-refresh-indicator.ts`
 
-**Intent**: Make background action progress visible on the affected expense without moving the user, and provide truthful recovery feedback if saved data cannot be rendered immediately.
+**Intent**: Keep successful actions in the current viewport while making the affected expense's update state clear and handling genuine refresh failures truthfully.
 
-**Contract**: Approve, decline, delete, and edit mark their associated `[data-expense-id]` card as refreshing while the JSON request and fragment refresh are in flight, with a visible refresh icon and an accessible busy description. Clear that state in every completion path. After a successful mutation followed by refresh failure, keep the viewport unchanged, restore the action control, and show an action-local `role="alert"` explaining that the change was saved but the view could not refresh. Keep dialogs open on this failure so the message is visible. Creation, settlement, and manual Refresh use their existing controls as the pending affordance and adopt the same no-navigation, truthful stale-view feedback. Preserve the explicit mobile creation redirect.
+**Contract**: Approve, decline, delete, and edit mark their associated `[data-expense-id]` card busy with a visible refresh icon for the mutation-plus-refresh lifecycle. A successful mutation followed by a real refresh failure leaves the page unchanged, re-enables the action, and shows a local `role="alert"`; dialogs remain open until a refresh succeeds. Creation, settlement, and manual Refresh keep their own controls usable and present matching stale-view feedback. Mobile creation retains its explicit navigation.
 
-#### 3. Focused regression and manual verification
+#### 3. Runtime-aware regression coverage
 
-**Files**: `src/lib/expense-workspace-refresh.test.ts`; update colocated tests only if a new pure helper is introduced for refreshing-card state.
+**Files**: `src/lib/expense-workspace-refresh.test.ts`, `src/components/expenses/ExpenseWorkspace.astro`; add a focused colocated test only if needed
 
-**Intent**: Protect the common recovery policy that caused the scroll loss, then verify the real browser interaction that unit tests cannot observe.
+**Intent**: Prevent the browser parse failure from being hidden by helper-only tests.
 
-**Contract**: Tests cover successful delegation, unavailable callback, and failed callback without navigation. The manual path confirms an affected card's refresh icon, retained scroll/URL after action and manual refresh, accurate stale-view feedback, and ordinary successful list/balance replacement.
+**Contract**: Coverage proves successful delegation and non-navigation rejection, and verifies the workspace source is emitted through a processed client-script path rather than a TypeScript-bearing `define:vars` inline script. Build validation remains part of the phase because it produces the browser artifact that previously exposed the defect.
 
 ### Success Criteria:
 
 #### Automated Verification:
 
-- Focused workspace-refresh tests prove no fallback document navigation after refresh rejection.
+- Focused workspace-refresh tests cover successful delegation, unavailable callbacks, and failed callbacks without fallback navigation.
+- A focused regression guards the valid client-runtime boundary that registers the workspace callback.
 - `npm test` and `npm run build` pass.
 - Run `npm run verify`; if the known unrelated `packages/code-reviewer` lint errors remain, report them without changing that package.
 
 #### Manual Verification:
 
-- From a scrolled dashboard, approve, decline, delete, edit, and create an expense; confirm the URL and scroll position stay unchanged and the balance and list update on successful refresh.
+- From a scrolled dashboard, approve, decline, delete, edit, and create an expense; confirm the URL and scroll position stay unchanged and the balance/list update on successful refresh.
 - Confirm the affected existing expense card displays its refresh indicator while approve, decline, delete, or edit is processing.
-- Induce a fragment-refresh failure after a successful action; confirm no page navigation, an accurate accessible stale-view message, and a usable action control. Confirm manual Refresh remains usable with its existing error.
+- Induce a real fragment-refresh failure after a successful action; confirm no navigation, an accurate accessible stale-view message, and a usable action control. Confirm manual Refresh remains usable with its existing error.
 - Confirm mobile expense creation still follows its deliberate return-to-dashboard path.
 
 **Implementation Note**: After automated verification passes (or the known unrelated lint baseline is documented), pause for human confirmation of the browser checks before committing.
@@ -89,49 +90,49 @@ Deliver the no-navigation recovery behavior, affected-item refresh feedback, and
 
 ### Unit Tests:
 
-- Exercise the shared refresh primitive's success and rejection behavior with a spyable `location.assign`.
-- Ensure unavailable callback and failed callback paths reject rather than navigate.
+- Exercise the shared refresh primitive's successful delegation and rejection behavior with a spyable navigation method.
+- Guard against a TypeScript-bearing raw inline workspace script, which would prevent callback registration before any fetch occurs.
 
 ### Integration Tests:
 
-- No database test is needed: the change preserves the existing JSON mutation and authorization contracts.
+- No database test is needed: the change preserves existing JSON mutation and authorization contracts.
 
 ### Manual Testing Steps:
 
-1. Scroll the dashboard below the expense list header and perform each existing expense action as an eligible parent.
-2. Observe the affected card's refresh indicator and verify that a normal response updates balance and list without a document navigation.
-3. Temporarily induce a workspace fragment refresh failure after a successful action; verify scroll retention, the stale-view alert, and re-enabled action.
-4. Verify Refresh and mobile creation retain their specified independent behavior.
+1. Scroll the dashboard below the expense list header and perform each eligible expense action.
+2. Confirm the relevant card's indicator appears and a normal response replaces balance and list without document navigation.
+3. Temporarily force a workspace-fragment refresh failure after a successful action; confirm scroll retention, stale-view alert, and re-enabled control.
+4. Verify manual Refresh and mobile creation retain their independent behavior.
 
 ## Performance Considerations
 
-The change adds only transient DOM state to an existing single-card action; it does not add requests, polling, persistence, or client-side caches.
+The change adds only transient DOM state to an existing single-card action. It adds no requests, polling, persistence, or client-side cache.
 
 ## Migration Notes
 
-No migration is required. Existing non-JavaScript form redirects stay intact as the server routes' progressive-enhancement behavior.
+No migration is required. Existing non-JavaScript form redirects remain the progressive-enhancement behavior.
 
 ## References
 
 - Frame: `context/changes/expense-action-scroll-preservation/frame.md`
-- Shared refresh helper: `src/lib/expense-workspace-refresh.ts:6`
-- Workspace fragment refresh: `src/components/expenses/ExpenseWorkspace.astro:107`
-- Settlement stale-view pattern: `src/components/expenses/ExpenseWorkspace.astro:209`
+- Root-cause evidence: `src/components/expenses/ExpenseWorkspace.astro:104-130`
+- Built invalid script evidence: `dist/server/chunks/ExpenseWorkspace_CZGAi1JT.mjs:139-165`
+- Shared refresh helper: `src/lib/expense-workspace-refresh.ts:5-7`
 
 ## Progress
 
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles.
 
-### Phase 1: Preserve in-place expense actions
+### Phase 1: Restore valid in-place workspace refresh
 
 #### Automated
 
-- [ ] 1.1 Replace navigation fallback with a rejecting shared refresh contract.
+- [ ] 1.1 Make the workspace client runtime valid and retain the rejecting refresh contract.
 - [ ] 1.2 Add affected-item refresh indicators and no-navigation stale-view feedback.
-- [ ] 1.3 Add focused refresh-failure regression coverage.
+- [ ] 1.3 Add runtime-aware refresh regression coverage.
 - [ ] 1.4 Run focused checks, `npm test`, `npm run build`, and `npm run verify`.
 
 #### Manual
 
-- [ ] 1.5 Verify in-place actions, refresh indicators, and retained scroll position.
-- [ ] 1.6 Verify failed refresh recovery and intentional mobile creation navigation.
+- [ ] 1.5 Verify successful in-place actions, refresh indicators, and retained scroll position.
+- [ ] 1.6 Verify real refresh-failure recovery and intentional mobile creation navigation.
