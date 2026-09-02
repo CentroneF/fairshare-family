@@ -4,6 +4,7 @@ import { loadMonthlyBalance } from "./financial-service";
 import {
   deriveSettlementState,
   deriveMonthlyReportHistory,
+  getCurrentMonthContributionRows,
   getSettlementUnavailableReason,
   isAccessibleHistoricalReportMonth,
   mapMonthlyReportHistoryRows,
@@ -123,7 +124,11 @@ describe("expense balance inputs", () => {
   it("loads exact approved and pending totals through the repository seam", async () => {
     const balance = await loadMonthlyBalance({
       repository: {
-        listActiveParentIds: () => Promise.resolve(["parent-a", "parent-b"]),
+        listActiveParents: () =>
+          Promise.resolve([
+            { id: "parent-a", displayName: "Ada Nowak" },
+            { id: "parent-b", displayName: "Beata Nowak" },
+          ]),
         listMonthExpenses: () =>
           Promise.resolve([
             { amount_pln: "10.50", payer_id: "parent-a", status: "approved" },
@@ -144,7 +149,11 @@ describe("expense balance inputs", () => {
   it("moves an edited approved amount back into the review total", async () => {
     const balance = await loadMonthlyBalance({
       repository: {
-        listActiveParentIds: () => Promise.resolve(["parent-a", "parent-b"]),
+        listActiveParents: () =>
+          Promise.resolve([
+            { id: "parent-a", displayName: "Ada Nowak" },
+            { id: "parent-b", displayName: "Beata Nowak" },
+          ]),
         listMonthExpenses: () => Promise.resolve([{ amount_pln: "10.50", payer_id: "parent-a", status: "pending" }]),
       },
       familyId: "family-a",
@@ -253,6 +262,38 @@ describe("expense balance inputs", () => {
       true,
     );
     expect(shouldRenderUnavailableSettlementPanel({ kind: "eligible", isLocked: false })).toBe(false);
+  });
+
+  it("returns named approved-only contributions for the current month and hides them for historical reports", () => {
+    const balance = {
+      totalAmount: new Decimal("16.00"),
+      approvedAmount: new Decimal("13.50"),
+      toReviewAmount: new Decimal("2.50"),
+      contributions: new Map([
+        ["parent-a", new Decimal("13.50")],
+        ["parent-b", new Decimal(0)],
+      ]),
+      settlement: {
+        kind: "payment" as const,
+        amount: new Decimal(7),
+        fromParentId: "parent-b",
+        toParentId: "parent-a",
+      },
+    };
+    const activeParents = [
+      { id: "parent-a", displayName: "Ada Nowak" },
+      { id: "parent-b", displayName: "Beata Nowak" },
+    ];
+
+    expect(
+      getCurrentMonthContributionRows({ activeParents, balance, month: "2026-07", currentMonth: "2026-07" }),
+    ).toEqual([
+      { parentId: "parent-a", displayName: "Ada Nowak", amountPln: "13.50" },
+      { parentId: "parent-b", displayName: "Beata Nowak", amountPln: "0.00" },
+    ]);
+    expect(
+      getCurrentMonthContributionRows({ activeParents, balance, month: "2026-06", currentMonth: "2026-07" }),
+    ).toEqual([]);
   });
 
   it("maps settlement failures to safe, settlement-specific feedback", () => {

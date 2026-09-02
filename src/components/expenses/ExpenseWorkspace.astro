@@ -30,6 +30,7 @@ const {
 } = Astro.props;
 const state = supabase ? await loadExpenseWorkspaceState(supabase, { familyId, userId, month }) : null;
 const today = new Date().toISOString().slice(0, 10);
+const currentMonth = today.slice(0, 7);
 const defaultDate = today.slice(0, 7) === month ? today : `${month}-01`;
 const monthLabel = new Intl.DateTimeFormat("en", { month: "long", year: "numeric", timeZone: "UTC" }).format(
   new Date(`${month}-01T00:00:00Z`),
@@ -70,7 +71,9 @@ const refreshFallbackRedirectTo = `${refreshTarget}${refreshTarget.includes("?")
       state?.balance && state.currentMembershipId && (
         <MonthlyBalancePanel
           balance={state.balance}
+          activeParents={state.activeParents}
           currentMembershipId={state.currentMembershipId}
+          currentMonth={currentMonth}
           month={month}
           settlement={state.settlement}
         />

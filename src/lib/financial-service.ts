@@ -18,8 +18,13 @@ export interface FinancialExpenseRow {
   status: ExpenseStatus;
 }
 
+export interface ActiveParent {
+  id: string;
+  displayName: string | null;
+}
+
 export interface FinancialRepository {
-  listActiveParentIds(familyId: string, userId: string): Promise<readonly string[]>;
+  listActiveParents(familyId: string, userId: string): Promise<readonly ActiveParent[]>;
   listMonthExpenses(familyId: string, userId: string, month: string): Promise<readonly FinancialExpenseRow[]>;
 }
 
@@ -31,12 +36,13 @@ function monthRange(month: string): { start: string; nextMonth: string } {
   };
 }
 
-function parseParentIds(value: unknown): string[] {
+export function mapActiveParents(value: unknown): ActiveParent[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((row) => {
     if (!row || typeof row !== "object") return [];
-    const id = (row as { id?: unknown }).id;
-    return typeof id === "string" ? [id] : [];
+    const parent = row as { id?: unknown; display_name?: unknown };
+    if (typeof parent.id !== "string") return [];
+    return [{ id: parent.id, displayName: typeof parent.display_name === "string" ? parent.display_name : null }];
   });
 }
 
@@ -64,16 +70,16 @@ function parseFinancialExpenseRows(value: unknown): FinancialExpenseRow[] {
 
 export function createSupabaseFinancialRepository(client: FinancialClient): FinancialRepository {
   return {
-    async listActiveParentIds(familyId: string, _userId: string): Promise<readonly string[]> {
+    async listActiveParents(familyId: string, _userId: string): Promise<readonly ActiveParent[]> {
       const result = await client
         .from("family_members")
-        .select("id")
+        .select("id, display_name")
         .eq("family_id", familyId)
         .eq("role", "parent")
         .eq("is_active", true)
         .order("created_at");
       if (result.error) throw new Error("We could not load the family balance.");
-      return parseParentIds(result.data);
+      return mapActiveParents(result.data);
     },
     async listMonthExpenses(familyId: string, _userId: string, month: string): Promise<readonly FinancialExpenseRow[]> {
       const { start, nextMonth } = monthRange(month);
@@ -109,8 +115,10 @@ export async function loadMonthlyBalance(input: {
   familyId: string;
   userId: string;
   month: string;
+  activeParents?: readonly ActiveParent[];
 }): Promise<MonthlyBalance> {
-  const parentIds = await input.repository.listActiveParentIds(input.familyId, input.userId);
+  const activeParents = input.activeParents ?? (await input.repository.listActiveParents(input.familyId, input.userId));
+  const parentIds = activeParents.map((parent) => parent.id);
   if (parentIds.length !== 2) {
     throw new Error("A monthly balance requires exactly two active parents");
   }
