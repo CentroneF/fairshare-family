@@ -127,12 +127,12 @@ No migration is required. Existing non-JavaScript form redirects remain the prog
 
 #### Automated
 
-- [x] 1.1 Make the workspace client runtime valid and retain the rejecting refresh contract.
-- [x] 1.2 Add affected-item refresh indicators and no-navigation stale-view feedback.
-- [x] 1.3 Add runtime-aware refresh regression coverage.
-- [x] 1.4 Run focused checks, `npm test`, `npm run build`, and `npm run verify`.
+- [x] 1.1 Make the workspace client runtime valid and retain the rejecting refresh contract. — 2405ebd
+- [x] 1.2 Add affected-item refresh indicators and no-navigation stale-view feedback. — 2405ebd
+- [x] 1.3 Add runtime-aware refresh regression coverage. — 2405ebd
+- [x] 1.4 Run focused checks, `npm test`, `npm run build`, and `npm run verify`. — 2405ebd
 
 #### Manual
 
-- [x] 1.5 Verify successful in-place actions, refresh indicators, and retained scroll position.
-- [x] 1.6 Verify real refresh-failure recovery and intentional mobile creation navigation.
+- [x] 1.5 Verify successful in-place actions, refresh indicators, and retained scroll position. — 2405ebd
+- [x] 1.6 Verify real refresh-failure recovery and intentional mobile creation navigation. — 2405ebd
