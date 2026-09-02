@@ -1,7 +1,7 @@
 ---
 change_id: current-month-summary-improvements
 title: Current month summary improvements
-status: implementing
+status: implemented
 created: 2026-09-02
 updated: 2026-09-02
 archived_at: null

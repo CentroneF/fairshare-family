@@ -129,12 +129,12 @@ No migration is required. `family_members.display_name` is an existing field, an
 
 #### Automated
 
-- [x] 1.1 Add named active-parent metadata to the balance workspace state.
-- [x] 1.2 Render exact approved contributions only for the current-month balance card.
-- [x] 1.3 Add focused split and display-boundary regression coverage.
-- [x] 1.4 Run `npm run verify`.
+- [x] 1.1 Add named active-parent metadata to the balance workspace state. — be739af
+- [x] 1.2 Render exact approved contributions only for the current-month balance card. — be739af
+- [x] 1.3 Add focused split and display-boundary regression coverage. — be739af
+- [x] 1.4 Run `npm run verify`. — be739af
 
 #### Manual
 
-- [x] 1.5 Verify both named contributions and background refresh on the dashboard.
-- [x] 1.6 Verify historical reports remain unchanged.
+- [x] 1.5 Verify both named contributions and background refresh on the dashboard. — be739af
+- [x] 1.6 Verify historical reports remain unchanged. — be739af
