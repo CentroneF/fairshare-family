@@ -39,7 +39,21 @@ const { expenseId, month, previousReason = null } = Astro.props;
 </dialog>
 
 <script>
-  import { refreshExpenseWorkspaceOrNavigate } from "@/lib/expense-workspace-refresh";
+  import { setExpenseRefreshing } from "@/lib/expense-refresh-indicator";
+  import { refreshExpenseWorkspace } from "@/lib/expense-workspace-refresh";
+
+  function showError(form: HTMLFormElement, message: string) {
+    const existing = form.querySelector<HTMLElement>("[role='alert']");
+    if (existing) {
+      existing.textContent = message;
+      return;
+    }
+    const error = document.createElement("p");
+    error.className = "text-sm text-red-200";
+    error.setAttribute("role", "alert");
+    error.textContent = message;
+    form.append(error);
+  }
 
   document.addEventListener("click", (event) => {
     const target = event.target;
@@ -62,6 +76,11 @@ const { expenseId, month, previousReason = null } = Astro.props;
     if (!(form instanceof HTMLFormElement) || !form.matches("[data-decline-expense]")) return;
     event.preventDefault();
     form.querySelector("[role='alert']")?.remove();
+    const button = form.querySelector<HTMLButtonElement>("button[type='submit']");
+    button?.setAttribute("disabled", "true");
+    if (button) button.textContent = "Declining…";
+    setExpenseRefreshing(form, true);
+    let declineSaved = false;
 
     try {
       const response = await fetch(form.action, {
@@ -71,22 +90,23 @@ const { expenseId, month, previousReason = null } = Astro.props;
       });
       const result = (await response.json()) as { expenseId?: string; month?: string; error?: string };
       if (!response.ok || !result.expenseId || !result.month) {
-        const error = document.createElement("p");
-        error.className = "text-sm text-red-200";
-        error.setAttribute("role", "alert");
-        error.textContent = result.error ?? "We could not decline that expense.";
-        form.append(error);
+        showError(form, result.error ?? "We could not decline that expense.");
         return;
       }
-      const dialog = form.closest<HTMLDialogElement>("dialog");
-      dialog?.close();
-      await refreshExpenseWorkspaceOrNavigate(window, result.month);
+      declineSaved = true;
+      await refreshExpenseWorkspace(window, result.month);
+      form.closest<HTMLDialogElement>("dialog")?.close();
     } catch {
-      const error = document.createElement("p");
-      error.className = "text-sm text-red-200";
-      error.setAttribute("role", "alert");
-      error.textContent = "We could not decline that expense.";
-      form.append(error);
+      showError(
+        form,
+        declineSaved
+          ? "The expense was declined, but the view could not refresh. Please reload the page."
+          : "We could not decline that expense.",
+      );
+    } finally {
+      setExpenseRefreshing(form, false);
+      button?.removeAttribute("disabled");
+      if (button) button.textContent = "Confirm decline";
     }
   });
 </script>

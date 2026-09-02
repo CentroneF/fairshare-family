@@ -11,7 +11,6 @@ interface Props {
   serverError?: string | null;
   successBehavior?: "refresh-workspace" | "return-to-dashboard";
   successRedirectTo?: string;
-  refreshFallbackRedirectTo?: string;
 }
 
 const {
@@ -24,7 +23,6 @@ const {
   serverError,
   successBehavior = "refresh-workspace",
   successRedirectTo = "/dashboard?success=expense-created",
-  refreshFallbackRedirectTo = "/dashboard?success=expense-created",
 } = Astro.props;
 ---
 
@@ -41,7 +39,6 @@ const {
       data-create-expense-form
       data-success-behavior={successBehavior}
       data-success-redirect-to={successRedirectTo}
-      data-refresh-fallback-redirect-to={refreshFallbackRedirectTo}
     >
       <input type="hidden" name="month" value={month} />
       <label class="sm:col-span-2">
@@ -143,6 +140,7 @@ const {
 
       submitButton.disabled = true;
       submitButton.textContent = "Saving…";
+      let creationSaved = false;
 
       try {
         const response = await fetch(form.action, {
@@ -159,16 +157,17 @@ const {
           window.location.assign(form.dataset.successRedirectTo ?? "/dashboard?success=expense-created");
           return;
         }
-        try {
-          await refreshExpenseWorkspace(window, result.month);
-        } catch {
-          window.location.assign(form.dataset.refreshFallbackRedirectTo ?? "/dashboard?success=expense-created");
-          return;
-        }
+        creationSaved = true;
+        await refreshExpenseWorkspace(window, result.month);
         form.reset();
         form.dispatchEvent(new CustomEvent("expense-created", { bubbles: true }));
       } catch {
-        showError(form, "We could not save that expense. Please try again.");
+        showError(
+          form,
+          creationSaved
+            ? "The expense was saved, but the view could not refresh. Please reload the page."
+            : "We could not save that expense. Please try again.",
+        );
       } finally {
         submitButton.disabled = false;
         submitButton.textContent = "Add expense";
